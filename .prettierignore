@@ -1,0 +1,5 @@
+build
+coverage
+.nuxt
+pnpm-lock.yaml
+README.md

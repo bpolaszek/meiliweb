@@ -1,75 +1,55 @@
-# Nuxt 3 Minimal Starter
+# Meiliweb
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+[Meiliweb](https://meiliweb.pages.dev) is a web-based administration panel
+that helps you store, organize and visualize data in your [Meilisearch](https://meilisearch.com) instances.
 
-## Setup
+# Features
 
-Make sure to install the dependencies:
+- 🛢️ Indexes management: create indexes, update settings
+- 🔍 Documents management: import documents, search, sort, filter
+- 🗝️ Access keys management: Create keys, generate tenant tokens
+- 📋 Tasks management
+- 🅿️ Dumps / snapshots management
+
+# Local usage
+
+Meiliweb is a [Nuxt 3](https://nuxt.com/) single-page application that entirely runs on the client side.
+
+If you have some basics with [Vue](https://vuejs.org/) and [TailwindCSS](https://tailwindcss.com/), you will easily 
+figure out how this application has been structured.
+
+[Yarn](https://yarnpkg.com/) is required to install packages.
+
+## Installation
 
 ```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
+git clone https://github.com/bpolaszek/meiliweb.git
+cd meiliweb
 yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+## Launch dev server
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
 yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
-
-Build the application for production:
+## Build & preview
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm run build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+yarn build && yarn preview
 ```
 
-Locally preview production build:
+## Code style
+
+### Check
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+yarn lint
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+### Fix
+
+```bash
+yarn format
+```
