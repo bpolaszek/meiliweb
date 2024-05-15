@@ -14,7 +14,7 @@
     </SlideOver>
 
     <template #actions>
-      <SearchInput v-model="searchTerms" class="w-60" />
+      <SearchInput v-model="searchTerms" class="grow lg:w-80" />
 
       <button
         v-tippy="t('actions.documentView')"

@@ -2,7 +2,7 @@
   <div class="space-y-4 pb-4">
     <header
       class="flex items-center justify-between gap-4 bg-gray-100 px-4 py-4 sm:px-6">
-      <h3 class="text-md capitalize">{{ facet }}</h3>
+      <h3 class="text-md">{{ humanizeString(facet) }}</h3>
       <SearchInput
         v-model="facetSearchParams.facetQuery"
         :input-attrs="{ placeholder: t('placeholder') }"
@@ -68,6 +68,7 @@ import type { FacetHit } from 'meilisearch'
 import type { AppliedFilters } from '~/utils'
 import SearchInput from '~/components/layout/forms/SearchInput.vue'
 import Badge from '~/components/layout/Badge.vue'
+import humanizeString from 'humanize-string'
 
 type Props = {
   indexUid: string

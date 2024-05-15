@@ -10,9 +10,11 @@
           <Select :id="id" v-model="appliedSort">
             <option :value="[]">Default</option>
             <template v-for="attribute of sortableAttributes">
-              <option :value="[`${attribute}:asc`]">{{ attribute }} ASC</option>
+              <option :value="[`${attribute}:asc`]">
+                {{ humanizeString(attribute) }} ⬆
+              </option>
               <option :value="[`${attribute}:desc`]">
-                {{ attribute }} DESC
+                {{ humanizeString(attribute) }} ⬇
               </option>
             </template>
           </Select>
@@ -39,7 +41,7 @@
         <div class="space-y-1 text-sm">
           <MultiCombobox
             v-model="facets"
-            :items="filterableAttributes"
+            :items="filterableAttributes.filter(a => '_geo' !== a)"
             class="block w-full"
             :input-attrs="{
               class: 'text-xs',
@@ -95,6 +97,7 @@ import type { FacetDistribution, FacetStats } from 'meilisearch'
 import RangeFacet from '~/components/documents/RangeFacet.vue'
 import Select from '~/components/layout/forms/Select.vue'
 import Label from '~/components/layout/forms/Label.vue'
+import humanizeString from 'humanize-string'
 
 type Props = {
   indexUid: string
