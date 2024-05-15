@@ -30,10 +30,10 @@
           v-slot="{ active }">
           <button
             type="button"
-            class="block w-full px-2 py-1.5 text-left text-sm font-light capitalize"
+            class="block w-full px-2 py-1.5 text-left text-sm font-light"
             :class="[active ? 'bg-primary-100' : 'bg-transparent']"
             @click="addSearchRule(indexUid)">
-            {{ indexUid }}
+            {{ humanizeString(indexUid) }}
           </button>
         </MenuItem>
       </ContextualMenu>
@@ -165,6 +165,7 @@ import type { ComputedRef } from 'vue'
 import { createJwt } from '~/utils/create-jwt'
 import { field } from 'meilisearch-filters'
 import { createReusableTemplate, watchArray } from '@vueuse/core'
+import humanizeString from 'humanize-string'
 
 type Self = {
   keyToUse: Key | null
