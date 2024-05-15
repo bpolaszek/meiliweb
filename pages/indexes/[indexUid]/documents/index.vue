@@ -116,7 +116,7 @@ import {
 import { tryOrThrow } from '~/utils'
 import { NuxtLink } from '#components'
 import SlideOver from '~/components/layout/SlideOver.vue'
-import FilterPanel from '~/components/layout/forms/FilterPanel.vue'
+import FilterPanel from '~/components/documents/FilterPanel.vue'
 import { AppliedFilters } from '~/utils/applied-filters'
 import humanizeString from 'humanize-string'
 import SearchInput from '~/components/layout/forms/SearchInput.vue'
