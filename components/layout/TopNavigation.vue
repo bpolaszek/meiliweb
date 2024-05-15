@@ -4,7 +4,7 @@
     <header
       :class="[
         open ? 'fixed inset-0 z-40 overflow-y-auto' : '',
-        'bg-white shadow-sm lg:static lg:overflow-y-visible',
+        'bg-white lg:static lg:overflow-y-visible',
       ]">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
