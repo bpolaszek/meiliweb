@@ -41,7 +41,7 @@
         <div class="space-y-1 text-sm">
           <MultiCombobox
             v-model="facets"
-            :items="filterableAttributes.filter(a => '_geo' !== a)"
+            :items="filterableAttributes.filter((a) => '_geo' !== a)"
             class="block w-full"
             :input-attrs="{
               class: 'text-xs',
