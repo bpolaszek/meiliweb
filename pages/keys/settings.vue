@@ -63,5 +63,5 @@ en:
     createKey: Create key
     createTenantToken: Create tenant token
   actions:
-    listKeys: Got to keys list
+    listKeys: Go to keys list
 </i18n>
