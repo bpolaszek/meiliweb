@@ -23,6 +23,7 @@ type GeoBoundingBox = {
 
 export class AppliedFilters {
   public length: number = 0
+  private shouldIncludeAll: FacetName[] = []
   constructor(
     private appliedStringFilters: AppliedStringFacets = new Map(),
     private appliedRangeFilters: AppliedRangeFacets = new Map(),
@@ -53,6 +54,18 @@ export class AppliedFilters {
       ],
     ])
     update()
+  }
+
+  includeAll(facetName: FacetName, includeAll?: boolean) {
+    includeAll = includeAll ?? !this.shouldIncludeAll.includes(facetName)
+    if (includeAll) {
+      this.shouldIncludeAll.push(facetName)
+    } else {
+      this.shouldIncludeAll.splice(
+        this.shouldIncludeAll.findIndex((v) => v === facetName),
+        1,
+      )
+    }
   }
 
   applyRangeFilter(facetName: FacetName, range: AppliedRange) {
@@ -96,7 +109,11 @@ export class AppliedFilters {
         }
         const expressions = []
         includedValues.length > 0 &&
-          expressions.push(field(facetName).isIn(includedValues))
+          expressions.push(
+            this.shouldIncludeAll.includes(facetName)
+              ? field(facetName).hasAll(includedValues)
+              : field(facetName).isIn(includedValues),
+          )
         excludedValues.length > 0 &&
           expressions.push(field(facetName).isNotIn(excludedValues))
 

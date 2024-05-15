@@ -7,6 +7,13 @@
         v-model="facetSearchParams.facetQuery"
         :input-attrs="{ placeholder: t('placeholder') }"
         class="grow" />
+      <button
+        type="button"
+        class="text-sm font-semibold text-gray-400"
+        @click="shouldIncludeAll = !shouldIncludeAll">
+        <template v-if="shouldIncludeAll">ALL</template>
+        <template v-else>ANY</template>
+      </button>
     </header>
     <div class="space-y-2 px-4 sm:px-6">
       <ul class="flex flex-wrap gap-2 empty:hidden">
@@ -84,7 +91,11 @@ const hydrateFacetValues = async () => {
   ).facetHits
 }
 const { facetHits } = toRefs(self)
+const shouldIncludeAll = ref(false)
 watch(facetSearchParams, () => hydrateFacetValues())
+watch(shouldIncludeAll, (value) =>
+  props.appliedFilters.includeAll(props.facet, value),
+)
 await hydrateFacetValues()
 </script>
 
