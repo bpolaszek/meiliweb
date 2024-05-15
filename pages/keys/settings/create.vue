@@ -81,7 +81,11 @@
 
       <Label :for="id">{{ t('labels.actions') }}</Label>
       <dl class="grid grid-cols-6 gap-4 text-sm">
-        <dt class="font-light">{{ t('labels.action.search') }}</dt>
+        <dt class="font-light">
+          <button type="button" @click="toggleActions(['search'])">
+            {{ t('labels.action.search') }}
+          </button>
+        </dt>
         <dd class="col-span-5 flex flex-wrap items-center gap-4">
           <ActionCheckbox action="search" />
         </dd>
