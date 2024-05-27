@@ -17,7 +17,9 @@
         <td>
           <Badge
             :theme="
-              'succeeded' === tasks.results[index].status ? 'success' : 'danger'
+              TaskStatus.TASK_SUCCEEDED === tasks.results[index].status
+                ? 'success'
+                : 'danger'
             ">
             {{ tasks.results[index].status }}
           </Badge>
@@ -39,14 +41,21 @@
         <td class="whitespace-nowrap">
           {{
             formatDate(
-              tasks.results[index].finishedAt ??
-                tasks.results[index].startedAt ??
-                tasks.results[index].enqueuedAt,
+              match(tasks.results[index].status, [
+                [
+                  [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED],
+                  [tasks.results[index].enqueuedAt],
+                ],
+                [TaskStatus.TASK_PROCESSING, [tasks.results[index].startedAt]],
+                [match.default, [tasks.results[index].finishedAt]],
+              ]),
             )
           }}
         </td>
         <td class="text-right">
-          {{ formatDuration(tasks.results[index].duration) }}
+          <template v-if="tasks.results[index].duration">
+            {{ formatDuration(tasks.results[index].duration) }}
+          </template>
         </td>
       </template>
     </Table>
@@ -60,6 +69,7 @@ import match from 'match-operator'
 import { NuxtLink } from '#components'
 import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
+import { TaskStatus } from 'meilisearch'
 
 const { t } = useI18n()
 useHead({
