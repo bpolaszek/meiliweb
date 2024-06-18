@@ -16,9 +16,7 @@ export const createJwt = (
   const payload: JWTPayload = {
     searchRules,
     apiKeyUid,
-    exp: expiresAt
-      ? Math.floor(new Date('2012.08.10').getTime() / 1000)
-      : undefined,
+    exp: expiresAt ? Math.floor(expiresAt.getTime() / 1000) : undefined,
   }
 
   return sign(payload, signingKey)
