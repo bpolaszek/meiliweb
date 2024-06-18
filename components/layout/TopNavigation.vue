@@ -1,5 +1,4 @@
 <template>
-  <!-- When the mobile menu is open, add `overflow-hidden` to the `body` element to prevent double scrollbars -->
   <Popover as="template" v-slot="{ open }">
     <header
       :class="[
@@ -65,6 +64,7 @@
           </div>
           <div
             class="hidden lg:flex lg:items-center lg:justify-end xl:col-span-4">
+            <GithubButton />
             <LogoutButton />
           </div>
         </div>
@@ -100,7 +100,9 @@
           </NuxtLink>
         </div>
         <div class="border-t border-gray-200 pb-3 pt-4">
-          <div class="mx-auto flex max-w-3xl items-center px-4 sm:px-6">
+          <div
+            class="mx-auto flex max-w-3xl items-center justify-center px-4 sm:px-6">
+            <GithubButton />
             <LogoutButton />
           </div>
         </div>
@@ -116,9 +118,10 @@ import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { asyncComputed } from '@vueuse/core'
 import { computed, reactive } from 'vue'
-import LogoutButton from '~/components/layout/LogoutButton.vue'
 import { useCredentials } from '~/stores'
 import { safeToRefs } from '~/utils'
+import GithubButton from '~/components/layout/GithubButton.vue'
+import LogoutButton from '~/components/layout/LogoutButton.vue'
 
 const route = useRoute()
 const navigation = reactive([
