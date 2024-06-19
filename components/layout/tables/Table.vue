@@ -3,23 +3,25 @@
     <div class="mx-auto max-w-7xl">
       <table class="w-full text-left">
         <thead class="bg-white">
-          <tr
-            class="*:py-4 *:pr-3 *:text-left *:text-sm *:font-semibold *:text-gray-900">
-            <slot name="head">
-              <template v-for="(key, index) of columns ?? keys">
-                <th v-if="0 === index" scope="col" class="relative isolate">
-                  {{ key }}
-                  <div
-                    class="absolute inset-y-0 right-full -z-10 w-screen border-b border-b-gray-200" />
-                  <div
-                    class="absolute inset-y-0 left-0 -z-10 w-screen border-b border-b-gray-200" />
-                </th>
-                <th v-else scope="col" class="whitespace-nowrap">
-                  {{ key }}
-                </th>
-              </template>
-            </slot>
-          </tr>
+          <slot name="head">
+            <tr
+              class="*:py-4 *:pr-3 *:text-left *:text-sm *:font-semibold *:text-gray-900">
+              <slot name="columns">
+                <template v-for="(key, index) of columns ?? keys">
+                  <th v-if="0 === index" scope="col" class="relative isolate">
+                    {{ key }}
+                    <div
+                      class="absolute inset-y-0 right-full -z-10 w-screen border-b border-b-gray-200" />
+                    <div
+                      class="absolute inset-y-0 left-0 -z-10 w-screen border-b border-b-gray-200" />
+                  </th>
+                  <th v-else scope="col" class="whitespace-nowrap">
+                    {{ key }}
+                  </th>
+                </template>
+              </slot>
+            </tr>
+          </slot>
         </thead>
         <tbody>
           <tr

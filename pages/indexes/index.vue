@@ -20,7 +20,7 @@
           'createdAt',
           'updatedAt',
         ]">
-        <template #head>
+        <template #columns>
           <th scope="col" class="relative isolate">
             {{ t('columns.index') }}
             <div
