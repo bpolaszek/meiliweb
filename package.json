@@ -1,6 +1,5 @@
 {
-  "name": "nuxt-app",
-  "private": true,
+  "name": "meiliweb",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
