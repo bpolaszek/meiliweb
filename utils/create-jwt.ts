@@ -7,6 +7,14 @@ type JWTPayload = {
   exp?: number
 }
 
+const normalizeDate = (date: Date | string): Date => {
+  if (date instanceof Date) {
+    return date
+  }
+
+  return new Date(date)
+}
+
 export const createJwt = (
   searchRules: TokenSearchRules,
   key: Key,
@@ -16,7 +24,9 @@ export const createJwt = (
   const payload: JWTPayload = {
     searchRules,
     apiKeyUid,
-    exp: expiresAt ? Math.floor(expiresAt.getTime() / 1000) : undefined,
+    exp: expiresAt
+      ? Math.floor(normalizeDate(expiresAt).getTime() / 1000)
+      : undefined,
   }
 
   return sign(payload, signingKey)
