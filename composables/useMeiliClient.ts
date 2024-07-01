@@ -1,19 +1,21 @@
 import { reactiveComputed } from '@vueuse/core'
 import { Meilisearch } from 'meilisearch'
+import type { MaybeRef } from 'vue'
 import { useCredentials } from '~/stores'
 
-export const useMeiliClient = (): Meilisearch => {
+export const useMeiliClient = (accessKey?: MaybeRef<string>): Meilisearch => {
   const { credentials } = toRefs(useCredentials())
 
   const self = reactive({
     credentials,
+    accessKey,
   })
 
   return reactiveComputed(
     () =>
       new Meilisearch({
         host: self.credentials?.baseUri ?? '',
-        apiKey: self.credentials?.accessKey ?? '',
+        apiKey: self.accessKey ?? self.credentials?.accessKey ?? '',
       }),
   )
 }
