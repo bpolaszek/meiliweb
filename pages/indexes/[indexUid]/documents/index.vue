@@ -8,12 +8,29 @@
         v-model:applied-sort="appliedSort"
         v-model:facets="facets"
         v-model:applied-filters="appliedFilters"
+        :client="searchClient"
         :index-uid="index.uid"
         :sortable-attributes="sortableAttributes"
         :filterable-attributes="filterableAttributes" />
     </SlideOver>
 
     <template #actions>
+      <div
+        v-if="tenant.tenantToken"
+        class="inline-flex items-center gap-1 rounded-lg border-0 border-gray-200 px-4 py-2">
+        <span class="font-medium text-gray-600">
+          {{ t('labels.multitenancyEnabled') }}
+        </span>
+        <Button
+          v-tippy="t('actions.clearTenantToken')"
+          no-padding
+          no-border
+          no-rounded
+          @click="tenant.clearTenantToken()">
+          <Icon name="uil:times" class="size-6 text-primary-600" />
+        </Button>
+      </div>
+
       <SearchInput v-model="searchTerms" class="grow lg:w-80" />
 
       <button
@@ -112,6 +129,7 @@ import {
   useIndexLocalSettings,
   useMeiliClient,
   usePagination,
+  useMultiTenancy,
 } from '~/composables'
 import { tryOrThrow } from '~/utils'
 import { NuxtLink } from '#components'
@@ -125,11 +143,16 @@ import DocumentsAsCards from '~/components/documents/DocumentsAsCards.vue'
 import DocumentsAsTable from '~/components/documents/DocumentsAsTable.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentsAsMap from '~/components/documents/DocumentsAsMap.vue'
+import { reactiveComputed } from '@vueuse/core'
 
 const { t } = useI18n()
 const route = useRoute()
 const indexUid = route.params.indexUid
 const meili = useMeiliClient()
+const tenant = useMultiTenancy()
+const searchClient = reactiveComputed(() =>
+  tenant.tenantToken ? useMeiliClient(tenant.tenantToken as string) : meili,
+)
 const { formatDate } = useDateFormatter()
 const index = await tryOrThrow(() => meili.getIndex(indexUid as string))
 const filterPanelOpen = ref(false)
@@ -156,7 +179,11 @@ const searchParams = reactive({
   offset,
   filter: computed(() => `${appliedFilters}`),
 })
-const resultset = ref(await index.search(null, searchParams))
+const resultset = ref(
+  await tryOrThrow(() =>
+    searchClient.index(index.uid).search(null, searchParams),
+  ),
+)
 const hasGeoDocuments = computed(() =>
   Object.keys(stats.fieldDistribution).includes('_geo'),
 )
@@ -182,7 +209,9 @@ watch(searchTerms, () => (searchParams.offset = 0))
 watch(
   searchParams,
   async (searchParams) =>
-    (self.resultset = await index.search(null, searchParams)),
+    (self.resultset = await searchClient
+      .index(index.uid)
+      .search(null, searchParams)),
   { deep: true },
 )
 watch(resultset, () => (self.totalItems = self.resultset.estimatedTotalHits), {
@@ -206,6 +235,8 @@ en:
     tableView: View as data table
     mapView: View as map
     toggleFilters: Open filter panel
+    clearTenantToken: Clear tenant token
   labels:
     filters: Sort & Filter
+    multitenancyEnabled: Tenant preview
 </i18n>

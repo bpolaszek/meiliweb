@@ -84,16 +84,26 @@
           "
           type="text"
           class="form-input w-full" />
-        <span
-          v-if="filterStats.has(indexUid)"
-          class="text-xs italic text-green-600">
-          {{
-            t('hints.matchingDocuments', {
-              nbFilteredDocuments: (filterStats.get(indexUid) as FilterStat)[0],
-              nbTotalDocuments: (filterStats.get(indexUid) as FilterStat)[1],
-            })
-          }}
-        </span>
+        <div v-if="filterStats.has(indexUid)" class="text-xs">
+          <span class="italic text-green-600">
+            {{
+              t('hints.matchingDocuments', {
+                nbFilteredDocuments: (
+                  filterStats.get(indexUid) as FilterStat
+                )[0],
+                nbTotalDocuments: (filterStats.get(indexUid) as FilterStat)[1],
+              })
+            }}
+          </span>
+          <span v-if="jwt">&nbsp;-&nbsp;</span>
+          <RouterLink
+            v-if="jwt"
+            :to="`/indexes/${indexUid}/documents?tenantToken=${jwt}`"
+            class="italic text-primary-700 hover:text-primary-800"
+            target="_blank">
+            {{ t('labels.preview') }}
+          </RouterLink>
+        </div>
         <span v-else class="text-xs italic text-red-600">
           {{ t('hints.invalidFilterQuery') }}
         </span>
@@ -192,7 +202,7 @@ const self: Self = reactive({
   ),
   jwt: computed(() =>
     self.keyToUse
-      ? createJwt(self.searchRules, self.keyToUse, self.expiresAt)
+      ? createJwt(self.searchRules, self.keyToUse, self.expiresAt ?? undefined)
       : null,
   ),
 })
@@ -326,6 +336,7 @@ en:
     expiresAt: Expires
     neverExpires: Never
     pickAnIndex: Pick an index below...
+    preview: Preview
   placeholders:
     example: "Example: {example}"
   hints:

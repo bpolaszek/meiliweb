@@ -1,7 +1,7 @@
 <template>
   <!--  <Login v-if="!credentials" />-->
   <div class="h-dvh">
-    <NuxtPage />
+    <NuxtPage :page-key="route.fullPath" />
   </div>
   <Toaster />
   <ConfirmationDialog v-if="confirmationDialog" v-bind="confirmationDialog" />
@@ -11,9 +11,9 @@
 import Toaster from '~/components/layout/toasts/Toaster.vue'
 import ConfirmationDialog from '~/components/layout/ConfirmationDialog.vue'
 import { safeToRefs } from '~/utils'
-import { useConfirmationDialog, useCredentials } from '~/stores'
+import { useConfirmationDialog } from '~/stores'
 
-const { credentials } = safeToRefs(useCredentials())
+const route = useRoute()
 const { confirmationDialog } = safeToRefs(useConfirmationDialog())
 
 useHead({
