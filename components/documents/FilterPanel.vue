@@ -73,6 +73,7 @@
       <template v-for="facet of facets" :key="facet">
         <StringFacet
           v-if="FACET_TYPE_STRING === facetsTypeMap.get(facet)"
+          :client
           :index-uid="indexUid"
           :facet
           :applied-filters="appliedFilters" />
@@ -93,13 +94,18 @@ import { useMeiliClient } from '~/composables'
 import MultiCombobox from '~/components/layout/forms/MultiCombobox.vue'
 import StringFacet from '~/components/documents/StringFacet.vue'
 import type { AppliedFilters } from '~/utils/applied-filters'
-import type { FacetDistribution, FacetStats } from 'meilisearch'
+import {
+  type FacetDistribution,
+  type FacetStats,
+  Meilisearch,
+} from 'meilisearch'
 import RangeFacet from '~/components/documents/RangeFacet.vue'
 import Select from '~/components/layout/forms/Select.vue'
 import Label from '~/components/layout/forms/Label.vue'
 import humanizeString from 'humanize-string'
 
 type Props = {
+  client: Meilisearch
   indexUid: string
   sortableAttributes: string[]
   filterableAttributes: string[]

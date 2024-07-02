@@ -8,6 +8,7 @@
         v-model:applied-sort="appliedSort"
         v-model:facets="facets"
         v-model:applied-filters="appliedFilters"
+        :client="searchClient"
         :index-uid="index.uid"
         :sortable-attributes="sortableAttributes"
         :filterable-attributes="filterableAttributes" />
@@ -208,7 +209,9 @@ watch(searchTerms, () => (searchParams.offset = 0))
 watch(
   searchParams,
   async (searchParams) =>
-    (self.resultset = await index.search(null, searchParams)),
+    (self.resultset = await searchClient
+      .index(index.uid)
+      .search(null, searchParams)),
   { deep: true },
 )
 watch(resultset, () => (self.totalItems = self.resultset.estimatedTotalHits), {

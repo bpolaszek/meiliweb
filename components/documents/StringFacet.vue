@@ -63,14 +63,14 @@
 </template>
 
 <script setup lang="ts">
-import { useMeiliClient } from '~/composables'
-import type { FacetHit } from 'meilisearch'
+import { type FacetHit, Meilisearch } from 'meilisearch'
 import type { AppliedFilters } from '~/utils'
 import SearchInput from '~/components/layout/forms/SearchInput.vue'
 import Badge from '~/components/layout/Badge.vue'
 import humanizeString from 'humanize-string'
 
 type Props = {
+  client: Meilisearch
   indexUid: string
   facet: string
   appliedFilters: AppliedFilters
@@ -78,7 +78,6 @@ type Props = {
 
 const props = defineProps<Props>()
 const { t } = useI18n()
-const meili = useMeiliClient()
 const self = reactive({
   facetHits: [] as FacetHit[],
 })
@@ -88,7 +87,9 @@ const facetSearchParams = reactive({
 })
 const hydrateFacetValues = async () => {
   self.facetHits = (
-    await meili.index(props.indexUid).searchForFacetValues(facetSearchParams)
+    await props.client
+      .index(props.indexUid)
+      .searchForFacetValues(facetSearchParams)
   ).facetHits
 }
 const { facetHits } = toRefs(self)
