@@ -21,6 +21,16 @@ You can run Meilweb on your search instances, provided they expose appropriate C
 
 Meiliweb is a [Nuxt 3](https://nuxt.com/) single-page application that entirely runs on the client side.
 
+You can run it locally using Docker with the following commands:
+```bash
+git clone https://github.com/bpolaszek/meiliweb.git
+cd meiliweb
+docker build -t meiliweb .
+docker run -p 3000:3000 -d meiliweb
+```
+
+## Development
+
 If you have some basics with [Vue](https://vuejs.org/) and [TailwindCSS](https://tailwindcss.com/), you will easily
 figure out how this application has been structured.
 
