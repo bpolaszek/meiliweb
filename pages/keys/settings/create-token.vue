@@ -95,9 +95,9 @@
               })
             }}
           </span>
-          <span v-if="jwt && rules.filter">&nbsp;-&nbsp;</span>
+          <span v-if="jwt">&nbsp;-&nbsp;</span>
           <RouterLink
-            v-if="jwt && rules.filter"
+            v-if="jwt"
             :to="`/indexes/${indexUid}/documents?tenantToken=${jwt}`"
             class="italic text-primary-700 hover:text-primary-800"
             target="_blank">
