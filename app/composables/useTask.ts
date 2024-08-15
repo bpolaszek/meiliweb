@@ -5,7 +5,7 @@ import {
   TaskStatus,
   type EnqueuedTask,
 } from 'meilisearch'
-import { useMeiliClient } from '~/composables'
+import { useMeiliClient } from '~/composables/index'
 
 type EnqueuedTaskPromise = () => Promise<EnqueuedTask>
 type ProcessTaskOptions = {

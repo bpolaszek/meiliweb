@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ulid } from 'ulid'
 import { toRef } from 'vue'
-import { type I18nT } from '~/utils'
+import { type I18nT } from '../utils'
 
 type CreateToastOptions = {
   title: string
