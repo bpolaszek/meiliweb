@@ -1,6 +1,9 @@
 import TailwindConfig from './tailwind.config'
 
 export default defineNuxtConfig({
+  future: {
+    compatibilityVersion: 4,
+  },
   ssr: false,
   devtools: { enabled: true },
   modules: [
