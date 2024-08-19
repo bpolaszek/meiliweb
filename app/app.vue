@@ -48,7 +48,7 @@ useHead({
   }
 }
 @layer components {
-  @import '@vueform/slider/themes/tailwind.scss';
+  @import '../node_modules/@vueform/slider/themes/tailwind';
 }
 body {
   font-family: 'DM Sans', sans-serif;
