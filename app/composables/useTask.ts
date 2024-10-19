@@ -18,7 +18,7 @@ type ProcessTaskOptions = {
 
 export class TaskError extends Error {
   constructor(
-    public message: string,
+    message: string,
     public code: string,
     public type: string,
     public link: string,

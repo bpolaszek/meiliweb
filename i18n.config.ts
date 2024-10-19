@@ -6,6 +6,7 @@ export default defineI18nConfig(() => ({
       toasts: {
         titles: {
           error: 'An error occured.',
+          duplicateIndex: 'Copying {indexUid} to {newIndexUid}',
         },
         texts: {
           pleaseWait: 'Please wait...',

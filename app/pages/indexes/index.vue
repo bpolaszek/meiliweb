@@ -65,11 +65,31 @@
             {{ item.numberOfDocuments }}
           </td>
           <td class="text-right">
-            <div class="inline-flex items-center gap-2">
-              <NuxtLink :to="`/indexes/${item.uid}/settings`">
-                <Icon name="heroicons-outline:cog" class="size-5" />
-              </NuxtLink>
-            </div>
+            <ContextualMenu>
+              <MenuItem v-slot="{ active }">
+                <NuxtLink
+                  :to="`/indexes/${item.uid}/settings`"
+                  class="flex w-full items-center justify-start gap-2 p-2"
+                  :class="{ 'bg-gray-50': active }">
+                  <Icon
+                    name="heroicons-outline:cog"
+                    class="size-5 opacity-70" />
+                  <span>{{ t('actions.settings') }}</span>
+                </NuxtLink>
+              </MenuItem>
+              <MenuItem v-slot="{ active }">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-start gap-2 p-2"
+                  :class="{ 'bg-gray-50': active }"
+                  @click="duplicateIndex(item.uid)">
+                  <Icon
+                    name="heroicons:document-duplicate"
+                    class="size-5 opacity-70" />
+                  <span>{{ t('actions.duplicate') }}</span>
+                </button>
+              </MenuItem>
+            </ContextualMenu>
           </td>
         </template>
       </Table>
@@ -93,12 +113,22 @@
 
 <script setup lang="ts">
 import { tryOrThrow } from '~/utils'
-import { useDateFormatter, useMeiliClient } from '~/composables'
+import {
+  useDateFormatter,
+  useIndexOperations,
+  useMeiliClient,
+} from '~/composables'
 import { NuxtLink } from '#components'
 import ServerStats from '~/components/settings/ServerStats.vue'
 import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
 import Button from '~/components/layout/forms/Button.vue'
+import ContextualMenu from '~/components/layout/ContextualMenu.vue'
+import { MenuItem } from '@headlessui/vue'
+import { usePromisifiedDialogs } from '~/stores'
+import { Index } from 'meilisearch'
+import { promiseTimeout, whenever } from '@vueuse/core'
+import { navigateTo } from '#imports'
 
 const { t } = useI18n()
 useHead({
@@ -107,17 +137,39 @@ useHead({
 
 const meili = useMeiliClient()
 const { formatDate } = useDateFormatter()
-const indexes = await tryOrThrow(async () =>
-  Promise.all(
-    (await meili.getIndexes()).results.map((index) =>
-      meili.getIndex(index.uid),
+const { openDialog } = usePromisifiedDialogs()
+const self = reactive({
+  indexes: [] as Index[],
+})
+
+const fetchIndexes = async () =>
+  tryOrThrow(async () =>
+    Promise.all(
+      (await meili.getIndexes()).results.map((index) =>
+        meili.getIndex(index.uid),
+      ),
     ),
-  ),
+  )
+
+whenever(
+  toRef(self, 'indexes'),
+  async (indexes) => {
+    for (const index of indexes) {
+      let indexInfo = await meili.getIndex(index.uid)
+      Object.assign(index, await indexInfo.getStats())
+    }
+  },
+  { immediate: true },
 )
-for (const index of indexes) {
-  let indexInfo = await meili.getIndex(index.uid)
-  Object.assign(index, await indexInfo.getStats())
+
+const { duplicateIndex: doDuplicateIndex } = useIndexOperations()
+const duplicateIndex = async (indexUid: string) => {
+  const newIndexUid = await doDuplicateIndex(indexUid)
+  await promiseTimeout(1000)
+  await navigateTo(`/indexes/${newIndexUid}/documents`)
 }
+const { indexes } = toRefs(self)
+self.indexes = await fetchIndexes()
 </script>
 
 <i18n>
@@ -135,4 +187,6 @@ en:
   actions:
     create: Create
     createExpanded: Create an index
+    settings: Settings
+    duplicate: Duplicate
 </i18n>
