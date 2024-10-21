@@ -1,7 +1,10 @@
 <template>
   <!--  <Login v-if="!credentials" />-->
-  <div class="h-dvh">
+  <div class="relative h-dvh">
     <NuxtPage :page-key="route.fullPath" />
+    <DebugMemory
+      v-if="IS_DEV_MODE && config.public.debugMemoryUsage"
+      class="absolute bottom-0 flex w-full items-center justify-center gap-4 pb-6 text-xs text-gray-600" />
   </div>
   <Toaster />
   <ConfirmationDialog v-if="confirmationDialog" v-bind="confirmationDialog" />
@@ -15,6 +18,8 @@ import { useConfirmationDialog } from '~/stores'
 
 const route = useRoute()
 const { confirmationDialog } = safeToRefs(useConfirmationDialog())
+const IS_DEV_MODE = import.meta.dev
+const config = useRuntimeConfig()
 
 useHead({
   htmlAttrs: {

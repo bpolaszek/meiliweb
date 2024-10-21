@@ -4,10 +4,13 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
-
   ssr: false,
   devtools: { enabled: true },
-
+  runtimeConfig: {
+    public: {
+      debugMemoryUsage: false,
+    },
+  },
   modules: [
     '@pinia/nuxt',
     'nuxt-icon',
@@ -28,6 +31,5 @@ export default defineNuxtConfig({
       },
     ],
   ],
-
   compatibilityDate: '2024-08-15',
 })
