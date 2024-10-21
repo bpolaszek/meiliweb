@@ -8,11 +8,13 @@
   </div>
   <Toaster />
   <ConfirmationDialog v-if="confirmationDialog" v-bind="confirmationDialog" />
+  <PromisifiedDialogs />
 </template>
 
 <script setup lang="ts">
 import Toaster from '~/components/layout/toasts/Toaster.vue'
 import ConfirmationDialog from '~/components/layout/ConfirmationDialog.vue'
+import PromisifiedDialogs from '~/components/layout/dialogs/PromisifiedDialogs.vue'
 import { safeToRefs } from '~/utils'
 import { useConfirmationDialog } from '~/stores'
 

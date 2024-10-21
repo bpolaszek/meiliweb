@@ -128,8 +128,8 @@ import {
   useFields,
   useIndexLocalSettings,
   useMeiliClient,
-  usePagination,
   useMultiTenancy,
+  usePagination,
 } from '~/composables'
 import { tryOrThrow } from '~/utils'
 import { NuxtLink } from '#components'
@@ -184,6 +184,7 @@ const resultset = ref(
     searchClient.index(index.uid).search(null, searchParams),
   ),
 )
+
 const hasGeoDocuments = computed(() =>
   Object.keys(stats.fieldDistribution).includes('_geo'),
 )

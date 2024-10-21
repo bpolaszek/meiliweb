@@ -34,7 +34,14 @@
         </td>
         <td>
           <span v-if="'documentAdditionOrUpdate' === tasks.results[index].type">
-            {{ t('labels.documentIndexRatio', tasks.results[index].details) }}
+            {{
+              t('labels.documentIndexRatio', {
+                indexedDocuments:
+                  tasks.results[index].details.indexedDocuments ?? 0,
+                receivedDocuments:
+                  tasks.results[index].details.receivedDocuments,
+              })
+            }}
           </span>
           <span v-else>{{ tasks.results[index].details }}</span>
         </td>
