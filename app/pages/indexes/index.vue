@@ -83,9 +83,7 @@
                   class="flex w-full items-center justify-start gap-2 p-2"
                   :class="{ 'bg-gray-50': active }"
                   @click="renameIndex(item.uid)">
-                  <Icon
-                    name="heroicons:pencil"
-                    class="size-5 opacity-70" />
+                  <Icon name="heroicons:pencil" class="size-5 opacity-70" />
                   <span>{{ t('actions.rename') }}</span>
                 </button>
               </MenuItem>
