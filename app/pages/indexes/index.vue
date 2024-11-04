@@ -82,6 +82,16 @@
                   type="button"
                   class="flex w-full items-center justify-start gap-2 p-2"
                   :class="{ 'bg-gray-50': active }"
+                  @click="renameIndex(item.uid)">
+                  <Icon name="heroicons:pencil" class="size-5 opacity-70" />
+                  <span>{{ t('actions.rename') }}</span>
+                </button>
+              </MenuItem>
+              <MenuItem v-slot="{ active }">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-start gap-2 p-2"
+                  :class="{ 'bg-gray-50': active }"
                   @click="duplicateIndex(item.uid)">
                   <Icon
                     name="heroicons:document-duplicate"
@@ -125,7 +135,6 @@ import Badge from '~/components/layout/Badge.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import ContextualMenu from '~/components/layout/ContextualMenu.vue'
 import { MenuItem } from '@headlessui/vue'
-import { usePromisifiedDialogs } from '~/stores'
 import { Index } from 'meilisearch'
 import { promiseTimeout, whenever } from '@vueuse/core'
 import { navigateTo } from '#imports'
@@ -137,7 +146,6 @@ useHead({
 
 const meili = useMeiliClient()
 const { formatDate } = useDateFormatter()
-const { openDialog } = usePromisifiedDialogs()
 const self = reactive({
   indexes: [] as Index[],
 })
@@ -168,6 +176,13 @@ const duplicateIndex = async (indexUid: string) => {
   await promiseTimeout(1000)
   await navigateTo(`/indexes/${newIndexUid}/documents`)
 }
+
+const { renameIndex: doRenameIndex } = useIndexOperations()
+const renameIndex = async (indexUid: string) => {
+  const newIndexUid = await doRenameIndex(indexUid)
+  await promiseTimeout(1000)
+  await navigateTo(`/indexes/${newIndexUid}/documents`)
+}
 const { indexes } = toRefs(self)
 self.indexes = await fetchIndexes()
 </script>
@@ -189,4 +204,5 @@ en:
     createExpanded: Create an index
     settings: Settings
     duplicate: Duplicate
+    rename: Rename
 </i18n>

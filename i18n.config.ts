@@ -7,6 +7,7 @@ export default defineI18nConfig(() => ({
         titles: {
           error: 'An error occured.',
           duplicateIndex: 'Copying {indexUid} to {newIndexUid}',
+          renameIndex: 'Renaming {indexUid} to {newIndexUid}',
         },
         texts: {
           pleaseWait: 'Please wait...',
