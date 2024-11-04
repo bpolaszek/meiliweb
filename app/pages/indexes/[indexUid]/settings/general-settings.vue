@@ -41,6 +41,35 @@
 
     <h3
       class="inline-flex w-full items-center justify-between text-xl font-semibold">
+      {{ t('titles.renameIndex') }}
+    </h3>
+
+    <form @submit.prevent="renameIndex()" class="space-y-4">
+      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
+        <Label required :for="id">{{ t('labels.renameIndexUid') }}</Label>
+        <input
+          v-model="renameIndexUid"
+          required
+          autofocus
+          autocomplete="off"
+          type="text"
+          class="form-input" />
+      </UniqueId>
+
+      <div class="flex justify-end">
+        <Button
+          type="submit"
+          :loading="isRenaming"
+          icon-on-right
+          theme="primary"
+          icon="heroicons:check">
+          {{ t('actions.renameIndex') }}
+        </Button>
+      </div>
+    </form>
+
+    <h3
+      class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.duplicateIndex') }}
     </h3>
 
@@ -132,7 +161,9 @@ const self = reactive({
   primaryKey,
   error,
   duplicateIndexUid: ref(`${props.indexUid}-copy`),
+  renameIndexUid: ref(`${props.indexUid}-new`),
   isDuplicating: false,
+  isRenaming: false,
 })
 
 const submit = async () => {
@@ -166,7 +197,8 @@ const submit = async () => {
   })
 }
 
-const { duplicateIndex: doDuplicateIndex } = useIndexOperations()
+const { duplicateIndex: doDuplicateIndex, renameIndex: doRenameIndex } =
+  useIndexOperations()
 const duplicateIndex = async () => {
   if (!(await confirm({ text: t('confirmations.duplicateIndex.text') }))) {
     return
@@ -180,6 +212,21 @@ const duplicateIndex = async () => {
     await navigateTo(`/indexes/${newIndexUid}/documents`)
   } finally {
     self.isDuplicating = false
+  }
+}
+const renameIndex = async () => {
+  if (!(await confirm({ text: t('confirmations.renameIndex.text') }))) {
+    return
+  }
+  try {
+    const newIndexUid = await doRenameIndex(props.indexUid, {
+      onStart: () => (self.isRenaming = true),
+      newIndexUid: self.renameIndexUid,
+    })
+    await promiseTimeout(1000)
+    await navigateTo(`/indexes/${newIndexUid}/documents`)
+  } finally {
+    self.isRenaming = false
   }
 }
 
@@ -219,7 +266,8 @@ useHead({
   title: `${t('titles.general')} - ${props.indexUid}`,
 })
 
-const { duplicateIndexUid, isDuplicating } = toRefs(self)
+const { duplicateIndexUid, renameIndexUid, isDuplicating, isRenaming } =
+  toRefs(self)
 </script>
 
 <i18n>
@@ -227,12 +275,15 @@ en:
   titles:
     general: General settings
     duplicateIndex: Duplicate index
+    renameIndex: Rename index
     dangerZone: Danger Zone
   confirmations:
     primaryKey:
       text: Do you want to update your settings?
     duplicateIndex:
       text: Duplicate this index?
+    renameIndex:
+      text: Rename this index?
     dropIndex:
       title: "Drop `{index}`?"
       text: "CAUTION: This action cannot be reversed!"
@@ -245,6 +296,7 @@ en:
   labels:
     primaryKey: Primary Key
     duplicateIndexUid: New index name
+    renameIndexUid: New index name
   notices:
     primaryKey:
       title: Warning
@@ -254,5 +306,6 @@ en:
       text: Your index will be duplicated by batches of documents. Ensure that your index is not being written to during the duplication process.
   actions:
     duplicateIndex: Duplicate index
+    renameIndex: Rename index
     dropIndex: Delete index
 </i18n>

@@ -9,10 +9,12 @@ import {
   useToasts,
 } from '~/stores'
 
-type DuplicateIndexOptions = {
+type RenameIndexOptions = {
   newIndexUid?: string
   onStart: (newIndexUid: string) => void
 }
+
+type DuplicateIndexOptions = RenameIndexOptions
 
 const DEFAULT_DUPLICATE_INDEX_OPTIONS: DuplicateIndexOptions = {
   onStart: () => {},
@@ -96,5 +98,67 @@ export const useIndexOperations = () => {
     return newIndexUid
   }
 
-  return { duplicateIndex }
+  const renameIndex = async (
+    indexUid: string,
+    options: Partial<RenameIndexOptions> = {},
+  ): Promise<string> => {
+    let { onStart, newIndexUid } = {
+      ...DEFAULT_DUPLICATE_INDEX_OPTIONS,
+      ...options,
+    }
+    const index = await meili.getIndex(indexUid)
+    newIndexUid =
+      newIndexUid ??
+      (await openDialog(IndexNamePromptModal, {
+        indexUid: `${indexUid}-new`,
+      }))
+    onStart(newIndexUid)
+    const toast = createToast({
+      ...TOAST_PLEASEWAIT(t),
+      title: t('toasts.titles.renameIndex', { indexUid, newIndexUid }),
+    })
+
+    let taskOptions = {
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        }),
+    }
+
+    let task = await processTask(
+      async () =>
+        meili.createIndex(newIndexUid, {
+          primaryKey: await index.fetchPrimaryKey(),
+        }),
+      taskOptions,
+    )
+    if (task.status === 'failed') {
+      throw new Error('Failed to rename index')
+    }
+
+    task = await processTask(
+      () => meili.swapIndexes([{ indexes: [indexUid, newIndexUid] }]),
+      taskOptions,
+    )
+    if (task.status === 'failed') {
+      throw new Error('Failed to rename index')
+    }
+
+    task = await processTask(() => meili.deleteIndex(indexUid), taskOptions)
+    if (task.status === 'failed') {
+      throw new Error('Failed to rename index')
+    }
+
+    toast.update({ ...TOAST_SUCCESS(t) })
+
+    return newIndexUid
+  }
+
+  return { duplicateIndex, renameIndex }
 }
