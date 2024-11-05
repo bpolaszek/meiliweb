@@ -235,7 +235,6 @@ const dropIndex = async () => {
     ...TOAST_PLEASEWAIT(t),
     immediate: false,
     title: t('toasts.dropIndex.title'),
-    text: t('toasts.dropIndex.pendingText'),
   })
   await handleIndexDrop(async () => {
     toast.spawn()
