@@ -76,7 +76,7 @@ import match from 'match-operator'
 import { NuxtLink } from '#components'
 import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
-import { TaskStatus } from 'meilisearch'
+import { type Task, TaskStatus } from 'meilisearch'
 
 const { t } = useI18n()
 useHead({
@@ -84,7 +84,16 @@ useHead({
 })
 
 const meili = useMeiliClient()
-const tasks = await tryOrThrow(() => meili.getTasks())
+const self: any = reactive({
+  tasks: await tryOrThrow(() => meili.getTasks()),
+  pendingTasks: computed(() =>
+    self.tasks.results.filter((task: Task) =>
+      [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_PROCESSING].includes(
+        task.status,
+      ),
+    ),
+  ),
+})
 const { formatDate, formatDuration } = useDateFormatter()
 const stringifyTaskType = (type: string) =>
   match(type, [
@@ -101,6 +110,37 @@ const stringifyTaskType = (type: string) =>
     ['snapshotCreation', t('taskTypes.snapshotCreation')],
     [match.default, type],
   ])
+
+const { tasks, pendingTasks } = toRefs(self)
+
+const watchers = new WeakMap()
+watch(
+  pendingTasks,
+  (tasks: Task[]) => {
+    tasks.forEach(async (task) => {
+      if (watchers.has(task)) {
+        return
+      }
+      watchers.set(task, this)
+      if (task.status === TaskStatus.TASK_ENQUEUED) {
+        const interval = setInterval(async () => {
+          let updatedTask = await meili.getTask(task.uid)
+          if (updatedTask.status !== TaskStatus.TASK_ENQUEUED) {
+            clearInterval(interval)
+            watchers.delete(task)
+            Object.assign(task, updatedTask)
+          }
+        }, 50)
+      } else {
+        const updatedTask = await meili.waitForTask(task.uid, {
+          timeOutMs: 1000 * 3600 * 24,
+        })
+        Object.assign(task, updatedTask)
+      }
+    })
+  },
+  { immediate: true, deep: true },
+)
 </script>
 
 <i18n>
