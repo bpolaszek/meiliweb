@@ -105,11 +105,18 @@
       {{ t('titles.dangerZone') }}
     </h3>
 
-    <form @submit.prevent="dropIndex()">
-      <Button type="submit" icon-on-right theme="primary" icon="oi:delete">
-        {{ t('actions.dropIndex') }}
-      </Button>
-    </form>
+    <div class="flex items-center gap-2">
+      <form @submit.prevent="dropIndex()">
+        <Button type="submit" icon-on-right theme="primary" icon="oi:delete">
+          {{ t('actions.dropIndex') }}
+        </Button>
+      </form>
+      <form @submit.prevent="deleteAllDocuments()">
+        <Button type="submit" icon-on-right theme="primary" icon="oi:delete">
+          {{ t('actions.deleteAllDocuments') }}
+        </Button>
+      </form>
+    </div>
   </section>
 </template>
 
@@ -153,6 +160,13 @@ const { handle: handleIndexDrop } = useFormSubmit({
     title: t('confirmations.dropIndex.title', { index: index.uid }),
     text: t('confirmations.dropIndex.text'),
     acceptButtonText: t('confirmations.dropIndex.acceptButtonText'),
+  },
+})
+const { handle: handleDeleteAllDocuments } = useFormSubmit({
+  confirm: {
+    title: t('confirmations.deleteAllDocuments.title', { index: index.uid }),
+    text: t('confirmations.deleteAllDocuments.text'),
+    acceptButtonText: t('confirmations.deleteAllDocuments.acceptButtonText'),
   },
 })
 const processTask = useTask()
@@ -261,6 +275,37 @@ const dropIndex = async () => {
   })
 }
 
+const deleteAllDocuments = async () => {
+  const toast = createToast({
+    ...TOAST_PLEASEWAIT(t),
+    immediate: false,
+    title: t('toasts.deleteAllDocuments.title'),
+  })
+  await handleDeleteAllDocuments(async () => {
+    toast.spawn()
+    await processTask(() => meili.index(index.uid).deleteAllDocuments(), {
+      onSuccess: async () => {
+        toast.update({ ...TOAST_SUCCESS(t) })
+        reset(self.primaryKey)
+        await promiseTimeout(500)
+        navigateTo(`/indexes/${index.uid}/documents`, { replace: true })
+      },
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: (task: Task) => {
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        })
+        self.error = task.error as TaskError
+      },
+    })
+  })
+}
+
 useHead({
   title: `${t('titles.general')} - ${props.indexUid}`,
 })
@@ -287,11 +332,17 @@ en:
       title: "Drop `{index}`?"
       text: "CAUTION: This action cannot be reversed!"
       acceptButtonText: Yes, delete forever
+    deleteAllDocuments:
+      title: "Delete all documents from `{index}`?"
+      text: "CAUTION: This action cannot be reversed!"
+      acceptButtonText: Yes, delete forever
   toasts:
     primaryKey:
       title: Updating primary key...
     dropIndex:
       title: Deleting index...
+    deleteAllDocuments:
+      title: Deleting documents...
   labels:
     primaryKey: Primary Key
     duplicateIndexUid: New index name
@@ -307,4 +358,5 @@ en:
     duplicateIndex: Duplicate index
     renameIndex: Rename index
     dropIndex: Delete index
+    deleteAllDocuments: Delete all documents
 </i18n>
