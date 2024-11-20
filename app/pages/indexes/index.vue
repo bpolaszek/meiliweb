@@ -104,6 +104,16 @@
         </template>
       </Table>
 
+      <div class="mt-4 flex items-center justify-between">
+        <PageSize v-model="itemsPerPage" />
+        <Pagination
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :previous-page="previousPage"
+          :next-page="nextPage"
+          @update:page="handlePageChange" />
+      </div>
+
       <ServerStats class="mt-6" />
     </template>
 
@@ -127,6 +137,7 @@ import {
   useDateFormatter,
   useIndexOperations,
   useMeiliClient,
+  usePagination,
 } from '~/composables'
 import { NuxtLink } from '#components'
 import ServerStats from '~/components/settings/ServerStats.vue'
@@ -138,6 +149,8 @@ import { MenuItem } from '@headlessui/vue'
 import { Index } from 'meilisearch'
 import { promiseTimeout, whenever } from '@vueuse/core'
 import { navigateTo } from '#imports'
+import Pagination from '~/components/layout/pagination/Pagination.vue'
+import PageSize from '~/components/layout/pagination/PageSize.vue'
 
 const { t } = useI18n()
 useHead({
@@ -146,18 +159,28 @@ useHead({
 
 const meili = useMeiliClient()
 const { formatDate } = useDateFormatter()
+const itemsPerPage = ref(20)
+const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } =
+  usePagination(itemsPerPage)
 const self = reactive({
   indexes: [] as Index[],
+  totalItems,
+  currentPage,
+  previousPage,
+  nextPage,
+  lastPage,
+  itemsPerPage,
+  offset,
 })
 
-const fetchIndexes = async () =>
-  tryOrThrow(async () =>
-    Promise.all(
-      (await meili.getIndexes()).results.map((index) =>
-        meili.getIndex(index.uid),
-      ),
-    ),
-  )
+const fetchIndexes = async (offset = self.offset, limit = self.itemsPerPage) =>
+  tryOrThrow(async () => {
+    const indexes = await meili.getIndexes({ offset, limit })
+    self.totalItems = indexes.total
+    return Promise.all(
+      indexes.results.map((index) => meili.getIndex(index.uid)),
+    )
+  })
 
 whenever(
   toRef(self, 'indexes'),
@@ -184,6 +207,16 @@ const renameIndex = async (indexUid: string) => {
   await navigateTo(`/indexes/${newIndexUid}/documents`)
 }
 const { indexes } = toRefs(self)
+watch(offset, async (offset) => {
+  self.indexes = []
+  self.indexes = await fetchIndexes(offset)
+})
+watch(itemsPerPage, async (itemsPerPage) => {
+  self.indexes = []
+  self.indexes = await fetchIndexes(0, itemsPerPage)
+})
+const handlePageChange = (page: number) =>
+  (self.offset = (page - 1) * self.itemsPerPage)
 self.indexes = await fetchIndexes()
 </script>
 
