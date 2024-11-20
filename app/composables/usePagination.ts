@@ -53,5 +53,9 @@ export const usePagination = (
       self.itemsPerPage * page - self.itemsPerPage,
   })
 
+  watch(toRef(self, 'itemsPerPage'), () => {
+    self.offset = 0
+  })
+
   return safeToRefs(self)
 }
