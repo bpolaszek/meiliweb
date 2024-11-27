@@ -313,7 +313,9 @@ const submit = async () => {
 }
 
 const { createdKey } = toRefs(self)
-const indexes = (await meili.getRawIndexes()).results.map(({ uid }) => uid)
+const indexes = (await meili.getRawIndexes({ limit: 1000 })).results.map(
+  ({ uid }) => uid,
+)
 </script>
 
 <i18n>

@@ -222,7 +222,9 @@ const expires = computed({
 }) as ComputedRef<boolean>
 const { keyToUse, searchRules, expiresAt, jwt } = toRefs(self)
 const [indexes, keys] = await Promise.all([
-  meili.getIndexes().then(({ results }) => results.map(({ uid }) => uid)),
+  meili
+    .getIndexes({ limit: 1000 })
+    .then(({ results }) => results.map(({ uid }) => uid)),
   meili.getKeys(),
 ])
 const availableIndexes = computed(() =>
