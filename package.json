@@ -13,7 +13,8 @@
   "dependencies": {
     "json-oneline-stringify": "^1.0.0",
     "vue": "^3.4.21",
-    "vue-router": "^4.3.0"
+    "vue-router": "^4.3.0",
+    "xxh32": "^2.0.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.2",

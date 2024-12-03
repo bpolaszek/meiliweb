@@ -1,7 +1,7 @@
 <template>
   <!--  <Login v-if="!credentials" />-->
   <div class="relative h-dvh">
-    <NuxtPage :page-key="route.fullPath" />
+    <NuxtPage :page-key="pageKey" />
     <DebugMemory
       v-if="IS_DEV_MODE && config.public.debugMemoryUsage"
       class="absolute bottom-0 flex w-full items-center justify-center gap-4 pb-6 text-xs text-gray-600" />
@@ -16,12 +16,22 @@ import Toaster from '~/components/layout/toasts/Toaster.vue'
 import ConfirmationDialog from '~/components/layout/ConfirmationDialog.vue'
 import PromisifiedDialogs from '~/components/layout/dialogs/PromisifiedDialogs.vue'
 import { safeToRefs } from '~/utils'
-import { useConfirmationDialog } from '~/stores'
+import { useConfirmationDialog, useCredentials } from '~/stores'
+import { toRefs } from 'vue'
 
 const route = useRoute()
 const { confirmationDialog } = safeToRefs(useConfirmationDialog())
 const IS_DEV_MODE = import.meta.dev
 const config = useRuntimeConfig()
+const { credentials } = toRefs(useCredentials())
+const self: any = reactive({
+  credentials,
+  pageKey: computed(() => {
+    return [route.fullPath, self.credentials?.id].join(':')
+  }),
+})
+
+const { pageKey } = toRefs(self)
 
 useHead({
   htmlAttrs: {
@@ -31,7 +41,11 @@ useHead({
     class: 'h-full',
   },
   titleTemplate: (titleChunk) => {
-    return titleChunk ? `${titleChunk} | Meiliweb` : 'Meiliweb'
+    let appName = 'Meiliweb'
+    if (self.credentials) {
+      appName += ` - ${self.credentials.name || self.credentials.baseUri}`
+    }
+    return titleChunk ? `${titleChunk} | ${appName}` : appName
   },
 })
 </script>

@@ -2,13 +2,13 @@
   <div class="bg-bubbles flex h-dvh flex-col items-center justify-center">
     <div
       class="-mt-20 w-full max-w-lg space-y-6 rounded-lg border-gray-200 bg-white bg-opacity-90 px-6 py-4 md:w-1/2 md:border md:px-0 md:shadow-lg">
-      <section class="flex items-center justify-center gap-2">
+      <NuxtLink to="/indexes" class="flex items-center justify-center gap-2">
         <img
           class="-ml-10 size-16 shrink-0 grow-0"
-          src="/assets/images/logo.svg"
+          src="~/assets/images/logo.svg"
           alt="Meiliweb" />
         <span class="text-3xl font-semibold">Meiliweb</span>
-      </section>
+      </NuxtLink>
 
       <form class="space-y-4 p-4" @submit.prevent="submit(credentials)">
         <h1 class="text-lg font-semibold">
@@ -27,7 +27,8 @@
             required
             type="url"
             class="form-input"
-            placeholder="http://localhost:7700" />
+            :placeholder="DEFAULT_BASE_URI"
+            @keydown.tab="autofillBaseUri()" />
         </UniqueId>
 
         <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
@@ -36,6 +37,16 @@
             v-model="credentials.accessKey"
             type="password"
             class="form-input" />
+        </UniqueId>
+
+        <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
+          <label :for="id">{{ t('labels.instanceName') }}</label>
+          <input
+            v-model="credentials.name"
+            type="text"
+            class="form-input"
+            :placeholder="suggestedName"
+            @keydown.tab="autofillName()" />
         </UniqueId>
 
         <Button
@@ -56,14 +67,34 @@ import { useCredentials } from '~/stores'
 import { useFormSubmit } from '~/composables'
 import Alert from '~/components/layout/Alert.vue'
 import Button from '~/components/layout/forms/Button.vue'
+import { toRefs } from 'vue'
 
-const { save, factory, auth } = useCredentials()
+const { auth, factory } = useCredentials()
 const { loading, error, handle } = useFormSubmit()
 const credentials = ref(factory())
-const self = reactive({
+const self: any = reactive({
   credentials,
   error,
+  suggestedName: computed(() =>
+    '' === self.credentials.baseUri ||
+    self.credentials.baseUri?.indexOf('localhost') > -1
+      ? t('placeholders.localInstance')
+      : t('placeholders.productionInstance'),
+  ),
 })
+
+const DEFAULT_BASE_URI = 'http://localhost:7700'
+const autofillBaseUri = () => {
+  if ('' === self.credentials.baseUri) {
+    self.credentials.baseUri = DEFAULT_BASE_URI
+  }
+}
+
+const autofillName = () => {
+  if ('' === self.credentials.name) {
+    self.credentials.name = self.suggestedName
+  }
+}
 
 const submit = async (credentials: CredentialsRecord) => {
   const meili = new Meilisearch({
@@ -73,7 +104,6 @@ const submit = async (credentials: CredentialsRecord) => {
 
   try {
     await handle(() => meili.getVersion(), true)
-    //save(credentials)
     auth(credentials)
     navigateTo('/indexes')
   } catch (e) {
@@ -83,6 +113,8 @@ const submit = async (credentials: CredentialsRecord) => {
   self.credentials = factory()
 }
 const { t } = useI18n()
+const { suggestedName } = toRefs(self)
+
 useHead({
   title: t('title'),
 })
@@ -95,7 +127,11 @@ en:
   labels:
     instanceUrl: "Instance URL:"
     accessToken: "Access Token:"
+    instanceName: "Instance Name (optional):"
     submit: "Connect"
+  placeholders:
+    localInstance: "Local instance"
+    productionInstance: "Production"
 </i18n>
 
 <style>

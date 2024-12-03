@@ -3,7 +3,7 @@
     <header
       :class="[
         open ? 'fixed inset-0 z-40 overflow-y-auto' : '',
-        'bg-white lg:static lg:overflow-y-visible',
+        'relative z-10 bg-white lg:static lg:overflow-y-visible', // Added z-50 and relative
       ]">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
@@ -11,19 +11,100 @@
           <div
             class="flex md:absolute md:inset-y-0 md:left-0 lg:static xl:col-span-2">
             <div class="flex flex-shrink-0 items-center">
-              <a href="/" class="flex items-center gap-2">
-                <img
-                  class="size-16 shrink-0 grow-0"
-                  src="/assets/images/logo.svg"
-                  alt="Meiliweb" />
-                <span class="flex flex-col">
-                  <span class="text-lg font-semibold">Meiliweb</span>
-                  <span class="-mt-1 text-sm font-light text-gray-600">
-                    {{ credentials.baseUri }} - Meilisearch
-                    {{ version?.pkgVersion }}
-                  </span>
-                </span>
-              </a>
+              <div class="flex items-center gap-2">
+                <a href="/">
+                  <img
+                    class="size-16 shrink-0 grow-0"
+                    src="~/assets/images/logo.svg"
+                    alt="Meiliweb" />
+                </a>
+                <div class="flex flex-col">
+                  <a href="/" class="text-lg font-semibold">Meiliweb</a>
+                  <div class="-mt-1 flex items-center gap-2">
+                    <a href="/" class="text-sm font-light text-gray-600">
+                      {{ credentials!.baseUri }} - Meilisearch
+                      {{ version?.pkgVersion }}
+                    </a>
+                    <Menu as="div" class="relative -mt-1">
+                      <MenuButton
+                        v-tippy="t('actions.switchInstance')"
+                        class="rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50">
+                        <Icon name="heroicons:chevron-down" class="size-4" />
+                      </MenuButton>
+                      <transition
+                        enter-active-class="transition ease-out duration-100"
+                        enter-from-class="transform opacity-0 scale-95"
+                        enter-to-class="transform opacity-100 scale-100"
+                        leave-active-class="transition ease-in duration-75"
+                        leave-from-class="transform opacity-100 scale-100"
+                        leave-to-class="transform opacity-0 scale-95">
+                        <MenuItems
+                          class="absolute right-0 mt-2 w-72 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <div v-if="savedInstances.length > 0">
+                            <MenuItem
+                              v-for="instance in savedInstances.filter(
+                                ({ id }) => id !== credentials?.id,
+                              )"
+                              :key="instance.baseUri"
+                              v-slot="{ active }">
+                              <span
+                                :class="[
+                                  active ? 'bg-gray-50' : '',
+                                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs',
+                                ]">
+                                <button
+                                  type="button"
+                                  class="flex w-full items-center gap-2"
+                                  @click="switchInstance(instance.id)">
+                                  <Icon
+                                    :name="
+                                      instance.baseUri === credentials?.baseUri
+                                        ? 'heroicons:server'
+                                        : 'heroicons:server'
+                                    "
+                                    class="h-5 w-5" />
+                                  <span class="flex flex-col items-start">
+                                    <span>
+                                      {{ instance.name || instance.baseUri }}
+                                    </span>
+                                    <span
+                                      v-if="instance.name"
+                                      class="text-xs text-gray-500">
+                                      {{ instance.baseUri }}
+                                    </span>
+                                  </span>
+                                </button>
+                                <button
+                                  @click="removeInstance(instance.id)"
+                                  class="text-gray-400 hover:text-gray-600">
+                                  <Icon
+                                    name="heroicons:trash"
+                                    class="h-4 w-4" />
+                                </button>
+                              </span>
+                            </MenuItem>
+                          </div>
+                          <div>
+                            <MenuItem v-slot="{ active }">
+                              <NuxtLink
+                                to="/login"
+                                :class="[
+                                  active ? 'bg-gray-50' : '',
+                                  'flex items-center gap-2 rounded-md px-2 py-1.5 text-xs',
+                                ]">
+                                <Icon
+                                  name="heroicons:plus-circle"
+                                  class="h-5 w-5" />
+                                {{ t('actions.connectToInstance') }}
+                              </NuxtLink>
+                            </MenuItem>
+                          </div>
+                        </MenuItems>
+                      </transition>
+                    </Menu>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="min-w-0 flex-1 md:px-8 lg:px-0 xl:col-span-6">
@@ -111,47 +192,82 @@
   </Popover>
 </template>
 
-<script setup>
-import { useRoute } from '#app'
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
+<script setup lang="ts">
+import { safeToRefs, useConfirmationDialog, useRoute } from '#imports'
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+} from '@headlessui/vue'
 import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { asyncComputed } from '@vueuse/core'
-import { computed, reactive } from 'vue'
-import { useCredentials } from '~/stores'
-import { safeToRefs } from '~/utils'
+import { computed, reactive, toRefs } from 'vue'
 import GithubButton from '~/components/layout/GithubButton.vue'
 import LogoutButton from '~/components/layout/LogoutButton.vue'
+import { useCredentials } from '~/stores'
 
 const route = useRoute()
 const navigation = reactive([
   {
     name: 'Indexes',
     href: '/indexes',
-    current: computed(() => route.name.startsWith('indexes')),
+    current: computed(() => route.name?.startsWith('indexes')),
   },
   {
     name: 'Access Keys',
     href: '/keys',
-    current: computed(() => route.name.startsWith('keys')),
+    current: computed(() => route.name?.startsWith('keys')),
   },
   {
     name: 'Tasks',
     href: '/tasks',
-    current: computed(() => route.name.startsWith('tasks')),
+    current: computed(() => route.name?.startsWith('tasks')),
   },
   {
     name: 'Dumps',
     href: '/dumps',
-    current: computed(() => route.name.startsWith('dumps')),
+    current: computed(() => route.name?.startsWith('dumps')),
   },
   {
     name: 'Snapshots',
     href: '/snapshots',
-    current: computed(() => route.name.startsWith('snapshots')),
+    current: computed(() => route.name?.startsWith('snapshots')),
   },
 ])
-const { credentials } = safeToRefs(useCredentials())
+
+const {
+  credentials,
+  records,
+  switchInstance,
+  removeInstance: doRemoveInstance,
+} = safeToRefs(useCredentials())
 const meili = useMeiliClient()
+const { confirm } = useConfirmationDialog()
 const version = asyncComputed(() => meili.getVersion())
+const self: any = reactive({
+  records,
+  savedInstances: computed(() => Array.from(self.records.values())),
+})
+
+const removeInstance = async (id: string) => {
+  if (await confirm({ text: t('confirm.removeInstance') })) {
+    doRemoveInstance(id)
+  }
+}
+const { t } = useI18n()
+const { savedInstances } = toRefs(self)
 </script>
+
+<i18n>
+en:
+  actions:
+    connectToInstance: Connect to another instance
+    switchInstance: Switch Instance
+  confirm:
+    removeInstance: Are you sure you want to log out from this instance?
+</i18n>
