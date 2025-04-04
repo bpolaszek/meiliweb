@@ -42,6 +42,9 @@ const self: any = reactive({
 })
 const { format } = toRefs(self)
 watch(value, ([min, max]) =>
-  props.appliedFilters.applyRangeFilter(props.facet, [min, max]),
+  props.appliedFilters.applyRangeFilter(props.facet, [
+    min as number,
+    max as number,
+  ]),
 )
 </script>

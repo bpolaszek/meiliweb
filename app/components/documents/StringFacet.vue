@@ -1,20 +1,38 @@
 <template>
   <div class="space-y-4 pb-4">
     <header
-      class="flex items-center justify-between gap-4 bg-gray-100 px-4 py-4 sm:px-6">
+      class="flex items-center justify-between gap-2 bg-gray-100 px-4 py-4 sm:px-6">
       <h3 class="text-md">{{ humanizeString(facet) }}</h3>
       <SearchInput
-        v-model="facetSearchParams.facetQuery"
+        v-model="self.facetQuery"
         :input-attrs="{ placeholder: t('placeholder') }"
         class="grow" />
       <button
         type="button"
-        class="text-sm font-semibold text-gray-400"
+        v-tippy="{
+          content: self.isLinked ? t('hints.unlink') : t('hints.link'),
+          hideOnClick: false,
+        }"
+        @click="self.isLinked = !self.isLinked">
+        <Icon
+          name="rivet-icons:link"
+          :class="self.isLinked ? 'text-green-600' : 'text-gray-700'" />
+      </button>
+      <button
+        type="button"
+        v-tippy="{
+          content: shouldIncludeAll
+            ? t('hints.allValues')
+            : t('hints.anyValue'),
+          hideOnClick: false,
+        }"
+        class="text-xs font-semibold text-gray-400"
         @click="shouldIncludeAll = !shouldIncludeAll">
         <template v-if="shouldIncludeAll">ALL</template>
         <template v-else>ANY</template>
       </button>
     </header>
+
     <div class="space-y-2 px-4 sm:px-6">
       <ul class="flex flex-wrap gap-2 empty:hidden">
         <li
@@ -68,6 +86,7 @@ import type { AppliedFilters } from '~/utils'
 import SearchInput from '~/components/layout/forms/SearchInput.vue'
 import Badge from '~/components/layout/Badge.vue'
 import humanizeString from 'humanize-string'
+import { promiseTimeout, reactiveComputed, watchDeep } from '@vueuse/core'
 
 type Props = {
   client: Meilisearch
@@ -80,12 +99,16 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 const self = reactive({
   facetHits: [] as FacetHit[],
-})
-const facetSearchParams = reactive({
-  facetName: props.facet,
   facetQuery: '',
+  isLinked: false,
 })
+
 const hydrateFacetValues = async () => {
+  const facetSearchParams = {
+    facetName: props.facet,
+    facetQuery: self.facetQuery,
+    filter: self.isLinked ? `${props.appliedFilters.without(props.facet)}` : '',
+  }
   self.facetHits = (
     await props.client
       .index(props.indexUid)
@@ -94,10 +117,17 @@ const hydrateFacetValues = async () => {
 }
 const { facetHits } = toRefs(self)
 const shouldIncludeAll = ref(false)
-watch(facetSearchParams, () => hydrateFacetValues())
+watch(toRef(self, 'facetQuery'), () => hydrateFacetValues())
+watch(toRef(self, 'isLinked'), () => hydrateFacetValues())
 watch(shouldIncludeAll, (value) =>
   props.appliedFilters.includeAll(props.facet, value),
 )
+onMounted(async () => {
+  await nextTick()
+  watchDeep(toRef(props, 'appliedFilters'), async () => {
+    hydrateFacetValues()
+  })
+})
 await hydrateFacetValues()
 </script>
 
@@ -108,4 +138,8 @@ en:
   hints:
     included: "`{value}` is included - click to exclude"
     excluded: "`{value}` is excluded - click to remove"
+    anyValue: "Filter should match any selected value"
+    allValues: "Filter should match all selected values"
+    link: "Link to other filters"
+    unlink: "Unlink from other filters"
 </i18n>
