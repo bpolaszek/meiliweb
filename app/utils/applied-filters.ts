@@ -30,6 +30,20 @@ export class AppliedFilters {
     private appliedBoundingBox: GeoBoundingBox | null = null,
   ) {}
 
+  without(facetName: FacetName): AppliedFilters {
+    const appliedStringFilters = structuredClone(
+      toRaw(this.appliedStringFilters),
+    )
+    const appliedRangeFilters = structuredClone(toRaw(this.appliedRangeFilters))
+    appliedStringFilters.delete(facetName)
+    appliedRangeFilters.delete(facetName)
+    return new AppliedFilters(
+      appliedStringFilters,
+      appliedRangeFilters,
+      this.appliedBoundingBox,
+    )
+  }
+
   applyStringFilter(facetName: FacetName, facetValue: FacetValue) {
     const appliedFacet = this.getAppliedFacet(facetName)
     const status = appliedFacet.get(facetValue) ?? null

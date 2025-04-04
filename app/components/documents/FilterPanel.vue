@@ -127,6 +127,7 @@ const self = reactive({
   facetsTypeMap: new Map(),
   facetStats: {} as FacetStats,
 })
+
 const hydrateFacetsTypes = async (facets: string[]) => {
   const search = await meili.index(props.indexUid).search(
     null,
@@ -139,13 +140,20 @@ const hydrateFacetsTypes = async (facets: string[]) => {
     search.facetDistribution as FacetDistribution,
   )
   const numericFacets = Object.keys(search.facetStats as FacetStats)
-  for (const facet of facets) {
-    if ('_geo' === facet) {
-      self.facetsTypeMap.set(facet, FACET_TYPE_GEO)
-    } else if (numericFacets.includes(facet)) {
-      self.facetsTypeMap.set(facet, FACET_TYPE_RANGE)
-    } else if (stringFacets.includes(facet)) {
-      self.facetsTypeMap.set(facet, FACET_TYPE_STRING)
+  const isProbablyRangeFacet = (attribute: string) =>
+    numericFacets.includes(attribute) &&
+    (!stringFacets.includes(attribute) ||
+      Object.keys(search.facetDistribution![attribute] ?? {}).every(
+        (key: any) => !isNaN(key),
+      ))
+
+  for (const attribute of facets) {
+    if ('_geo' === attribute) {
+      self.facetsTypeMap.set(attribute, FACET_TYPE_GEO)
+    } else if (isProbablyRangeFacet(attribute)) {
+      self.facetsTypeMap.set(attribute, FACET_TYPE_RANGE)
+    } else if (stringFacets.includes(attribute)) {
+      self.facetsTypeMap.set(attribute, FACET_TYPE_STRING)
     }
   }
 
