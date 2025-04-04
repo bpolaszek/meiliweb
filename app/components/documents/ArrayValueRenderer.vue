@@ -28,7 +28,9 @@
         :level="level + 1" />
     </li>
     <li v-if="isTruncated">
-      <button @click="showMore = !showMore" class="font-medium text-gray-500">
+      <button
+        @click="showMore = !showMore"
+        class="text-xs text-primary-500 hover:text-primary-700 focus:outline-none">
         <template v-if="showMore">{{ t('labels.showLess') }}</template>
         <template v-else>
           {{ t('labels.showMore', { count: nbRemainingValues }) }}
