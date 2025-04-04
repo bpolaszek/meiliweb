@@ -16,12 +16,13 @@
   </a>
   <span v-else-if="'object' === typeof value">{{ prettify(value) }}</span>
   <Badge v-else-if="renderAsBadge">{{ value }}</Badge>
-  <span v-else class="line-clamp-1">{{ value }}</span>
+  <StringRenderer :value v-else>{{ value }}</StringRenderer>
 </template>
 
 <script setup lang="ts">
 import { stringify } from 'yaml'
 import Badge from '~/components/layout/Badge.vue'
+import StringRenderer from '~/components/documents/StringRenderer.vue'
 
 type Props = {
   indexUid: string
