@@ -11,25 +11,7 @@
       </div>
     </Alert>
 
-    <form class="space-y-4" @reset.prevent="resetPrimaryKey()" @submit.prevent="submitPrimaryKey()">
-      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
-        <Label required :for="id">{{ t('labels.primaryKey') }}</Label>
-        <input v-model="self.primaryKey" required autofocus autocomplete="off" type="text" class="form-input" />
-        <p class="text-xs italic text-gray-600">
-          {{ t('notices.primaryKey.text') }}
-        </p>
-      </UniqueId>
-
-      <footer class="flex flex-col items-center justify-end sm:flex-row">
-        <Buttons>
-          <Button type="reset" :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading" />
-          <Button
-            type="submit"
-            :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading"
-            :loading="isPrimaryKeyLoading" />
-        </Buttons>
-      </footer>
-    </form>
+    <PrimaryKeyEditor :index="index" :initial-primary-key="initialPrimaryKey!" @error="self.error = $event" />
 
     <form class="space-y-4" @reset.prevent="resetDistinctAttribute()" @submit.prevent="submitDistinctAttribute()">
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
@@ -155,6 +137,7 @@ import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Label from '~/components/layout/forms/Label.vue'
 import { navigateTo } from '#imports'
 import Select from '~/components/layout/forms/Select.vue'
+import PrimaryKeyEditor from '~/components/settings/PrimaryKeyEditor.vue'
 
 type Props = {
   indexUid: string
@@ -171,14 +154,6 @@ const [initialPrimaryKey, initialDistinctAttribute, initialProximityPrecision] =
   index.getProximityPrecision(),
 ])
 
-const {
-  value: primaryKey,
-  reset: resetPrimaryKey,
-  modified: isPrimaryKeyModified,
-} = resettableRef(initialPrimaryKey as string)
-const { loading: isPrimaryKeyLoading, handle: handlePrimaryKey } = useFormSubmit({
-  confirm: { text: t('confirmations.primaryKey.text') },
-})
 const {
   value: distinctAttribute,
   reset: resetDistinctAttribute,
@@ -212,7 +187,6 @@ const { handle: handleDeleteAllDocuments } = useFormSubmit({
 const processTask = useTask()
 const { createToast } = useToasts()
 const self = reactive({
-  primaryKey,
   distinctAttribute,
   proximityPrecision,
   error: null as Error | null,
@@ -221,37 +195,6 @@ const self = reactive({
   isDuplicating: false,
   isRenaming: false,
 })
-
-const submitPrimaryKey = async () => {
-  const toast = createToast({
-    ...TOAST_PLEASEWAIT(t),
-    immediate: false,
-    title: t('toasts.primaryKey.title'),
-    text: t('toasts.primaryKey.pendingText'),
-  })
-  await handlePrimaryKey(async () => {
-    toast.spawn()
-    await processTask(() => index.update({ primaryKey: self.primaryKey }), {
-      onSuccess: async () => {
-        toast.update({ ...TOAST_SUCCESS(t) })
-        resetPrimaryKey(self.primaryKey)
-      },
-      onCanceled: () =>
-        toast.update({
-          ...TOAST_FAILURE(t),
-          text: t('toasts.texts.canceledTask'),
-        }),
-      onFailure: (task: Task) => {
-        toast.update({
-          ...TOAST_FAILURE(t),
-          text: t('toasts.texts.failedTask'),
-        })
-        self.error = task.error as TaskError
-      },
-    })
-    resetPrimaryKey(self.primaryKey)
-  })
-}
 
 const submitDistinctAttribute = async () => {
   const toast = createToast({
@@ -420,8 +363,6 @@ en:
     renameIndex: Rename index
     dangerZone: Danger Zone
   confirmations:
-    primaryKey:
-      text: Do you want to update your settings?
     distinctAttribute:
       text: Do you want to update your settings?
     proximityPrecision:
@@ -439,8 +380,6 @@ en:
       text: "CAUTION: This action cannot be reversed!"
       acceptButtonText: Yes, delete forever
   toasts:
-    primaryKey:
-      title: Updating primary key...
     distinctAttribute:
       title: Updating distinct attribute...
     proximityPrecision:
@@ -450,7 +389,6 @@ en:
     deleteAllDocuments:
       title: Deleting documents...
   labels:
-    primaryKey: Primary Key
     distinctAttribute: Distinct Attribute
     proximityPrecision: Proximity Precision
     duplicateIndexUid: New index name
@@ -458,8 +396,6 @@ en:
     proximityPrecisionByWord: By Word
     proximityPrecisionByAttribute: By Attribute
   notices:
-    primaryKey:
-      text: You can freely update the primary key of an index as long as it contains no documents. To change the primary key of an index that already contains documents, you must first delete all documents in that index. You may then change the primary key and index your dataset again.
     distinctAttribute:
       text: Updating distinct attributes will re-index all documents in the index, which can take some time. We recommend updating your index settings first and then adding documents as this reduces RAM consumption.
     duplicateIndex:
