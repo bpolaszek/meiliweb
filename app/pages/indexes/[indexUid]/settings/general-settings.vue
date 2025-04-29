@@ -27,18 +27,7 @@
       {{ t('titles.renameIndex') }}
     </h3>
 
-    <form @submit.prevent="renameIndex()" class="space-y-4">
-      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
-        <Label required :for="id">{{ t('labels.renameIndexUid') }}</Label>
-        <input v-model="self.renameIndexUid" required autofocus autocomplete="off" type="text" class="form-input" />
-      </UniqueId>
-
-      <div class="flex justify-end">
-        <Button type="submit" :loading="self.isRenaming" icon-on-right theme="primary" icon="heroicons:check">
-          {{ t('actions.renameIndex') }}
-        </Button>
-      </div>
-    </form>
+    <IndexNameEditor :index-uid="indexUid" @error="self.error = $event" />
 
     <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.duplicateIndex') }}
@@ -97,6 +86,7 @@ import { navigateTo } from '#imports'
 import PrimaryKeyEditor from '~/components/settings/PrimaryKeyEditor.vue'
 import DistinctAttributeEditor from '~/components/settings/DistinctAttributeEditor.vue'
 import ProximityPrecisionEditor from '~/components/settings/ProximityPrecisionEditor.vue'
+import IndexNameEditor from '~/components/settings/IndexNameEditor.vue'
 
 type Props = {
   indexUid: string
@@ -137,7 +127,7 @@ const self = reactive({
   isRenaming: false,
 })
 
-const { duplicateIndex: doDuplicateIndex, renameIndex: doRenameIndex } = useIndexOperations()
+const { duplicateIndex: doDuplicateIndex } = useIndexOperations()
 const duplicateIndex = async () => {
   if (!(await confirm({ text: t('confirmations.duplicateIndex.text') }))) {
     return
@@ -151,21 +141,6 @@ const duplicateIndex = async () => {
     await navigateTo(`/indexes/${newIndexUid}/documents`)
   } finally {
     self.isDuplicating = false
-  }
-}
-const renameIndex = async () => {
-  if (!(await confirm({ text: t('confirmations.renameIndex.text') }))) {
-    return
-  }
-  try {
-    const newIndexUid = await doRenameIndex(props.indexUid, {
-      onStart: () => (self.isRenaming = true),
-      newIndexUid: self.renameIndexUid,
-    })
-    await promiseTimeout(1000)
-    await navigateTo(`/indexes/${newIndexUid}/documents`)
-  } finally {
-    self.isRenaming = false
   }
 }
 
