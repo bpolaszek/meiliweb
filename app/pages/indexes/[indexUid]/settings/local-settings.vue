@@ -1,7 +1,6 @@
 <template>
   <section class="space-y-4">
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('title') }}
     </h3>
 

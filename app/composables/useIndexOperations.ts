@@ -1,13 +1,7 @@
 import IndexNamePromptModal from '~/components/settings/IndexNamePromptModal.vue'
 import { useMeiliClient } from '~/composables/useMeiliClient'
 import { useTask } from '~/composables/useTask'
-import {
-  TOAST_FAILURE,
-  TOAST_PLEASEWAIT,
-  TOAST_SUCCESS,
-  usePromisifiedDialogs,
-  useToasts,
-} from '~/stores'
+import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS, usePromisifiedDialogs, useToasts } from '~/stores'
 
 type RenameIndexOptions = {
   newIndexUid?: string
@@ -27,10 +21,7 @@ export const useIndexOperations = () => {
   const { createToast } = useToasts()
   const processTask = useTask()
 
-  const duplicateIndex = async (
-    indexUid: string,
-    options: Partial<DuplicateIndexOptions> = {},
-  ): Promise<string> => {
+  const duplicateIndex = async (indexUid: string, options: Partial<DuplicateIndexOptions> = {}): Promise<string> => {
     let { onStart, newIndexUid } = {
       ...DEFAULT_DUPLICATE_INDEX_OPTIONS,
       ...options,
@@ -72,9 +63,7 @@ export const useIndexOperations = () => {
     }
 
     const newIndex = await meili.getIndex(newIndexUid)
-    task = await processTask(async () =>
-      newIndex.updateSettings(await index.getSettings()),
-    )
+    task = await processTask(async () => newIndex.updateSettings(await index.getSettings()))
     if (task.status === 'failed') {
       throw new Error('Failed to duplicate index')
     }
@@ -98,10 +87,7 @@ export const useIndexOperations = () => {
     return newIndexUid
   }
 
-  const renameIndex = async (
-    indexUid: string,
-    options: Partial<RenameIndexOptions> = {},
-  ): Promise<string> => {
+  const renameIndex = async (indexUid: string, options: Partial<RenameIndexOptions> = {}): Promise<string> => {
     let { onStart, newIndexUid } = {
       ...DEFAULT_DUPLICATE_INDEX_OPTIONS,
       ...options,
@@ -142,10 +128,7 @@ export const useIndexOperations = () => {
       throw new Error('Failed to rename index')
     }
 
-    task = await processTask(
-      () => meili.swapIndexes([{ indexes: [indexUid, newIndexUid] }]),
-      taskOptions,
-    )
+    task = await processTask(() => meili.swapIndexes([{ indexes: [indexUid, newIndexUid] }]), taskOptions)
     if (task.status === 'failed') {
       throw new Error('Failed to rename index')
     }

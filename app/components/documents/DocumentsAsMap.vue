@@ -1,7 +1,6 @@
 <template>
   <main class="grid h-full grid-cols-12 overflow-hidden">
-    <div
-      class="col-span-3 h-full space-y-6 overflow-y-auto overflow-x-hidden px-4 pb-4">
+    <div class="col-span-3 h-full space-y-6 overflow-y-auto overflow-x-hidden px-4 pb-4">
       <DocumentCard
         v-for="document of documents"
         :indexUid="indexUid"
@@ -35,13 +34,7 @@
 
 <script setup lang="ts">
 import DocumentCard from './DocumentCard.vue'
-import {
-  MapContainer,
-  Marker,
-  OpenStreetMap,
-  Popup,
-  ScaleControl,
-} from 'vue3-leaflet'
+import { MapContainer, Marker, OpenStreetMap, Popup, ScaleControl } from 'vue3-leaflet'
 import { useFields } from '~/composables'
 import { AppliedFilters } from '~/utils'
 
@@ -71,9 +64,7 @@ const props = defineProps<Props>()
 const { nameField } = useFields(props.primaryKey, props.fields)
 const center = ref([0, 0])
 const scrollToDocument = (doc: any) => {
-  document
-    .getElementById(`document-${doc[props.primaryKey]}`)
-    ?.scrollIntoView({ behavior: 'smooth' })
+  document.getElementById(`document-${doc[props.primaryKey]}`)?.scrollIntoView({ behavior: 'smooth' })
 }
 const onZoomEnd = ({ bounds }: ZoomEndEvent) => {
   if (!props.canFilterGeoDocuments) {

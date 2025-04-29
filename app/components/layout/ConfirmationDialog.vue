@@ -9,8 +9,7 @@
         leave="ease-in duration-200"
         leave-from="opacity-100"
         leave-to="opacity-0">
-        <div
-          class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
       </TransitionChild>
 
       <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -40,14 +39,10 @@
               <div class="sm:flex sm:items-start">
                 <div
                   class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                  <ExclamationTriangleIcon
-                    class="h-6 w-6 text-red-600"
-                    aria-hidden="true" />
+                  <ExclamationTriangleIcon class="h-6 w-6 text-red-600" aria-hidden="true" />
                 </div>
                 <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                  <DialogTitle
-                    as="h3"
-                    class="text-base font-semibold leading-6 text-gray-900">
+                  <DialogTitle as="h3" class="text-base font-semibold leading-6 text-gray-900">
                     {{ title ?? t('title') }}
                   </DialogTitle>
                   <p class="mt-2 block text-sm text-gray-500 empty:hidden">
@@ -55,8 +50,7 @@
                   </p>
                 </div>
               </div>
-              <div
-                class="mt-5 flex-row-reverse justify-end gap-2 sm:mt-4 sm:flex sm:flex-row">
+              <div class="mt-5 flex-row-reverse justify-end gap-2 sm:mt-4 sm:flex sm:flex-row">
                 <Button type="reset">
                   {{ denyButtonText ?? t('buttons.deny') }}
                 </Button>
@@ -74,13 +68,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue'
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { type ConfirmationDialog, useConfirmationDialog } from '~/stores'
 import { promiseTimeout } from '@vueuse/core'

@@ -1,14 +1,8 @@
 <template>
-  <div
-    class="space-y-1 rounded-md border px-4 py-2 text-sm shadow-md"
-    :class="themeClasses">
+  <div class="space-y-1 rounded-md border px-4 py-2 text-sm shadow-md" :class="themeClasses">
     <header class="flex items-center justify-between">
       <span class="text-lg font-semibold">{{ title ?? t('errorTitle') }}</span>
-      <button
-        v-if="dismissable"
-        type="button"
-        class="h-full shrink-0 grow-0"
-        @click="emit('close')">
+      <button v-if="dismissable" type="button" class="h-full shrink-0 grow-0" @click="emit('close')">
         <Icon name="mingcute:close-fill" />
       </button>
     </header>

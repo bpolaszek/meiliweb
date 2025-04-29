@@ -5,8 +5,7 @@
 
       <div class="fixed inset-0 overflow-hidden">
         <div class="absolute inset-0 overflow-hidden">
-          <div
-            class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+          <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
             <TransitionChild
               as="template"
               enter="transform transition ease-in-out duration-500 sm:duration-700"
@@ -16,15 +15,10 @@
               leave-from="translate-x-0"
               leave-to="translate-x-full">
               <DialogPanel class="pointer-events-auto w-screen max-w-lg">
-                <div
-                  class="flex h-full flex-col overflow-y-auto bg-white/95 py-6 shadow-xl">
+                <div class="flex h-full flex-col overflow-y-auto bg-white/95 py-6 shadow-xl">
                   <div class="px-4 sm:px-6">
-                    <div
-                      class="flex items-start"
-                      :class="title ? 'justify-between' : 'justify-end'">
-                      <DialogTitle
-                        v-if="title"
-                        class="text-2xl font-semibold leading-6 text-gray-900">
+                    <div class="flex items-start" :class="title ? 'justify-between' : 'justify-end'">
+                      <DialogTitle v-if="title" class="text-2xl font-semibold leading-6 text-gray-900">
                         {{ title }}
                       </DialogTitle>
                       <div class="ml-3 flex h-7 items-center">
@@ -39,9 +33,7 @@
                       </div>
                     </div>
                   </div>
-                  <div
-                    class="relative mt-6 flex-1"
-                    :class="noPadding || 'px-4 sm:px-6'">
+                  <div class="relative mt-6 flex-1" :class="noPadding || 'px-4 sm:px-6'">
                     <slot />
                   </div>
                 </div>
@@ -55,13 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue'
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 
 type Props = {

@@ -1,22 +1,15 @@
 <template>
   <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('title') }}
-      <DocumentationLink
-        href="https://www.meilisearch.com/docs/learn/security/managing_api_keys" />
+      <DocumentationLink href="https://www.meilisearch.com/docs/learn/security/managing_api_keys" />
     </h3>
 
     <Alert v-if="error" dismissable theme="danger" @close="error = null">
       {{ error }}
     </Alert>
 
-    <Alert
-      v-if="createdKey"
-      dismissable
-      theme="success"
-      :title="t('alerts.success.title')"
-      @close="createdKey = null">
+    <Alert v-if="createdKey" dismissable theme="success" :title="t('alerts.success.title')" @close="createdKey = null">
       <dl class="flex items-center gap-2">
         <dt class="font-medium">{{ t('alerts.success.uid') }}:</dt>
         <dd>
@@ -41,11 +34,7 @@
             <span class="text-sm font-light italic text-gray-600">
               {{ t('labels.allIndexes') }}
             </span>
-            <input
-              type="checkbox"
-              v-model="key.indexes"
-              value="*"
-              class="form-checkbox" />
+            <input type="checkbox" v-model="key.indexes" value="*" class="form-checkbox" />
           </label>
         </div>
       </header>
@@ -65,17 +54,11 @@
           class="flex items-center gap-1"
           v-slot="{ id }">
           <Label :for="id" class="cursor-pointer">
-            <Badge
-              :theme="key.actions.includes(action) ? 'success' : 'neutral'">
+            <Badge :theme="key.actions.includes(action) ? 'success' : 'neutral'">
               {{ t(`keyActions.${action}.label`) }}
             </Badge>
           </Label>
-          <input
-            :id
-            :value="action"
-            v-model="key.actions"
-            type="checkbox"
-            class="hidden" />
+          <input :id :value="action" v-model="key.actions" type="checkbox" class="hidden" />
         </UniqueId>
       </DefineActionCheckbox>
 
@@ -176,19 +159,12 @@
             <span class="text-sm font-light italic text-gray-600">
               {{ t('labels.neverExpires') }}
             </span>
-            <input
-              :disabled="expires"
-              type="checkbox"
-              v-model="expires"
-              class="form-checkbox" />
+            <input :disabled="expires" type="checkbox" v-model="expires" class="form-checkbox" />
           </label>
         </div>
       </header>
       <div>
-        <input
-          type="datetime-local"
-          v-model="key.expiresAt"
-          class="form-input w-full" />
+        <input type="datetime-local" v-model="key.expiresAt" class="form-input w-full" />
       </div>
     </UniqueId>
 
@@ -244,35 +220,20 @@ const expires = computed({
     if ('boolean' === typeof value) {
       self.key.expiresAt = value
         ? null
-        : (new Date(
-            new Date().setMonth(new Date().getMonth() + 1),
-          ).toISOString() as unknown as Date)
+        : (new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString() as unknown as Date)
     } else {
       self.key.expiresAt = value as unknown as Date
     }
   },
 }) as ComputedRef<boolean>
 const DOCUMENT_ACTIONS = ['documents.get', 'documents.add', 'documents.delete']
-const INDEX_ACTIONS = [
-  'indexes.get',
-  'indexes.create',
-  'indexes.update',
-  'indexes.delete',
-  'indexes.swap',
-]
+const INDEX_ACTIONS = ['indexes.get', 'indexes.create', 'indexes.update', 'indexes.delete', 'indexes.swap']
 const TASK_ACTIONS = ['tasks.get', 'tasks.cancel', 'tasks.delete']
 const KEY_ACTIONS = ['keys.get', 'keys.create', 'keys.update', 'keys.delete']
 const SETTINGS_ACTIONS = ['settings.get', 'settings.update']
-const MISC_ACTIONS = [
-  'version',
-  'stats.get',
-  'dumps.create',
-  'snapshots.create',
-]
+const MISC_ACTIONS = ['version', 'stats.get', 'dumps.create', 'snapshots.create']
 const toggleActions = (actions: string[]) => {
-  const nbIncludedActions = self.key.actions.filter((action) =>
-    actions.includes(action),
-  ).length
+  const nbIncludedActions = self.key.actions.filter((action) => actions.includes(action)).length
   for (const action of actions) {
     const index = self.key.actions.findIndex((_action) => _action === action)
     index >= 0 && self.key.actions.splice(index, 1)
@@ -313,9 +274,7 @@ const submit = async () => {
 }
 
 const { createdKey } = toRefs(self)
-const indexes = (await meili.getRawIndexes({ limit: 1000 })).results.map(
-  ({ uid }) => uid,
-)
+const indexes = (await meili.getRawIndexes({ limit: 1000 })).results.map(({ uid }) => uid)
 </script>
 
 <i18n>

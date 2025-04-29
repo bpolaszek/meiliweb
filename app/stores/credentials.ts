@@ -14,22 +14,15 @@ type CredentialsStorage = Map<Identifier, CredentialsRecord>
 
 export const useCredentials = defineStore('credentials', () => {
   // Store all credentials
-  const records = useLocalStorage<CredentialsStorage>(
-    'credentials-all',
-    new Map(),
-  )
+  const records = useLocalStorage<CredentialsStorage>('credentials-all', new Map())
 
   // Store current active credentials
-  const credentials = useLocalStorage<CredentialsRecord | null>(
-    'credentials-current',
-    null,
-    {
-      serializer: {
-        read: (v: any) => (v ? JSON.parse(v) : null),
-        write: (v: any) => JSON.stringify(v),
-      },
+  const credentials = useLocalStorage<CredentialsRecord | null>('credentials-current', null, {
+    serializer: {
+      read: (v: any) => (v ? JSON.parse(v) : null),
+      write: (v: any) => JSON.stringify(v),
     },
-  )
+  })
 
   const self = reactive({
     records,

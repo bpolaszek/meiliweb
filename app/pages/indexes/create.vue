@@ -1,9 +1,6 @@
 <template>
   <Layout :title="t('title')" :subtitle="t('subtitle')">
-    <form
-      class="space-y-4"
-      @reset.prevent="reset(factory())"
-      @submit.prevent="submit()">
+    <form class="space-y-4" @reset.prevent="reset(factory())" @submit.prevent="submit()">
       <Alert v-if="error" dismissable theme="danger" @close="error = null">
         {{ error }}
       </Alert>
@@ -21,12 +18,7 @@
 
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
         <Label required :for="id">{{ t('labels.primaryKey') }}</Label>
-        <input
-          v-model="index.primaryKey"
-          required
-          type="text"
-          class="form-input"
-          placeholder="id, objectID, ..." />
+        <input v-model="index.primaryKey" required type="text" class="form-input" placeholder="id, objectID, ..." />
       </UniqueId>
 
       <footer class="flex flex-col items-center justify-end sm:flex-row">

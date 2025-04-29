@@ -39,10 +39,7 @@ const self = reactive({
     const pages = []
     const start = Math.max(
       1,
-      Math.min(
-        props.currentPage - Math.floor(VISIBLE_PAGES / 2),
-        props.lastPage - VISIBLE_PAGES + 1,
-      ),
+      Math.min(props.currentPage - Math.floor(VISIBLE_PAGES / 2), props.lastPage - VISIBLE_PAGES + 1),
     )
     const end = Math.min(props.lastPage, start + VISIBLE_PAGES - 1)
     for (let i = start; i <= end; i++) {

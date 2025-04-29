@@ -2,13 +2,10 @@
   <div
     ref="container"
     @keydown.esc="hideOptions"
-    @keyup="
-      ({ code }) => ['ArrowUp', 'ArrowDown'].includes(code) && showOptions()
-    ">
+    @keyup="({ code }) => ['ArrowUp', 'ArrowDown'].includes(code) && showOptions()">
     <Combobox as="div" v-model="selectedKeys" multiple>
       <slot name="label">
-        <ComboboxLabel
-          class="block text-sm font-medium leading-5 text-gray-700 empty:hidden">
+        <ComboboxLabel class="block text-sm font-medium leading-5 text-gray-700 empty:hidden">
           {{ label }}
         </ComboboxLabel>
       </slot>
@@ -18,20 +15,14 @@
           <div
             class="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-2 pr-10 text-left transition duration-150 ease-in-out focus-within:border-primary-500 focus-within:outline-none focus-within:ring-1 focus-within:ring-primary-500 sm:text-sm sm:leading-5">
             <span class="flex flex-wrap gap-2">
-              <span
-                v-if="selectedKeys.length === 0"
-                class="cursor-pointer p-0.5 empty:hidden"
-                @click="focus">
+              <span v-if="selectedKeys.length === 0" class="cursor-pointer p-0.5 empty:hidden" @click="focus">
                 <slot name="empty-state" />
               </span>
 
               <template v-if="!hideTags">
                 <span v-for="item in selectedItems" :key="uniqueKey(item)">
-                  <slot
-                    name="selected-items"
-                    v-bind="{ item, stringify, remove }">
-                    <span
-                      class="flex items-center gap-1 rounded-lg bg-primary-600 px-2 py-0.5 text-white">
+                  <slot name="selected-items" v-bind="{ item, stringify, remove }">
+                    <span class="flex items-center gap-1 rounded-lg bg-primary-600 px-2 py-0.5 text-white">
                       <span>{{ stringify(item) }}</span>
                       <button role="button" @click="remove(item)">
                         <XMarkIcon class="h-4 w-4" />
@@ -51,26 +42,18 @@
                 @change="query = $event.target.value" />
             </span>
 
-            <div
-              class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
+            <div class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
               <button v-if="clearable" type="button" @click="clear">
-                <XMarkIcon
-                  v-if="0 !== selectedKeys.length"
-                  class="h-5 w-5 text-gray-300"
-                  aria-hidden="true" />
+                <XMarkIcon v-if="0 !== selectedKeys.length" class="h-5 w-5 text-gray-300" aria-hidden="true" />
               </button>
               <button type="button" @click="toggle">
-                <ChevronUpDownIcon
-                  class="h-5 w-5 text-gray-400"
-                  aria-hidden="true" />
+                <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
               </button>
             </div>
           </div>
         </span>
 
-        <div
-          v-show="open"
-          class="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg">
+        <div v-show="open" class="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg">
           <ComboboxOptions
             :static="!autoHide"
             v-if="availableItems.length > 0"
@@ -85,9 +68,7 @@
               <slot v-bind="{ item, active, selected, stringify }">
                 <li
                   class="relative cursor-default select-none py-2 pl-3 pr-9 focus:outline-none"
-                  :class="
-                    active ? 'bg-primary-600 text-white' : 'text-gray-900'
-                  ">
+                  :class="active ? 'bg-primary-600 text-white' : 'text-gray-900'">
                   <span
                     class="block"
                     :class="{
@@ -117,27 +98,9 @@
 </template>
 
 <script setup>
-import {
-  computed,
-  nextTick,
-  onMounted,
-  reactive,
-  ref,
-  toRefs,
-  watch,
-} from 'vue'
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxLabel,
-  ComboboxOption,
-  ComboboxOptions,
-} from '@headlessui/vue'
-import {
-  CheckIcon,
-  ChevronUpDownIcon,
-  XMarkIcon,
-} from '@heroicons/vue/24/outline'
+import { computed, nextTick, onMounted, reactive, ref, toRefs, watch } from 'vue'
+import { Combobox, ComboboxInput, ComboboxLabel, ComboboxOption, ComboboxOptions } from '@headlessui/vue'
+import { CheckIcon, ChevronUpDownIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { get, onClickOutside, set, syncRef, templateRef } from '@vueuse/core'
 
 // eslint-disable-next-line no-undef
@@ -211,21 +174,14 @@ const cachedItems = reactive([])
 const query = ref(get(inputQuery))
 const selectedKeys = ref([])
 const selectedItems = computed(() =>
-  cachedItems.filter((item) =>
-    get(selectedKeys).map(uniqueKey).includes(uniqueKey(item)),
-  ),
+  cachedItems.filter((item) => get(selectedKeys).map(uniqueKey).includes(uniqueKey(item))),
 )
 
 const filter =
   props.filter ??
-  (async (query, items) =>
-    get(items).filter((item) =>
-      stringify(item).toLowerCase().includes(query.toLowerCase()),
-    ))
+  (async (query, items) => get(items).filter((item) => stringify(item).toLowerCase().includes(query.toLowerCase())))
 const filteredItems = computed(() =>
-  get(items).filter(
-    (item) => !get(selectedKeys).map(uniqueKey).includes(uniqueKey(item)),
-  ),
+  get(items).filter((item) => !get(selectedKeys).map(uniqueKey).includes(uniqueKey(item))),
 )
 const availableItems = ref(get(items))
 
@@ -251,9 +207,7 @@ async function clear() {
 async function remove(itemToRemove) {
   set(
     selectedKeys,
-    get(selectedKeys).filter(
-      (item) => uniqueKey(item) !== uniqueKey(itemToRemove),
-    ),
+    get(selectedKeys).filter((item) => uniqueKey(item) !== uniqueKey(itemToRemove)),
   )
   await nextTick()
   focus()
@@ -266,12 +220,7 @@ watch(
   items,
   (items) => {
     items.forEach((item) => {
-      if (
-        -1 ===
-        cachedItems.findIndex(
-          (cachedItem) => uniqueKey(cachedItem) === uniqueKey(item),
-        )
-      ) {
+      if (-1 === cachedItems.findIndex((cachedItem) => uniqueKey(cachedItem) === uniqueKey(item))) {
         cachedItems.push(item)
       }
     })
@@ -283,10 +232,7 @@ watch(selectedKeys, (ids) => emit('update:modelValue', ids))
 watch(selectedKeys, () => set(query, ''))
 watch(query, (query) => emit('update:query', query))
 watch(query, async (query) => {
-  const results = await filter(
-    get(query),
-    get(excludeSelected) ? get(filteredItems) : get(items),
-  )
+  const results = await filter(get(query), get(excludeSelected) ? get(filteredItems) : get(items))
   set(availableItems, get(results) ?? [])
 })
 watch(inputQuery, (value) => set(query, null != value ? `${value}` : ''))

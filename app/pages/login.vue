@@ -3,10 +3,7 @@
     <div
       class="-mt-20 w-full max-w-lg space-y-6 rounded-lg border-gray-200 bg-white bg-opacity-90 px-6 py-4 md:w-1/2 md:border md:px-0 md:shadow-lg">
       <NuxtLink to="/indexes" class="flex items-center justify-center gap-2">
-        <img
-          class="-ml-10 size-16 shrink-0 grow-0"
-          src="~/assets/images/logo.svg"
-          alt="Meiliweb" />
+        <img class="-ml-10 size-16 shrink-0 grow-0" src="~/assets/images/logo.svg" alt="Meiliweb" />
         <span class="text-3xl font-semibold">Meiliweb</span>
       </NuxtLink>
 
@@ -33,10 +30,7 @@
 
         <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
           <label :for="id">{{ t('labels.accessToken') }}</label>
-          <input
-            v-model="credentials.accessKey"
-            type="password"
-            class="form-input" />
+          <input v-model="credentials.accessKey" type="password" class="form-input" />
         </UniqueId>
 
         <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
@@ -49,11 +43,7 @@
             @keydown.tab="autofillName()" />
         </UniqueId>
 
-        <Button
-          type="submit"
-          icon="solar:login-linear"
-          :loading="loading"
-          class="w-full">
+        <Button type="submit" icon="solar:login-linear" :loading="loading" class="w-full">
           <span>{{ t('labels.submit') }}</span>
         </Button>
       </form>
@@ -78,8 +68,7 @@ const self: any = reactive({
   credentials,
   error,
   suggestedName: computed(() =>
-    '' === self.credentials.baseUri ||
-    self.credentials.baseUri?.indexOf('localhost') > -1
+    '' === self.credentials.baseUri || self.credentials.baseUri?.indexOf('localhost') > -1
       ? t('placeholders.localInstance')
       : t('placeholders.productionInstance'),
   ),

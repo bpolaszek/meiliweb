@@ -1,7 +1,6 @@
 <template>
   <form class="space-y-4" @submit.prevent="submit()">
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('title') }}
     </h3>
 
@@ -11,11 +10,7 @@
 
     <UniqueId as="section" v-slot="{ id }" class="space-y-1 *:block">
       <Label required :for="id">{{ t('labels.pickAFile') }}</Label>
-      <input
-        type="file"
-        required
-        class="form-input w-full"
-        @change="file = $event.target?.files?.[0]" />
+      <input type="file" required class="form-input w-full" @change="file = $event.target?.files?.[0]" />
     </UniqueId>
 
     <UniqueId as="section" v-slot="{ id }" class="space-y-1 *:block">
@@ -37,11 +32,7 @@
 
     <footer class="flex flex-col items-center justify-end sm:flex-row">
       <Buttons>
-        <Button
-          type="submit"
-          :disabled="!file"
-          :loading
-          icon="tabler:database-import">
+        <Button type="submit" :disabled="!file" :loading icon="tabler:database-import">
           {{ t('actions.import') }}
         </Button>
       </Buttons>
@@ -100,18 +91,8 @@ const submit = async () => {
     let enqueuedTask: EnqueuedTask
     try {
       enqueuedTask = await match(self.updateMode, [
-        [
-          'replace',
-          client
-            .index(props.indexUid)
-            .addDocumentsFromString(documents, self.contentType),
-        ],
-        [
-          'update',
-          client
-            .index(props.indexUid)
-            .updateDocumentsFromString(documents, self.contentType),
-        ],
+        ['replace', client.index(props.indexUid).addDocumentsFromString(documents, self.contentType)],
+        ['update', client.index(props.indexUid).updateDocumentsFromString(documents, self.contentType)],
       ])
     } catch (e) {
       toast.destroy()

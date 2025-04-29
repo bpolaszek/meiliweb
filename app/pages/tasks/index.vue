@@ -15,12 +15,7 @@
           {{ stringifyTaskType(tasks.results[index].type) }}
         </td>
         <td>
-          <Badge
-            :theme="
-              TaskStatus.TASK_SUCCEEDED === tasks.results[index].status
-                ? 'success'
-                : 'danger'
-            ">
+          <Badge :theme="TaskStatus.TASK_SUCCEEDED === tasks.results[index].status ? 'success' : 'danger'">
             {{ tasks.results[index].status }}
           </Badge>
         </td>
@@ -36,10 +31,8 @@
           <span v-if="'documentAdditionOrUpdate' === tasks.results[index].type">
             {{
               t('labels.documentIndexRatio', {
-                indexedDocuments:
-                  tasks.results[index].details.indexedDocuments ?? 0,
-                receivedDocuments:
-                  tasks.results[index].details.receivedDocuments,
+                indexedDocuments: tasks.results[index].details.indexedDocuments ?? 0,
+                receivedDocuments: tasks.results[index].details.receivedDocuments,
               })
             }}
           </span>
@@ -49,10 +42,7 @@
           {{
             formatDate(
               match(tasks.results[index].status, [
-                [
-                  [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED],
-                  [tasks.results[index].enqueuedAt],
-                ],
+                [[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED], [tasks.results[index].enqueuedAt]],
                 [TaskStatus.TASK_PROCESSING, [tasks.results[index].startedAt]],
                 [match.default, [tasks.results[index].finishedAt]],
               ]),
@@ -88,9 +78,7 @@ const self: any = reactive({
   tasks: await tryOrThrow(() => meili.getTasks()),
   pendingTasks: computed(() =>
     self.tasks.results.filter((task: Task) =>
-      [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_PROCESSING].includes(
-        task.status,
-      ),
+      [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_PROCESSING].includes(task.status),
     ),
   ),
 })

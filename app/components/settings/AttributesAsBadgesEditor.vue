@@ -28,11 +28,7 @@ type Props = {
 const props = defineProps<Props>()
 const { t } = useI18n()
 const localSettings = reactive(useIndexLocalSettings(props.indexUid))
-const {
-  value: attributesAsBadges,
-  reset,
-  modified,
-} = resettableRef(localSettings.attributesAsBadges)
+const { value: attributesAsBadges, reset, modified } = resettableRef(localSettings.attributesAsBadges)
 const editableAttributes = computed({
   get: () => self.attributesAsBadges.join('\n'),
   set: (value) =>

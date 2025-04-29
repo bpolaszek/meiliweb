@@ -1,12 +1,8 @@
 <template>
   <div class="space-y-4 pb-4">
-    <header
-      class="flex items-center justify-between gap-2 bg-gray-100 px-4 py-4 sm:px-6">
+    <header class="flex items-center justify-between gap-2 bg-gray-100 px-4 py-4 sm:px-6">
       <h3 class="text-md">{{ humanizeString(facet) }}</h3>
-      <SearchInput
-        v-model="self.facetQuery"
-        :input-attrs="{ placeholder: t('placeholder') }"
-        class="grow" />
+      <SearchInput v-model="self.facetQuery" :input-attrs="{ placeholder: t('placeholder') }" class="grow" />
       <button
         type="button"
         v-tippy="{
@@ -14,16 +10,12 @@
           hideOnClick: false,
         }"
         @click="self.isLinked = !self.isLinked">
-        <Icon
-          name="rivet-icons:link"
-          :class="self.isLinked ? 'text-green-600' : 'text-gray-700'" />
+        <Icon name="rivet-icons:link" :class="self.isLinked ? 'text-green-600' : 'text-gray-700'" />
       </button>
       <button
         type="button"
         v-tippy="{
-          content: shouldIncludeAll
-            ? t('hints.allValues')
-            : t('hints.anyValue'),
+          content: shouldIncludeAll ? t('hints.allValues') : t('hints.anyValue'),
           hideOnClick: false,
         }"
         class="text-xs font-semibold text-gray-400"
@@ -35,17 +27,12 @@
 
     <div class="space-y-2 px-4 sm:px-6">
       <ul class="flex flex-wrap gap-2 empty:hidden">
-        <li
-          v-for="[value, included] of appliedFilters
-            .getAppliedFacet(facet)
-            .entries()">
+        <li v-for="[value, included] of appliedFilters.getAppliedFacet(facet).entries()">
           <Badge
             as="button"
             type="button"
             v-tippy="{
-              content: included
-                ? t('hints.included', { value })
-                : t('hints.excluded', { value }),
+              content: included ? t('hints.included', { value }) : t('hints.excluded', { value }),
               hideOnClick: false,
             }"
             :theme="included ? 'success' : 'danger'"
@@ -109,19 +96,13 @@ const hydrateFacetValues = async () => {
     facetQuery: self.facetQuery,
     filter: self.isLinked ? `${props.appliedFilters.without(props.facet)}` : '',
   }
-  self.facetHits = (
-    await props.client
-      .index(props.indexUid)
-      .searchForFacetValues(facetSearchParams)
-  ).facetHits
+  self.facetHits = (await props.client.index(props.indexUid).searchForFacetValues(facetSearchParams)).facetHits
 }
 const { facetHits } = toRefs(self)
 const shouldIncludeAll = ref(false)
 watch(toRef(self, 'facetQuery'), () => hydrateFacetValues())
 watch(toRef(self, 'isLinked'), () => hydrateFacetValues())
-watch(shouldIncludeAll, (value) =>
-  props.appliedFilters.includeAll(props.facet, value),
-)
+watch(shouldIncludeAll, (value) => props.appliedFilters.includeAll(props.facet, value))
 onMounted(async () => {
   await nextTick()
   watchDeep(toRef(props, 'appliedFilters'), async () => {

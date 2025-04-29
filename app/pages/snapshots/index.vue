@@ -9,12 +9,7 @@
     </template>
 
     <template #actions>
-      <Button
-        type="button"
-        theme="primary"
-        icon="clarity:backup-solid"
-        :disabled="loading"
-        @click="createSnapshot()">
+      <Button type="button" theme="primary" icon="clarity:backup-solid" :disabled="loading" @click="createSnapshot()">
         {{ t('actions.create') }}
       </Button>
     </template>
@@ -22,22 +17,13 @@
     <Alert v-if="error" dismissable theme="danger" @close="error = null">
       {{ error }}
     </Alert>
-    <Table
-      :items="tasks.results"
-      :columns="[
-        t('columns.date'),
-        t('columns.status'),
-        t('columns.duration'),
-      ]">
+    <Table :items="tasks.results" :columns="[t('columns.date'), t('columns.status'), t('columns.duration')]">
       <template #default="{ index }">
         <td class="whitespace-nowrap">
           {{
             formatDate(
               match(tasks.results[index].status, [
-                [
-                  [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED],
-                  [tasks.results[index].enqueuedAt],
-                ],
+                [[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED], [tasks.results[index].enqueuedAt]],
                 [TaskStatus.TASK_PROCESSING, [tasks.results[index].startedAt]],
                 [match.default, [tasks.results[index].finishedAt]],
               ]),
@@ -45,12 +31,7 @@
           }}
         </td>
         <td>
-          <Badge
-            :theme="
-              TaskStatus.TASK_SUCCEEDED === tasks.results[index].status
-                ? 'success'
-                : 'danger'
-            ">
+          <Badge :theme="TaskStatus.TASK_SUCCEEDED === tasks.results[index].status ? 'success' : 'danger'">
             {{ tasks.results[index].status }}
           </Badge>
         </td>
@@ -65,12 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  tryOrThrow,
-  useDateFormatter,
-  useMeiliClient,
-  useToasts,
-} from '#imports'
+import { tryOrThrow, useDateFormatter, useMeiliClient, useToasts } from '#imports'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from '~/stores/toasts'
 import { useFormSubmit, useTask } from '~/composables'
 import Alert from '~/components/layout/Alert.vue'
@@ -83,8 +59,7 @@ import { TaskStatus } from 'meilisearch'
 
 const { t } = useI18n()
 const meili = useMeiliClient()
-const fetchTasks = () =>
-  tryOrThrow(() => meili.getTasks({ types: ['snapshotCreation'] }))
+const fetchTasks = () => tryOrThrow(() => meili.getTasks({ types: ['snapshotCreation'] }))
 const { formatDate, formatDuration } = useDateFormatter()
 const { createToast } = useToasts()
 const processTask = useTask()

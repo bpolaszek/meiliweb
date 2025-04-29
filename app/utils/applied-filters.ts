@@ -31,17 +31,11 @@ export class AppliedFilters {
   ) {}
 
   without(facetName: FacetName): AppliedFilters {
-    const appliedStringFilters = structuredClone(
-      toRaw(this.appliedStringFilters),
-    )
+    const appliedStringFilters = structuredClone(toRaw(this.appliedStringFilters))
     const appliedRangeFilters = structuredClone(toRaw(this.appliedRangeFilters))
     appliedStringFilters.delete(facetName)
     appliedRangeFilters.delete(facetName)
-    return new AppliedFilters(
-      appliedStringFilters,
-      appliedRangeFilters,
-      this.appliedBoundingBox,
-    )
+    return new AppliedFilters(appliedStringFilters, appliedRangeFilters, this.appliedBoundingBox)
   }
 
   applyStringFilter(facetName: FacetName, facetValue: FacetValue) {
@@ -62,10 +56,7 @@ export class AppliedFilters {
           appliedFacet.delete(facetValue)
         },
       ],
-      [
-        match.default,
-        () => appliedFacet.set(facetValue, StringFilterStatus.INCLUDE),
-      ],
+      [match.default, () => appliedFacet.set(facetValue, StringFilterStatus.INCLUDE)],
     ])
     update()
   }
@@ -98,10 +89,7 @@ export class AppliedFilters {
     if (!this.appliedStringFilters.has(facetName)) {
       this.appliedStringFilters.set(facetName, reactive(new Map()))
     }
-    return this.appliedStringFilters.get(facetName) as Map<
-      FacetValue,
-      StringFilterStatus
-    >
+    return this.appliedStringFilters.get(facetName) as Map<FacetValue, StringFilterStatus>
   }
 
   isValueApplied(facetName: FacetName, facetValue: FacetValue) {
@@ -109,50 +97,37 @@ export class AppliedFilters {
   }
 
   toString() {
-    const appliedStringFilters = Array.from(
-      this.appliedStringFilters,
-      ([facetName, facetValues]) => {
-        const includedValues = []
-        const excludedValues = []
-        for (const [facetValue, status] of facetValues.entries()) {
-          if (StringFilterStatus.INCLUDE === status) {
-            includedValues.push(facetValue)
-          } else {
-            excludedValues.push(facetValue)
-          }
+    const appliedStringFilters = Array.from(this.appliedStringFilters, ([facetName, facetValues]) => {
+      const includedValues = []
+      const excludedValues = []
+      for (const [facetValue, status] of facetValues.entries()) {
+        if (StringFilterStatus.INCLUDE === status) {
+          includedValues.push(facetValue)
+        } else {
+          excludedValues.push(facetValue)
         }
-        const expressions = []
-        includedValues.length > 0 &&
-          expressions.push(
-            this.shouldIncludeAll.includes(facetName)
-              ? field(facetName).hasAll(includedValues)
-              : field(facetName).isIn(includedValues),
-          )
-        excludedValues.length > 0 &&
-          expressions.push(field(facetName).isNotIn(excludedValues))
+      }
+      const expressions = []
+      includedValues.length > 0 &&
+        expressions.push(
+          this.shouldIncludeAll.includes(facetName)
+            ? field(facetName).hasAll(includedValues)
+            : field(facetName).isIn(includedValues),
+        )
+      excludedValues.length > 0 && expressions.push(field(facetName).isNotIn(excludedValues))
 
-        return filterBuilder(...expressions)
-      },
-    )
+      return filterBuilder(...expressions)
+    })
 
-    const appliedRangeFilters = Array.from(
-      this.appliedRangeFilters,
-      ([facetName, [min, max]]) => {
-        return field(facetName).isBetween(min, max)
-      },
-    )
+    const appliedRangeFilters = Array.from(this.appliedRangeFilters, ([facetName, [min, max]]) => {
+      return field(facetName).isBetween(min, max)
+    })
 
-    let expression = filterBuilder(
-      ...appliedStringFilters,
-      ...appliedRangeFilters,
-    )
+    let expression = filterBuilder(...appliedStringFilters, ...appliedRangeFilters)
 
     if (this.appliedBoundingBox) {
       expression = expression.and(
-        withinGeoBoundingBox(
-          this.appliedBoundingBox.topLeftCorner,
-          this.appliedBoundingBox.bottomRightCorner,
-        ),
+        withinGeoBoundingBox(this.appliedBoundingBox.topLeftCorner, this.appliedBoundingBox.bottomRightCorner),
       )
     }
 

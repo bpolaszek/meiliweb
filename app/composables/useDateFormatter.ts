@@ -37,8 +37,7 @@ function parseISOString(durationString: string): Duration {
   const minutes = minutesStr ? parseFloat(minutesStr) : 0
   const seconds = secondsStr ? parseFloat(secondsStr) : 0
 
-  const totalSeconds =
-    days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds
+  const totalSeconds = days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds
   const totalMinutes = Math.floor(totalSeconds / 60)
   const totalHours = Math.floor(totalMinutes / 60)
 
@@ -54,10 +53,7 @@ function parseISOString(durationString: string): Duration {
 export const useDateFormatter = () => {
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-  const formatDate = (
-    date: Date | string | null,
-    options: FormatDateOptions = {},
-  ) => {
+  const formatDate = (date: Date | string | null, options: FormatDateOptions = {}) => {
     if (null == date) {
       return null
     }

@@ -9,12 +9,7 @@
     </template>
 
     <template #actions>
-      <Button
-        type="button"
-        theme="primary"
-        icon="clarity:backup-solid"
-        :disabled="loading"
-        @click="createDump()">
+      <Button type="button" theme="primary" icon="clarity:backup-solid" :disabled="loading" @click="createDump()">
         {{ t('actions.create') }}
       </Button>
     </template>
@@ -25,19 +20,11 @@
 
     <Table
       :items="tasks.results"
-      :columns="[
-        t('columns.dumpUid'),
-        t('columns.status'),
-        t('columns.date'),
-        t('columns.duration'),
-      ]">
+      :columns="[t('columns.dumpUid'), t('columns.status'), t('columns.date'), t('columns.duration')]">
       <template #default="{ index }">
         <td>{{ tasks.results[index].details.dumpUid }}</td>
         <td>
-          <Badge
-            :theme="
-              'succeeded' === tasks.results[index].status ? 'success' : 'danger'
-            ">
+          <Badge :theme="'succeeded' === tasks.results[index].status ? 'success' : 'danger'">
             {{ tasks.results[index].status }}
           </Badge>
         </td>
@@ -45,10 +32,7 @@
           {{
             formatDate(
               match(tasks.results[index].status, [
-                [
-                  [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED],
-                  [tasks.results[index].enqueuedAt],
-                ],
+                [[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED], [tasks.results[index].enqueuedAt]],
                 [TaskStatus.TASK_PROCESSING, [tasks.results[index].startedAt]],
                 [match.default, [tasks.results[index].finishedAt]],
               ]),
@@ -66,12 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  tryOrThrow,
-  useDateFormatter,
-  useMeiliClient,
-  useToasts,
-} from '#imports'
+import { tryOrThrow, useDateFormatter, useMeiliClient, useToasts } from '#imports'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from '~/stores/toasts'
 import { useFormSubmit, useTask } from '~/composables'
 import Alert from '~/components/layout/Alert.vue'
@@ -84,8 +63,7 @@ import match from 'match-operator'
 
 const { t } = useI18n()
 const meili = useMeiliClient()
-const fetchTasks = () =>
-  tryOrThrow(() => meili.getTasks({ types: ['dumpCreation'] }))
+const fetchTasks = () => tryOrThrow(() => meili.getTasks({ types: ['dumpCreation'] }))
 const { formatDate, formatDuration } = useDateFormatter()
 const { createToast } = useToasts()
 const processTask = useTask()
