@@ -6,15 +6,12 @@
         <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#distinct-attribute" />
       </Label>
       <input v-model="self.distinctAttribute" autofocus autocomplete="off" type="text" class="form-input" />
-      <p class="text-xs italic text-gray-600">
-        {{ t('notices.distinctAttribute.text') }}
-      </p>
     </UniqueId>
 
     <footer class="flex flex-col items-center justify-end sm:flex-row">
       <Buttons>
-        <Button type="reset" :disabled="!modified || loading" />
-        <Button type="submit" :disabled="!modified || loading" :loading="loading" />
+        <Button size="small" type="reset" :disabled="!modified || loading" />
+        <Button size="small" type="submit" :disabled="!modified || loading" :loading="loading" />
       </Buttons>
     </footer>
   </form>
@@ -90,7 +87,4 @@ en:
       title: Updating distinct attribute...
   labels:
     distinctAttribute: Distinct Attribute
-  notices:
-    distinctAttribute:
-      text: Updating distinct attributes will re-index all documents in the index, which can take some time. We recommend updating your index settings first and then adding documents as this reduces RAM consumption.
 </i18n>

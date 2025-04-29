@@ -6,10 +6,10 @@
         <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#prefix-search" />
       </Label>
       <Select :id v-model="self.prefixSearch">
-        <option value="disabled" :selected="'disabled' === self.prefixSearch">
+        <option value="disabled">
           {{ t('labels.disabled') }}
         </option>
-        <option value="indexingTime" :selected="'indexingTime' === self.prefixSearch">
+        <option value="indexingTime">
           {{ t('labels.indexingTime') }}
         </option>
       </Select>
@@ -17,8 +17,8 @@
 
     <footer class="flex flex-col items-center justify-end sm:flex-row">
       <Buttons>
-        <Button type="reset" :disabled="!modified || loading" />
-        <Button type="submit" :disabled="!modified || loading" :loading="loading" />
+        <Button size="small" type="reset" :disabled="!modified || loading" />
+        <Button size="small" type="submit" :disabled="!modified || loading" :loading="loading" />
       </Buttons>
     </footer>
   </form>
