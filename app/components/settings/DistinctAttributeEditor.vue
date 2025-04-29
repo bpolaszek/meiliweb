@@ -1,5 +1,5 @@
 <template>
-  <form class="space-y-4" @reset.prevent="resetDistinctAttribute()" @submit.prevent="submitDistinctAttribute()">
+  <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
     <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
       <Label :for="id" class="flex items-center gap-2">
         <span>{{ t('labels.distinctAttribute') }}</span>
@@ -13,11 +13,8 @@
 
     <footer class="flex flex-col items-center justify-end sm:flex-row">
       <Buttons>
-        <Button type="reset" :disabled="!isDistinctAttributeModified || isDistinctAttributeLoading" />
-        <Button
-          type="submit"
-          :disabled="!isDistinctAttributeModified || isDistinctAttributeLoading"
-          :loading="isDistinctAttributeLoading" />
+        <Button type="reset" :disabled="!modified || loading" />
+        <Button type="submit" :disabled="!modified || loading" :loading="loading" />
       </Buttons>
     </footer>
   </form>
@@ -45,12 +42,8 @@ const { t } = useI18n()
 const processTask = useTask()
 const { createToast } = useToasts()
 
-const {
-  value: distinctAttribute,
-  reset: resetDistinctAttribute,
-  modified: isDistinctAttributeModified,
-} = resettableRef(props.initialDistinctAttribute as string)
-const { loading: isDistinctAttributeLoading, handle: handleDistinctAttribute } = useFormSubmit({
+const { value: distinctAttribute, reset, modified } = resettableRef(props.initialDistinctAttribute as string)
+const { loading, handle } = useFormSubmit({
   confirm: { text: t('confirmations.distinctAttribute.text') },
 })
 
@@ -58,19 +51,18 @@ const self = reactive({
   distinctAttribute,
 })
 
-const submitDistinctAttribute = async () => {
+const submit = async () => {
   const toast = createToast({
     ...TOAST_PLEASEWAIT(t),
     immediate: false,
     title: t('toasts.distinctAttribute.title'),
-    text: t('toasts.distinctAttribute.pendingText'),
   })
-  await handleDistinctAttribute(async () => {
+  await handle(async () => {
     toast.spawn()
     await processTask(() => props.index.updateDistinctAttribute(self.distinctAttribute), {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
-        resetDistinctAttribute(self.distinctAttribute)
+        reset(self.distinctAttribute)
       },
       onCanceled: () =>
         toast.update({

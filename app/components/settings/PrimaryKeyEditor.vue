@@ -1,5 +1,5 @@
 <template>
-  <form class="space-y-4" @reset.prevent="resetPrimaryKey()" @submit.prevent="submitPrimaryKey()">
+  <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submitPrimaryKey()">
     <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
       <Label required :for="id">{{ t('labels.primaryKey') }}</Label>
       <input v-model="primaryKey" required autofocus autocomplete="off" type="text" class="form-input" />
@@ -10,8 +10,8 @@
 
     <footer class="flex flex-col items-center justify-end sm:flex-row">
       <Buttons>
-        <Button type="reset" :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading" />
-        <Button type="submit" :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading" :loading="isPrimaryKeyLoading" />
+        <Button type="reset" :disabled="!modified || loading" />
+        <Button type="submit" :disabled="!modified || loading" :loading="loading" />
       </Buttons>
     </footer>
   </form>
@@ -38,12 +38,8 @@ const { t } = useI18n()
 const processTask = useTask()
 const { createToast } = useToasts()
 
-const {
-  value: primaryKey,
-  reset: resetPrimaryKey,
-  modified: isPrimaryKeyModified,
-} = resettableRef(props.initialPrimaryKey as string)
-const { loading: isPrimaryKeyLoading, handle: handlePrimaryKey } = useFormSubmit({
+const { value: primaryKey, reset, modified } = resettableRef(props.initialPrimaryKey as string)
+const { loading, handle } = useFormSubmit({
   confirm: { text: t('confirmations.primaryKey.text') },
 })
 
@@ -56,14 +52,13 @@ const submitPrimaryKey = async () => {
     ...TOAST_PLEASEWAIT(t),
     immediate: false,
     title: t('toasts.primaryKey.title'),
-    text: t('toasts.primaryKey.pendingText'),
   })
-  await handlePrimaryKey(async () => {
+  await handle(async () => {
     toast.spawn()
     await processTask(() => props.index.update({ primaryKey: self.primaryKey }), {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
-        resetPrimaryKey(self.primaryKey)
+        reset(self.primaryKey)
       },
       onCanceled: () =>
         toast.update({
