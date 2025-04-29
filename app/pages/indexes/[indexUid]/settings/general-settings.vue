@@ -5,12 +5,16 @@
       {{ t('titles.general') }}
     </h3>
 
-    <Alert v-if="error" dismissable theme="danger" @close="error = null">
+    <Alert
+      v-if="self.error"
+      dismissable
+      theme="danger"
+      @close="self.error = null">
       <div class="flex items-start justify-between">
-        <p class="grow">{{ error }}</p>
+        <p class="grow">{{ self.error }}</p>
         <DocumentationLink
-          v-if="error instanceof TaskError"
-          :href="error.link"
+          v-if="self.error instanceof TaskError"
+          :href="self.error.link"
           class="shrink-0 grow-0" />
       </div>
     </Alert>
@@ -19,19 +23,18 @@
       class="space-y-4"
       @reset.prevent="resetPrimaryKey()"
       @submit.prevent="submitPrimaryKey()">
-      <Alert theme="warning" :title="t('notices.primaryKey.title')">
-        {{ t('notices.primaryKey.text') }}
-      </Alert>
-
-      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
+      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
         <Label required :for="id">{{ t('labels.primaryKey') }}</Label>
         <input
-          v-model="primaryKey"
+          v-model="self.primaryKey"
           required
           autofocus
           autocomplete="off"
           type="text"
           class="form-input" />
+        <p class="text-xs italic text-gray-600">
+          {{ t('notices.primaryKey.text') }}
+        </p>
       </UniqueId>
 
       <footer class="flex flex-col items-center justify-end sm:flex-row">
@@ -47,6 +50,40 @@
       </footer>
     </form>
 
+    <form
+      class="space-y-4"
+      @reset.prevent="resetDistinctAttribute()"
+      @submit.prevent="submitDistinctAttribute()">
+      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
+        <Label :for="id">{{ t('labels.distinctAttribute') }}</Label>
+        <input
+          v-model="self.distinctAttribute"
+          autofocus
+          autocomplete="off"
+          type="text"
+          class="form-input" />
+        <p class="text-xs italic text-gray-600">
+          {{ t('notices.distinctAttribute.text') }}
+        </p>
+      </UniqueId>
+
+      <footer class="flex flex-col items-center justify-end sm:flex-row">
+        <Buttons>
+          <Button
+            type="reset"
+            :disabled="
+              !isDistinctAttributeModified || isDistinctAttributeLoading
+            " />
+          <Button
+            type="submit"
+            :disabled="
+              !isDistinctAttributeModified || isDistinctAttributeLoading
+            "
+            :loading="isDistinctAttributeLoading" />
+        </Buttons>
+      </footer>
+    </form>
+
     <h3
       class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.renameIndex') }}
@@ -56,7 +93,7 @@
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
         <Label required :for="id">{{ t('labels.renameIndexUid') }}</Label>
         <input
-          v-model="renameIndexUid"
+          v-model="self.renameIndexUid"
           required
           autofocus
           autocomplete="off"
@@ -67,7 +104,7 @@
       <div class="flex justify-end">
         <Button
           type="submit"
-          :loading="isRenaming"
+          :loading="self.isRenaming"
           icon-on-right
           theme="primary"
           icon="heroicons:check">
@@ -82,24 +119,24 @@
     </h3>
 
     <form @submit.prevent="duplicateIndex()" class="space-y-4">
-      <Alert theme="warning" :title="t('notices.duplicateIndex.title')">
-        {{ t('notices.duplicateIndex.text') }}
-      </Alert>
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
         <Label required :for="id">{{ t('labels.duplicateIndexUid') }}</Label>
         <input
-          v-model="duplicateIndexUid"
+          v-model="self.duplicateIndexUid"
           required
           autofocus
           autocomplete="off"
           type="text"
           class="form-input" />
+        <p class="text-xs italic text-gray-600">
+          {{ t('notices.duplicateIndex.text') }}
+        </p>
       </UniqueId>
 
       <div class="flex justify-end">
         <Button
           type="submit"
-          :loading="isDuplicating"
+          :loading="self.isDuplicating"
           icon-on-right
           theme="primary"
           icon="heroicons:document-duplicate">
@@ -155,18 +192,30 @@ const { t } = useI18n()
 const meili = useMeiliClient()
 const { confirm } = useConfirmationDialog()
 const index = meili.index(props.indexUid)
+
+const [initialPrimaryKey, initialDistinctAttribute] = await Promise.all([
+  index.fetchPrimaryKey(),
+  index.getDistinctAttribute(),
+])
+
 const {
   value: primaryKey,
   reset: resetPrimaryKey,
   modified: isPrimaryKeyModified,
-} = resettableRef((await index.fetchPrimaryKey()) as string)
+} = resettableRef(initialPrimaryKey as string)
+const { loading: isPrimaryKeyLoading, handle: handlePrimaryKey } =
+  useFormSubmit({
+    confirm: { text: t('confirmations.primaryKey.text') },
+  })
 const {
-  loading: isPrimaryKeyLoading,
-  error: primaryKeyError,
-  handle: handlePrimaryKey,
-} = useFormSubmit({
-  confirm: { text: t('confirmations.primaryKey.text') },
-})
+  value: distinctAttribute,
+  reset: resetDistinctAttribute,
+  modified: isDistinctAttributeModified,
+} = resettableRef(initialDistinctAttribute as string)
+const { loading: isDistinctAttributeLoading, handle: handleDistinctAttribute } =
+  useFormSubmit({
+    confirm: { text: t('confirmations.distinctAttribute.text') },
+  })
 const { handle: handleIndexDrop } = useFormSubmit({
   confirm: {
     title: t('confirmations.dropIndex.title', { index: index.uid }),
@@ -185,6 +234,7 @@ const processTask = useTask()
 const { createToast } = useToasts()
 const self = reactive({
   primaryKey,
+  distinctAttribute,
   error: null as Error | null,
   duplicateIndexUid: ref(`${props.indexUid}-copy`),
   renameIndexUid: ref(`${props.indexUid}-new`),
@@ -220,6 +270,40 @@ const submitPrimaryKey = async () => {
       },
     })
     resetPrimaryKey(self.primaryKey)
+  })
+}
+
+const submitDistinctAttribute = async () => {
+  const toast = createToast({
+    ...TOAST_PLEASEWAIT(t),
+    immediate: false,
+    title: t('toasts.distinctAttribute.title'),
+    text: t('toasts.distinctAttribute.pendingText'),
+  })
+  await handleDistinctAttribute(async () => {
+    toast.spawn()
+    await processTask(
+      () => index.updateDistinctAttribute(self.distinctAttribute),
+      {
+        onSuccess: async () => {
+          toast.update({ ...TOAST_SUCCESS(t) })
+          resetDistinctAttribute(self.distinctAttribute)
+        },
+        onCanceled: () =>
+          toast.update({
+            ...TOAST_FAILURE(t),
+            text: t('toasts.texts.canceledTask'),
+          }),
+        onFailure: (task: Task) => {
+          toast.update({
+            ...TOAST_FAILURE(t),
+            text: t('toasts.texts.failedTask'),
+          })
+          self.error = task.error as TaskError
+        },
+      },
+    )
+    resetDistinctAttribute(self.distinctAttribute)
   })
 }
 
@@ -319,9 +403,6 @@ const deleteAllDocuments = async () => {
 useHead({
   title: `${t('titles.general')} - ${props.indexUid}`,
 })
-
-const { duplicateIndexUid, renameIndexUid, isDuplicating, isRenaming, error } =
-  toRefs(self)
 </script>
 
 <i18n>
@@ -333,6 +414,8 @@ en:
     dangerZone: Danger Zone
   confirmations:
     primaryKey:
+      text: Do you want to update your settings?
+    distinctAttribute:
       text: Do you want to update your settings?
     duplicateIndex:
       text: Duplicate this index?
@@ -349,20 +432,23 @@ en:
   toasts:
     primaryKey:
       title: Updating primary key...
+    distinctAttribute:
+      title: Updating distinct attribute...
     dropIndex:
       title: Deleting index...
     deleteAllDocuments:
       title: Deleting documents...
   labels:
     primaryKey: Primary Key
+    distinctAttribute: Distinct Attribute
     duplicateIndexUid: New index name
     renameIndexUid: New index name
   notices:
     primaryKey:
-      title: Warning
       text: You can freely update the primary key of an index as long as it contains no documents. To change the primary key of an index that already contains documents, you must first delete all documents in that index. You may then change the primary key and index your dataset again.
+    distinctAttribute:
+      text: Updating distinct attributes will re-index all documents in the index, which can take some time. We recommend updating your index settings first and then adding documents as this reduces RAM consumption.
     duplicateIndex:
-      title: Warning
       text: Your index will be duplicated by batches of documents. Ensure that your index is not being written to during the duplication process.
   actions:
     duplicateIndex: Duplicate index
