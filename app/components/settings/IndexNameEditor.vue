@@ -30,7 +30,7 @@ const { t } = useI18n()
 const { confirm } = useConfirmationDialog()
 const { renameIndex: doRenameIndex } = useIndexOperations()
 const self = reactive({
-  renameIndexUid: props.indexUid,
+  renameIndexUid: ref(`${props.indexUid}-new`),
   isRenaming: false,
 })
 
