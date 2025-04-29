@@ -79,6 +79,16 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.dictionary'),
   },
   {
+    href: `/indexes/${index.uid}/settings/separator-tokens`,
+    current: computed(() => 'indexes-indexUid-settings-separator-tokens' === route.name),
+    text: t('menu.separatorTokens'),
+  },
+  {
+    href: `/indexes/${index.uid}/settings/non-separator-tokens`,
+    current: computed(() => 'indexes-indexUid-settings-non-separator-tokens' === route.name),
+    text: t('menu.nonSeparatorTokens'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/local-settings`,
     current: computed(() => 'indexes-indexUid-settings-local-settings' === route.name),
     text: t('menu.localSettings'),
@@ -105,6 +115,8 @@ en:
     sortableAttributes: Sortable Attributes
     displayedAttributes: Displayed Attributes
     dictionary: Dictionary
+    separatorTokens: Separator Tokens
+    nonSeparatorTokens: Non-Separator Tokens
     localSettings: Local settings
   actions:
     documents: Go to Documents
