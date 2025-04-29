@@ -79,6 +79,11 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.dictionary'),
   },
   {
+    href: `/indexes/${index.uid}/settings/stop-words`,
+    current: computed(() => 'indexes-indexUid-settings-stop-words' === route.name),
+    text: t('menu.stopWords'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/separator-tokens`,
     current: computed(() => 'indexes-indexUid-settings-separator-tokens' === route.name),
     text: t('menu.separatorTokens'),
@@ -115,6 +120,7 @@ en:
     sortableAttributes: Sortable Attributes
     displayedAttributes: Displayed Attributes
     dictionary: Dictionary
+    stopWords: Stop Words
     separatorTokens: Separator Tokens
     nonSeparatorTokens: Non-Separator Tokens
     localSettings: Local settings
