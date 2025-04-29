@@ -11,7 +11,7 @@
           v-for="{ href, text, current } of navigation"
           class="block w-full rounded-lg shadow-md"
           :class="current ? 'bg-primary-600 text-white' : 'bg-gray-50 hover:bg-gray-100'">
-          <NuxtLink :to="href" class="block size-full px-2 py-3 text-sm">
+          <NuxtLink :to="href" class="block size-full px-2 py-2.5 text-sm">
             {{ text }}
           </NuxtLink>
         </li>
