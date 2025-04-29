@@ -61,8 +61,12 @@
           <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#proximity-precision" />
         </Label>
         <Select :id v-model="self.proximityPrecision">
-          <option value="byAttribute" :selected="'byAttribute' === self.proximityPrecision">By Attribute</option>
-          <option value="byWord" :selected="'byWord' === self.proximityPrecision">By Word</option>
+          <option value="byAttribute" :selected="'byAttribute' === self.proximityPrecision">
+            {{ t('labels.proximityPrecisionByAttribute') }}
+          </option>
+          <option value="byWord" :selected="'byWord' === self.proximityPrecision">
+            {{ t('labels.proximityPrecisionByWord') }}
+          </option>
         </Select>
       </UniqueId>
 
@@ -451,6 +455,8 @@ en:
     proximityPrecision: Proximity Precision
     duplicateIndexUid: New index name
     renameIndexUid: New index name
+    proximityPrecisionByWord: By Word
+    proximityPrecisionByAttribute: By Attribute
   notices:
     primaryKey:
       text: You can freely update the primary key of an index as long as it contains no documents. To change the primary key of an index that already contains documents, you must first delete all documents in that index. You may then change the primary key and index your dataset again.
