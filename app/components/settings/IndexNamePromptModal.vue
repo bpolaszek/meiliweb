@@ -1,18 +1,9 @@
 <template>
   <PromisifiedDialog :title v-slot="{ resolve, close }">
-    <form
-      class="space-y-4"
-      @submit.prevent="resolve(newindexUid)"
-      @reset.prevent="close()">
+    <form class="space-y-4" @submit.prevent="resolve(newindexUid)" @reset.prevent="close()">
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
         <Label required :for="id">{{ t('labels.indexUid') }}</Label>
-        <input
-          v-model="newindexUid"
-          required
-          v-focus
-          autocomplete="off"
-          type="text"
-          class="form-input" />
+        <input v-model="newindexUid" required v-focus autocomplete="off" type="text" class="form-input" />
       </UniqueId>
 
       <Buttons>

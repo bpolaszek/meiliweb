@@ -1,11 +1,5 @@
 <template>
-  <Component
-    v-if="component"
-    :is="component"
-    :index-uid="indexUid"
-    :field="field"
-    :value="value"
-    :level="level" />
+  <Component v-if="component" :is="component" :index-uid="indexUid" :field="field" :value="value" :level="level" />
   <span v-else-if="null == value" class="italic text-gray-400">null</span>
   <a
     v-else-if="'string' == typeof value && value.startsWith('http')"
@@ -33,15 +27,9 @@ type Props = {
 
 const props = defineProps<Props>()
 const prettify = (object: any) => stringify(object)
-const ArrayValueRenderer = defineAsyncComponent(
-  () => import('./ArrayValueRenderer.vue'),
-)
-const ObjectValueRenderer = defineAsyncComponent(
-  () => import('./ObjectValueRenderer.vue'),
-)
-const DateTimeRenderer = defineAsyncComponent(
-  () => import('../layout/DateTimeRenderer.vue'),
-)
+const ArrayValueRenderer = defineAsyncComponent(() => import('./ArrayValueRenderer.vue'))
+const ObjectValueRenderer = defineAsyncComponent(() => import('./ObjectValueRenderer.vue'))
+const DateTimeRenderer = defineAsyncComponent(() => import('../layout/DateTimeRenderer.vue'))
 
 const localSettings = reactive(useIndexLocalSettings(props.indexUid))
 const { attributesAsBadges } = toRefs(localSettings)
@@ -52,11 +40,7 @@ const component = computed(() => {
   if (Array.isArray(props.value)) {
     return ArrayValueRenderer
   }
-  if (
-    null != props.value &&
-    'object' === typeof props.value &&
-    0 === props.level
-  ) {
+  if (null != props.value && 'object' === typeof props.value && 0 === props.level) {
     return ObjectValueRenderer
   }
 })

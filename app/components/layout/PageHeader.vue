@@ -4,25 +4,15 @@
       <ol role="list" class="flex items-center space-x-4">
         <li>
           <div class="flex">
-            <a
-              href="/"
-              class="text-sm font-medium text-gray-500 hover:text-gray-700">
-              <HomeIcon
-                class="h-5 w-5 shrink-0 text-gray-400"
-                aria-hidden="true" />
+            <a href="/" class="text-sm font-medium text-gray-500 hover:text-gray-700">
+              <HomeIcon class="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
             </a>
           </div>
         </li>
         <li>
           <div class="flex items-center">
-            <ChevronRightIcon
-              class="h-5 w-5 flex-shrink-0 text-gray-400"
-              aria-hidden="true" />
-            <a
-              href="#"
-              class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">
-              Breadcrumbs
-            </a>
+            <ChevronRightIcon class="h-5 w-5 flex-shrink-0 text-gray-400" aria-hidden="true" />
+            <a href="#" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Breadcrumbs</a>
           </div>
         </li>
       </ol>
@@ -38,8 +28,7 @@
         </h2>
       </div>
 
-      <div
-        class="mt-4 flex items-center justify-center gap-4 text-sm lg:mt-0 lg:justify-end">
+      <div class="mt-4 flex items-center justify-center gap-4 text-sm lg:mt-0 lg:justify-end">
         <slot name="actions" />
       </div>
     </header>

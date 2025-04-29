@@ -1,10 +1,8 @@
 <template>
   <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('title') }}
-      <DocumentationLink
-        href="https://www.meilisearch.com/docs/reference/api/settings#dictionary" />
+      <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#dictionary" />
     </h3>
 
     <Alert v-if="error" dismissable theme="danger" @close="error = null">
@@ -49,11 +47,7 @@ const { loading, error, handle } = useFormSubmit({
 })
 const processTask = useTask()
 const { createToast } = useToasts()
-const {
-  value: dictionary,
-  reset,
-  modified,
-} = resettableRef(await index.getDictionary())
+const { value: dictionary, reset, modified } = resettableRef(await index.getDictionary())
 const self = reactive({ dictionary })
 const editableDictionary = computed({
   get: () => self.dictionary.join('\n'),

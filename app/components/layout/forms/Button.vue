@@ -6,10 +6,7 @@
     class="flex items-center justify-center gap-2"
     :class="themeClasses">
     <template v-if="!iconOnRight">
-      <Icon
-        v-if="loading"
-        name="fluent:spinner-ios-16-filled"
-        class="animate-spin" />
+      <Icon v-if="loading" name="fluent:spinner-ios-16-filled" class="animate-spin" />
       <Icon v-else-if="icon" :name="icon" />
     </template>
 
@@ -17,10 +14,7 @@
     <slot v-else>{{ text }}</slot>
 
     <template v-if="iconOnRight">
-      <Icon
-        v-if="loading"
-        name="fluent:spinner-ios-16-filled"
-        class="animate-spin" />
+      <Icon v-if="loading" name="fluent:spinner-ios-16-filled" class="animate-spin" />
       <Icon v-else-if="icon" :name="icon" />
     </template>
   </Component>
@@ -53,9 +47,7 @@ const props = withDefaults(defineProps<Props>(), {
   noRounded: false,
 })
 const { t } = useI18n()
-const type = computed(
-  () => props.type ?? ('button' === props.as ? 'button' : undefined),
-)
+const type = computed(() => props.type ?? ('button' === props.as ? 'button' : undefined))
 const themeClasses = computed(() => {
   const classes = []
 

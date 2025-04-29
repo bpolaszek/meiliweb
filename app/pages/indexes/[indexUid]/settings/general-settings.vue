@@ -1,37 +1,20 @@
 <template>
   <section class="space-y-4">
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.general') }}
     </h3>
 
-    <Alert
-      v-if="self.error"
-      dismissable
-      theme="danger"
-      @close="self.error = null">
+    <Alert v-if="self.error" dismissable theme="danger" @close="self.error = null">
       <div class="flex items-start justify-between">
         <p class="grow">{{ self.error }}</p>
-        <DocumentationLink
-          v-if="self.error instanceof TaskError"
-          :href="self.error.link"
-          class="shrink-0 grow-0" />
+        <DocumentationLink v-if="self.error instanceof TaskError" :href="self.error.link" class="shrink-0 grow-0" />
       </div>
     </Alert>
 
-    <form
-      class="space-y-4"
-      @reset.prevent="resetPrimaryKey()"
-      @submit.prevent="submitPrimaryKey()">
+    <form class="space-y-4" @reset.prevent="resetPrimaryKey()" @submit.prevent="submitPrimaryKey()">
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
         <Label required :for="id">{{ t('labels.primaryKey') }}</Label>
-        <input
-          v-model="self.primaryKey"
-          required
-          autofocus
-          autocomplete="off"
-          type="text"
-          class="form-input" />
+        <input v-model="self.primaryKey" required autofocus autocomplete="off" type="text" class="form-input" />
         <p class="text-xs italic text-gray-600">
           {{ t('notices.primaryKey.text') }}
         </p>
@@ -39,9 +22,7 @@
 
       <footer class="flex flex-col items-center justify-end sm:flex-row">
         <Buttons>
-          <Button
-            type="reset"
-            :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading" />
+          <Button type="reset" :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading" />
           <Button
             type="submit"
             :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading"
@@ -50,18 +31,10 @@
       </footer>
     </form>
 
-    <form
-      class="space-y-4"
-      @reset.prevent="resetDistinctAttribute()"
-      @submit.prevent="submitDistinctAttribute()">
+    <form class="space-y-4" @reset.prevent="resetDistinctAttribute()" @submit.prevent="submitDistinctAttribute()">
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
         <Label :for="id">{{ t('labels.distinctAttribute') }}</Label>
-        <input
-          v-model="self.distinctAttribute"
-          autofocus
-          autocomplete="off"
-          type="text"
-          class="form-input" />
+        <input v-model="self.distinctAttribute" autofocus autocomplete="off" type="text" class="form-input" />
         <p class="text-xs italic text-gray-600">
           {{ t('notices.distinctAttribute.text') }}
         </p>
@@ -69,65 +42,40 @@
 
       <footer class="flex flex-col items-center justify-end sm:flex-row">
         <Buttons>
-          <Button
-            type="reset"
-            :disabled="
-              !isDistinctAttributeModified || isDistinctAttributeLoading
-            " />
+          <Button type="reset" :disabled="!isDistinctAttributeModified || isDistinctAttributeLoading" />
           <Button
             type="submit"
-            :disabled="
-              !isDistinctAttributeModified || isDistinctAttributeLoading
-            "
+            :disabled="!isDistinctAttributeModified || isDistinctAttributeLoading"
             :loading="isDistinctAttributeLoading" />
         </Buttons>
       </footer>
     </form>
 
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.renameIndex') }}
     </h3>
 
     <form @submit.prevent="renameIndex()" class="space-y-4">
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
         <Label required :for="id">{{ t('labels.renameIndexUid') }}</Label>
-        <input
-          v-model="self.renameIndexUid"
-          required
-          autofocus
-          autocomplete="off"
-          type="text"
-          class="form-input" />
+        <input v-model="self.renameIndexUid" required autofocus autocomplete="off" type="text" class="form-input" />
       </UniqueId>
 
       <div class="flex justify-end">
-        <Button
-          type="submit"
-          :loading="self.isRenaming"
-          icon-on-right
-          theme="primary"
-          icon="heroicons:check">
+        <Button type="submit" :loading="self.isRenaming" icon-on-right theme="primary" icon="heroicons:check">
           {{ t('actions.renameIndex') }}
         </Button>
       </div>
     </form>
 
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.duplicateIndex') }}
     </h3>
 
     <form @submit.prevent="duplicateIndex()" class="space-y-4">
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-1">
         <Label required :for="id">{{ t('labels.duplicateIndexUid') }}</Label>
-        <input
-          v-model="self.duplicateIndexUid"
-          required
-          autofocus
-          autocomplete="off"
-          type="text"
-          class="form-input" />
+        <input v-model="self.duplicateIndexUid" required autofocus autocomplete="off" type="text" class="form-input" />
         <p class="text-xs italic text-gray-600">
           {{ t('notices.duplicateIndex.text') }}
         </p>
@@ -145,8 +93,7 @@
       </div>
     </form>
 
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.dangerZone') }}
     </h3>
 
@@ -167,13 +114,7 @@
 
 <script setup lang="ts">
 import { resettableRef } from '~/utils'
-import {
-  TaskError,
-  useFormSubmit,
-  useIndexOperations,
-  useMeiliClient,
-  useTask,
-} from '~/composables'
+import { TaskError, useFormSubmit, useIndexOperations, useMeiliClient, useTask } from '~/composables'
 import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores/toasts'
 import Alert from '~/components/layout/Alert.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
@@ -203,19 +144,17 @@ const {
   reset: resetPrimaryKey,
   modified: isPrimaryKeyModified,
 } = resettableRef(initialPrimaryKey as string)
-const { loading: isPrimaryKeyLoading, handle: handlePrimaryKey } =
-  useFormSubmit({
-    confirm: { text: t('confirmations.primaryKey.text') },
-  })
+const { loading: isPrimaryKeyLoading, handle: handlePrimaryKey } = useFormSubmit({
+  confirm: { text: t('confirmations.primaryKey.text') },
+})
 const {
   value: distinctAttribute,
   reset: resetDistinctAttribute,
   modified: isDistinctAttributeModified,
 } = resettableRef(initialDistinctAttribute as string)
-const { loading: isDistinctAttributeLoading, handle: handleDistinctAttribute } =
-  useFormSubmit({
-    confirm: { text: t('confirmations.distinctAttribute.text') },
-  })
+const { loading: isDistinctAttributeLoading, handle: handleDistinctAttribute } = useFormSubmit({
+  confirm: { text: t('confirmations.distinctAttribute.text') },
+})
 const { handle: handleIndexDrop } = useFormSubmit({
   confirm: {
     title: t('confirmations.dropIndex.title', { index: index.uid }),
@@ -282,33 +221,29 @@ const submitDistinctAttribute = async () => {
   })
   await handleDistinctAttribute(async () => {
     toast.spawn()
-    await processTask(
-      () => index.updateDistinctAttribute(self.distinctAttribute),
-      {
-        onSuccess: async () => {
-          toast.update({ ...TOAST_SUCCESS(t) })
-          resetDistinctAttribute(self.distinctAttribute)
-        },
-        onCanceled: () =>
-          toast.update({
-            ...TOAST_FAILURE(t),
-            text: t('toasts.texts.canceledTask'),
-          }),
-        onFailure: (task: Task) => {
-          toast.update({
-            ...TOAST_FAILURE(t),
-            text: t('toasts.texts.failedTask'),
-          })
-          self.error = task.error as TaskError
-        },
+    await processTask(() => index.updateDistinctAttribute(self.distinctAttribute), {
+      onSuccess: async () => {
+        toast.update({ ...TOAST_SUCCESS(t) })
+        resetDistinctAttribute(self.distinctAttribute)
       },
-    )
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: (task: Task) => {
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        })
+        self.error = task.error as TaskError
+      },
+    })
     resetDistinctAttribute(self.distinctAttribute)
   })
 }
 
-const { duplicateIndex: doDuplicateIndex, renameIndex: doRenameIndex } =
-  useIndexOperations()
+const { duplicateIndex: doDuplicateIndex, renameIndex: doRenameIndex } = useIndexOperations()
 const duplicateIndex = async () => {
   if (!(await confirm({ text: t('confirmations.duplicateIndex.text') }))) {
     return

@@ -35,8 +35,7 @@ export const useIndexLocalSettings = (indexUid: string) => {
   return {
     attributesAsDateTime: computed({
       get: () => self.storage.attributesAsDateTime ?? [],
-      set: (value: Array<string>) =>
-        (self.storage.attributesAsDateTime = value),
+      set: (value: Array<string>) => (self.storage.attributesAsDateTime = value),
     }),
     attributesAsBadges: computed({
       get: () => self.storage.attributesAsBadges ?? [],

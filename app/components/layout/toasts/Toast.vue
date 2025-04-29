@@ -14,11 +14,7 @@
       <div class="p-4">
         <div class="flex items-start">
           <div v-if="toast.icon" class="flex-shrink-0">
-            <Icon
-              :name="toast.icon"
-              class="size-6"
-              aria-hidden="true"
-              :class="toast.iconClasses" />
+            <Icon :name="toast.icon" class="size-6" aria-hidden="true" :class="toast.iconClasses" />
           </div>
           <div class="ml-3 w-0 flex-1 pt-0.5">
             <p class="text-sm font-medium text-gray-900">{{ toast.title }}</p>

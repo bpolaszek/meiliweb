@@ -1,10 +1,8 @@
 <template>
   <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
-    <h3
-      class="inline-flex w-full items-center justify-between text-xl font-semibold">
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('title') }}
-      <DocumentationLink
-        href="https://www.meilisearch.com/docs/reference/api/settings#displayed-attributes" />
+      <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#displayed-attributes" />
     </h3>
 
     <Alert v-if="error" dismissable theme="danger" @close="error = null">
@@ -44,11 +42,7 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 const meili = useMeiliClient()
 const index = meili.index(props.indexUid)
-const {
-  value: displayedAttributes,
-  reset,
-  modified,
-} = resettableRef(await index.getDisplayedAttributes())
+const { value: displayedAttributes, reset, modified } = resettableRef(await index.getDisplayedAttributes())
 const { loading, error, handle } = useFormSubmit({
   confirm: { text: t('confirmations.submit') },
 })
@@ -73,25 +67,22 @@ const submit = async () => {
   })
   await handle(async () => {
     toast.spawn()
-    await processTask(
-      () => index.updateDisplayedAttributes(self.displayedAttributes),
-      {
-        onSuccess: async () => {
-          toast.update({ ...TOAST_SUCCESS(t) })
-          reset(self.displayedAttributes)
-        },
-        onCanceled: () =>
-          toast.update({
-            ...TOAST_FAILURE(t),
-            text: t('toasts.texts.canceledTask'),
-          }),
-        onFailure: () =>
-          toast.update({
-            ...TOAST_FAILURE(t),
-            text: t('toasts.texts.failedTask'),
-          }),
+    await processTask(() => index.updateDisplayedAttributes(self.displayedAttributes), {
+      onSuccess: async () => {
+        toast.update({ ...TOAST_SUCCESS(t) })
+        reset(self.displayedAttributes)
       },
-    )
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        }),
+    })
   })
 }
 

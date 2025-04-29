@@ -1,9 +1,6 @@
 <template>
   <Layout :title="humanizeString(index.uid)" :subtitle="subtitle">
-    <SlideOver
-      no-padding
-      v-model:open="filterPanelOpen"
-      :title="t('labels.filters')">
+    <SlideOver no-padding v-model:open="filterPanelOpen" :title="t('labels.filters')">
       <FilterPanel
         v-model:applied-sort="appliedSort"
         v-model:facets="facets"
@@ -33,62 +30,32 @@
 
       <SearchInput v-model="searchTerms" class="grow lg:w-80" />
 
-      <button
-        v-tippy="t('actions.documentView')"
-        @click="viewMode = 'documents'">
+      <button v-tippy="t('actions.documentView')" @click="viewMode = 'documents'">
         <Icon
           name="fa-solid:id-card"
-          :class="[
-            'documents' === viewMode
-              ? 'text-primary-700'
-              : 'text-gray-600 hover:text-gray-800',
-            'size-6',
-          ]" />
+          :class="['documents' === viewMode ? 'text-primary-700' : 'text-gray-600 hover:text-gray-800', 'size-6']" />
       </button>
-      <button
-        v-tippy="t('actions.tableView')"
-        type="button"
-        @click="viewMode = 'table'">
+      <button v-tippy="t('actions.tableView')" type="button" @click="viewMode = 'table'">
         <Icon
           name="nimbus:list"
-          :class="[
-            'table' === viewMode
-              ? 'text-primary-700'
-              : 'text-gray-600 hover:text-gray-800',
-            'size-6',
-          ]" />
+          :class="['table' === viewMode ? 'text-primary-700' : 'text-gray-600 hover:text-gray-800', 'size-6']" />
       </button>
-      <button
-        v-if="hasGeoDocuments"
-        v-tippy="t('actions.mapView')"
-        type="button"
-        @click="viewMode = 'map'">
+      <button v-if="hasGeoDocuments" v-tippy="t('actions.mapView')" type="button" @click="viewMode = 'map'">
         <Icon
           name="gis:poi-map"
-          :class="[
-            'map' === viewMode
-              ? 'text-primary-700'
-              : 'text-gray-600 hover:text-gray-800',
-            'size-6',
-          ]" />
+          :class="['map' === viewMode ? 'text-primary-700' : 'text-gray-600 hover:text-gray-800', 'size-6']" />
       </button>
-      <button
-        v-tippy="t('actions.toggleFilters')"
-        @click="filterPanelOpen = true">
+      <button v-tippy="t('actions.toggleFilters')" @click="filterPanelOpen = true">
         <Icon
           name="ph:funnel-fill"
           class="size-6"
           :class="
-            appliedFilters.length > 0
-              ? 'text-primary-600 hover:text-primary-800'
-              : 'text-gray-600 hover:text-gray-800'
+            appliedFilters.length > 0 ? 'text-primary-600 hover:text-primary-800' : 'text-gray-600 hover:text-gray-800'
           " />
       </button>
     </template>
     <template #title-actions>
-      <NuxtLink
-        :to="`/indexes/${index.uid}/settings`"
-        v-tippy="t('actions.goToSettings')">
+      <NuxtLink :to="`/indexes/${index.uid}/settings`" v-tippy="t('actions.goToSettings')">
         <Icon name="heroicons-outline:cog" />
       </NuxtLink>
     </template>
@@ -96,9 +63,7 @@
     <DocumentsEmptyState
       v-if="0 === resultset.estimatedTotalHits"
       :index-uid="index.uid"
-      :request-has-filters="
-        !!(searchParams.filter || searchParams.q)
-      "></DocumentsEmptyState>
+      :request-has-filters="!!(searchParams.filter || searchParams.q)"></DocumentsEmptyState>
 
     <MainComponent
       v-else
@@ -124,13 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  useFields,
-  useIndexLocalSettings,
-  useMeiliClient,
-  useMultiTenancy,
-  usePagination,
-} from '~/composables'
+import { useFields, useIndexLocalSettings, useMeiliClient, useMultiTenancy, usePagination } from '~/composables'
 import { tryOrThrow } from '~/utils'
 import { NuxtLink } from '#components'
 import SlideOver from '~/components/layout/SlideOver.vue'
@@ -150,28 +109,22 @@ const route = useRoute()
 const indexUid = route.params.indexUid
 const meili = useMeiliClient()
 const tenant = useMultiTenancy()
-const searchClient = reactiveComputed(() =>
-  tenant.tenantToken ? useMeiliClient(tenant.tenantToken as string) : meili,
-)
+const searchClient = reactiveComputed(() => (tenant.tenantToken ? useMeiliClient(tenant.tenantToken as string) : meili))
 const { formatDate } = useDateFormatter()
 const index = await tryOrThrow(() => meili.getIndex(indexUid as string))
 const filterPanelOpen = ref(false)
-const [primaryKey, filterableAttributes, sortableAttributes, stats] =
-  await Promise.all([
-    index.fetchPrimaryKey() as Promise<string>,
-    index.getFilterableAttributes(),
-    index.getSortableAttributes(),
-    index.getStats(),
-  ])
+const [primaryKey, filterableAttributes, sortableAttributes, stats] = await Promise.all([
+  index.fetchPrimaryKey() as Promise<string>,
+  index.getFilterableAttributes(),
+  index.getSortableAttributes(),
+  index.getStats(),
+])
 
 const { fields } = useFields(primaryKey, Object.keys(stats.fieldDistribution))
-const { appliedSort, facets, itemsPerPage, viewMode } = useIndexLocalSettings(
-  index.uid,
-)
+const { appliedSort, facets, itemsPerPage, viewMode } = useIndexLocalSettings(index.uid)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
 const searchTerms = ref('')
-const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } =
-  usePagination(itemsPerPage)
+const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } = usePagination(itemsPerPage)
 const searchParams = reactive({
   q: searchTerms,
   sort: appliedSort,
@@ -179,18 +132,10 @@ const searchParams = reactive({
   offset,
   filter: computed(() => `${appliedFilters}`),
 })
-const resultset = ref(
-  await tryOrThrow(() =>
-    searchClient.index(index.uid).search(null, searchParams),
-  ),
-)
+const resultset = ref(await tryOrThrow(() => searchClient.index(index.uid).search(null, searchParams)))
 
-const hasGeoDocuments = computed(() =>
-  Object.keys(stats.fieldDistribution).includes('_geo'),
-)
-const canFilterGeoDocuments = computed(() =>
-  filterableAttributes.includes('_geo'),
-)
+const hasGeoDocuments = computed(() => Object.keys(stats.fieldDistribution).includes('_geo'))
+const canFilterGeoDocuments = computed(() => filterableAttributes.includes('_geo'))
 const self = reactive({
   resultset,
   totalItems,
@@ -209,10 +154,7 @@ watch(itemsPerPage, () => (searchParams.offset = 0))
 watch(searchTerms, () => (searchParams.offset = 0))
 watch(
   searchParams,
-  async (searchParams) =>
-    (self.resultset = await searchClient
-      .index(index.uid)
-      .search(null, searchParams)),
+  async (searchParams) => (self.resultset = await searchClient.index(index.uid).search(null, searchParams)),
   { deep: true },
 )
 watch(resultset, () => (self.totalItems = self.resultset.estimatedTotalHits), {

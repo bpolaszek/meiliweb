@@ -7,10 +7,7 @@ type UseFieldsReturn = {
   nameField: ComputedRef<string>
 }
 
-export const useFields = (
-  primaryKey: MaybeRef<string>,
-  fields: MaybeRef<Array<string>>,
-): UseFieldsReturn => {
+export const useFields = (primaryKey: MaybeRef<string>, fields: MaybeRef<Array<string>>): UseFieldsReturn => {
   const self: any = reactive({
     primaryKey,
     fields,
@@ -26,21 +23,14 @@ export const useFields = (
     sortedFields: computed(() => [
       self.primaryKey,
       self.nameField,
-      ...self.fields.filter(
-        (field: string) => ![self.primaryKey, self.nameField].includes(field),
-      ),
+      ...self.fields.filter((field: string) => ![self.primaryKey, self.nameField].includes(field)),
     ]),
-    fieldsWithoutPrimaryKey: computed(() => [
-      ...self.fields.filter((field: string) => field !== self.primaryKey),
-    ]),
+    fieldsWithoutPrimaryKey: computed(() => [...self.fields.filter((field: string) => field !== self.primaryKey)]),
   })
 
   return {
     fields: toRef(self, 'sortedFields') as ComputedRef<Array<string>>,
     nameField: toRef(self, 'nameField') as ComputedRef<string>,
-    fieldsWithoutPrimaryKey: toRef(
-      self,
-      'fieldsWithoutPrimaryKey',
-    ) as ComputedRef<Array<string>>,
+    fieldsWithoutPrimaryKey: toRef(self, 'fieldsWithoutPrimaryKey') as ComputedRef<Array<string>>,
   }
 }

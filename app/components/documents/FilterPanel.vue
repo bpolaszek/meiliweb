@@ -10,25 +10,15 @@
           <Select :id="id" v-model="appliedSort">
             <option :value="[]">Default</option>
             <template v-for="attribute of sortableAttributes">
-              <option :value="[`${attribute}:asc`]">
-                {{ humanizeString(attribute) }} ⬆
-              </option>
-              <option :value="[`${attribute}:desc`]">
-                {{ humanizeString(attribute) }} ⬇
-              </option>
+              <option :value="[`${attribute}:asc`]">{{ humanizeString(attribute) }} ⬆</option>
+              <option :value="[`${attribute}:desc`]">{{ humanizeString(attribute) }} ⬇</option>
             </template>
           </Select>
         </div>
       </UniqueId>
-      <i18n-t
-        v-else
-        keypath="emptyStates.sort.text"
-        tag="p"
-        class="text-sm font-light italic text-gray-600">
+      <i18n-t v-else keypath="emptyStates.sort.text" tag="p" class="text-sm font-light italic text-gray-600">
         <template v-slot:link>
-          <NuxtLink
-            :to="`/indexes/${indexUid}/settings/sortable-attributes`"
-            class="text-primary-600">
+          <NuxtLink :to="`/indexes/${indexUid}/settings/sortable-attributes`" class="text-primary-600">
             {{ t('emptyStates.sort.link') }}
           </NuxtLink>
         </template>
@@ -49,24 +39,16 @@
             }" />
         </div>
       </UniqueId>
-      <i18n-t
-        v-else
-        keypath="emptyStates.facets.text"
-        tag="p"
-        class="text-sm font-light italic text-gray-600">
+      <i18n-t v-else keypath="emptyStates.facets.text" tag="p" class="text-sm font-light italic text-gray-600">
         <template v-slot:link>
-          <NuxtLink
-            :to="`/indexes/${indexUid}/settings/filterable-attributes`"
-            class="text-primary-600">
+          <NuxtLink :to="`/indexes/${indexUid}/settings/filterable-attributes`" class="text-primary-600">
             {{ t('emptyStates.facets.link') }}
           </NuxtLink>
         </template>
       </i18n-t>
     </section>
 
-    <section
-      v-if="(facets as NonNullable<string[]>).length > 0"
-      class="space-y-6 pb-6 pt-6">
+    <section v-if="(facets as NonNullable<string[]>).length > 0" class="space-y-6 pb-6 pt-6">
       <h3 class="text-md px-4 font-medium sm:px-6">
         {{ t('titles.filters') }}
       </h3>
@@ -94,11 +76,7 @@ import { useMeiliClient } from '~/composables'
 import MultiCombobox from '~/components/layout/forms/MultiCombobox.vue'
 import StringFacet from '~/components/documents/StringFacet.vue'
 import type { AppliedFilters } from '~/utils/applied-filters'
-import {
-  type FacetDistribution,
-  type FacetStats,
-  Meilisearch,
-} from 'meilisearch'
+import { type FacetDistribution, type FacetStats, Meilisearch } from 'meilisearch'
 import RangeFacet from '~/components/documents/RangeFacet.vue'
 import Select from '~/components/layout/forms/Select.vue'
 import Label from '~/components/layout/forms/Label.vue'
@@ -114,9 +92,7 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 const meili = useMeiliClient()
 const appliedSort = defineModel<string[]>('appliedSort')
-const appliedFilters = defineModel<AppliedFilters>(
-  'appliedFilters',
-) as unknown as AppliedFilters
+const appliedFilters = defineModel<AppliedFilters>('appliedFilters') as unknown as AppliedFilters
 const facets = defineModel<string[]>('facets')
 const FACET_TYPE_STRING = Symbol()
 const FACET_TYPE_RANGE = Symbol()
@@ -136,16 +112,12 @@ const hydrateFacetsTypes = async (facets: string[]) => {
       facets,
     }),
   )
-  const stringFacets = Object.keys(
-    search.facetDistribution as FacetDistribution,
-  )
+  const stringFacets = Object.keys(search.facetDistribution as FacetDistribution)
   const numericFacets = Object.keys(search.facetStats as FacetStats)
   const isProbablyRangeFacet = (attribute: string) =>
     numericFacets.includes(attribute) &&
     (!stringFacets.includes(attribute) ||
-      Object.keys(search.facetDistribution![attribute] ?? {}).every(
-        (key: any) => !isNaN(key),
-      ))
+      Object.keys(search.facetDistribution![attribute] ?? {}).every((key: any) => !isNaN(key)))
 
   for (const attribute of facets) {
     if ('_geo' === attribute) {

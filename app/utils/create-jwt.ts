@@ -15,18 +15,12 @@ const normalizeDate = (date: Date | string): Date => {
   return new Date(date)
 }
 
-export const createJwt = (
-  searchRules: TokenSearchRules,
-  key: Key,
-  expiresAt?: Date | null,
-) => {
+export const createJwt = (searchRules: TokenSearchRules, key: Key, expiresAt?: Date | null) => {
   const { key: signingKey, uid: apiKeyUid } = key
   const payload: JWTPayload = {
     searchRules,
     apiKeyUid,
-    exp: expiresAt
-      ? Math.floor(normalizeDate(expiresAt).getTime() / 1000)
-      : undefined,
+    exp: expiresAt ? Math.floor(normalizeDate(expiresAt).getTime() / 1000) : undefined,
   }
 
   return sign(payload, signingKey)

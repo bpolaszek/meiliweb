@@ -1,32 +1,17 @@
 <template>
   <Layout :title="t('title')">
     <template #actions>
-      <Button
-        v-if="indexes.length > 0"
-        :as="NuxtLink"
-        to="/indexes/create"
-        theme="primary"
-        icon="pajamas:doc-new">
+      <Button v-if="indexes.length > 0" :as="NuxtLink" to="/indexes/create" theme="primary" icon="pajamas:doc-new">
         {{ t('actions.create') }}
       </Button>
     </template>
     <template v-if="indexes.length > 0">
-      <Table
-        :items="indexes"
-        :keys="[
-          'uid',
-          'numberOfDocuments',
-          'primaryKey',
-          'createdAt',
-          'updatedAt',
-        ]">
+      <Table :items="indexes" :keys="['uid', 'numberOfDocuments', 'primaryKey', 'createdAt', 'updatedAt']">
         <template #columns>
           <th scope="col" class="relative isolate">
             {{ t('columns.index') }}
-            <div
-              class="absolute inset-y-0 right-full -z-10 w-screen border-b border-b-gray-200" />
-            <div
-              class="absolute inset-y-0 left-0 -z-10 w-screen border-b border-b-gray-200" />
+            <div class="absolute inset-y-0 right-full -z-10 w-screen border-b border-b-gray-200" />
+            <div class="absolute inset-y-0 left-0 -z-10 w-screen border-b border-b-gray-200" />
           </th>
           <th scope="col">
             {{ t('columns.primaryKey') }}
@@ -52,8 +37,7 @@
                 {{ t('labels.isIndexing') }}
               </Badge>
             </span>
-            <div
-              class="absolute bottom-0 right-full h-px w-screen bg-gray-100" />
+            <div class="absolute bottom-0 right-full h-px w-screen bg-gray-100" />
             <div class="absolute bottom-0 left-0 h-px w-screen bg-gray-100" />
           </td>
           <td>
@@ -71,9 +55,7 @@
                   :to="`/indexes/${item.uid}/settings`"
                   class="flex w-full items-center justify-start gap-2 p-2"
                   :class="{ 'bg-gray-50': active }">
-                  <Icon
-                    name="heroicons-outline:cog"
-                    class="size-5 opacity-70" />
+                  <Icon name="heroicons-outline:cog" class="size-5 opacity-70" />
                   <span>{{ t('actions.settings') }}</span>
                 </NuxtLink>
               </MenuItem>
@@ -93,9 +75,7 @@
                   class="flex w-full items-center justify-start gap-2 p-2"
                   :class="{ 'bg-gray-50': active }"
                   @click="duplicateIndex(item.uid)">
-                  <Icon
-                    name="heroicons:document-duplicate"
-                    class="size-5 opacity-70" />
+                  <Icon name="heroicons:document-duplicate" class="size-5 opacity-70" />
                   <span>{{ t('actions.duplicate') }}</span>
                 </button>
               </MenuItem>
@@ -120,11 +100,7 @@
     <div v-else class="flex flex-col items-center justify-center gap-6 py-20">
       <p class="text-5xl font-light text-gray-700">🫠</p>
       <p class="text-2xl font-light text-gray-700">{{ t('emptyState') }}</p>
-      <Button
-        :as="NuxtLink"
-        :to="`/indexes/create`"
-        theme="primary"
-        icon="pajamas:doc-new">
+      <Button :as="NuxtLink" :to="`/indexes/create`" theme="primary" icon="pajamas:doc-new">
         {{ t('actions.createExpanded') }}
       </Button>
     </div>
@@ -133,12 +109,7 @@
 
 <script setup lang="ts">
 import { tryOrThrow } from '~/utils'
-import {
-  useDateFormatter,
-  useIndexOperations,
-  useMeiliClient,
-  usePagination,
-} from '~/composables'
+import { useDateFormatter, useIndexOperations, useMeiliClient, usePagination } from '~/composables'
 import { NuxtLink } from '#components'
 import ServerStats from '~/components/settings/ServerStats.vue'
 import Table from '~/components/layout/tables/Table.vue'
@@ -160,8 +131,7 @@ useHead({
 const meili = useMeiliClient()
 const { formatDate } = useDateFormatter()
 const itemsPerPage = ref(20)
-const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } =
-  usePagination(itemsPerPage)
+const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } = usePagination(itemsPerPage)
 const self = reactive({
   indexes: [] as Index[],
   totalItems,
@@ -177,9 +147,7 @@ const fetchIndexes = async (offset = self.offset, limit = self.itemsPerPage) =>
   tryOrThrow(async () => {
     const indexes = await meili.getIndexes({ offset, limit })
     self.totalItems = indexes.total
-    return Promise.all(
-      indexes.results.map((index) => meili.getIndex(index.uid)),
-    )
+    return Promise.all(indexes.results.map((index) => meili.getIndex(index.uid)))
   })
 
 whenever(
@@ -215,8 +183,7 @@ watch(itemsPerPage, async (itemsPerPage) => {
   self.indexes = []
   self.indexes = await fetchIndexes(0, itemsPerPage)
 })
-const handlePageChange = (page: number) =>
-  (self.offset = (page - 1) * self.itemsPerPage)
+const handlePageChange = (page: number) => (self.offset = (page - 1) * self.itemsPerPage)
 self.indexes = await fetchIndexes()
 </script>
 

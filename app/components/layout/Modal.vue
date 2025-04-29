@@ -9,8 +9,7 @@
         leave="ease-in duration-200"
         leave-from="opacity-100"
         leave-to="opacity-0">
-        <div
-          class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
       </TransitionChild>
 
       <div class="fixed inset-0 z-10 overflow-y-auto">
@@ -33,10 +32,7 @@
                   class="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:text-gray-200"
                   @click="state.open = false">
                   <span class="sr-only">Close</span>
-                  <Icon
-                    name="heroicons:x-mark"
-                    class="h-6 w-6"
-                    aria-hidden="true" />
+                  <Icon name="heroicons:x-mark" class="h-6 w-6" aria-hidden="true" />
                 </button>
               </div>
               <DialogTitle
@@ -57,13 +53,7 @@
 </template>
 
 <script lang="ts">
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue'
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { type MaybeRef, watchDebounced } from '@vueuse/core'
 import { reactive, ref, watch } from 'vue'
 
@@ -78,10 +68,7 @@ export type ModalOptions = {
 
 const DEFAULT_OPTIONS = { onDismiss: () => {}, debounce: 300 }
 
-export function useModalState(
-  open: MaybeRef<boolean> = false,
-  options: ModalOptions = DEFAULT_OPTIONS,
-): ModalState {
+export function useModalState(open: MaybeRef<boolean> = false, options: ModalOptions = DEFAULT_OPTIONS): ModalState {
   const { onDismiss, debounce } = { ...DEFAULT_OPTIONS, ...options }
   open = ref(open)
   watchDebounced(open, (value: boolean) => !value && onDismiss(), { debounce })

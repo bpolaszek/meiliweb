@@ -11,9 +11,7 @@
       <div class="text-right">{{ size(memory.jsHeapSizeLimit) }}</div>
     </template>
   </div>
-  <div v-else class="text-xs italic text-gray-600">
-    Performance memory API not supported
-  </div>
+  <div v-else class="text-xs italic text-gray-600">Performance memory API not supported</div>
 </template>
 
 <script setup>

@@ -35,10 +35,7 @@ const [DefineCard, Card] = createReusableTemplate()
 const meili = useMeiliClient()
 const { t } = useI18n()
 const { formatDate } = useDateFormatter()
-const [version, stats] = await Promise.all([
-  meili.getVersion(),
-  meili.getStats(),
-])
+const [version, stats] = await Promise.all([meili.getVersion(), meili.getStats()])
 </script>
 
 <i18n>

@@ -76,9 +76,7 @@ export const useToasts = defineStore('toasts', () => {
 
   const self: any = reactive({
     toasts: computed(() => [...toasts].map(([id, toast]) => toast)),
-    visibleToasts: computed(() =>
-      self.toasts.filter((toast: Toast) => toast.show),
-    ),
+    visibleToasts: computed(() => self.toasts.filter((toast: Toast) => toast.show)),
   })
 
   return {

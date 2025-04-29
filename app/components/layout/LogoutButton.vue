@@ -6,10 +6,7 @@
     @click="confirmLogout()">
     <span class="absolute -inset-1.5" />
     <span class="sr-only">{{ t('label') }}</span>
-    <Icon
-      name="ant-design:logout-outlined"
-      class="size-6 -rotate-90 hover:text-primary-800"
-      aria-hidden="true" />
+    <Icon name="ant-design:logout-outlined" class="size-6 -rotate-90 hover:text-primary-800" aria-hidden="true" />
   </button>
 </template>
 
