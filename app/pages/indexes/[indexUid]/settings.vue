@@ -6,7 +6,7 @@
       </NuxtLink>
     </template>
     <div class="grid h-48 grid-cols-12 gap-4">
-      <menu class="col-span-3 space-y-3">
+      <menu class="col-span-3 mb-12 space-y-3">
         <li
           v-for="{ href, text, current } of navigation"
           class="block w-full rounded-lg shadow-md"
