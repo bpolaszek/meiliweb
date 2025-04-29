@@ -15,7 +15,10 @@
       </div>
     </Alert>
 
-    <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
+    <form
+      class="space-y-4"
+      @reset.prevent="resetPrimaryKey()"
+      @submit.prevent="submitPrimaryKey()">
       <Alert theme="warning" :title="t('notices.primaryKey.title')">
         {{ t('notices.primaryKey.text') }}
       </Alert>
@@ -33,8 +36,13 @@
 
       <footer class="flex flex-col items-center justify-end sm:flex-row">
         <Buttons>
-          <Button type="reset" :disabled="!modified || loading" />
-          <Button type="submit" :disabled="!modified || loading" :loading />
+          <Button
+            type="reset"
+            :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading" />
+          <Button
+            type="submit"
+            :disabled="!isPrimaryKeyModified || isPrimaryKeyLoading"
+            :loading="isPrimaryKeyLoading" />
         </Buttons>
       </footer>
     </form>
@@ -149,10 +157,14 @@ const { confirm } = useConfirmationDialog()
 const index = meili.index(props.indexUid)
 const {
   value: primaryKey,
-  reset,
-  modified,
+  reset: resetPrimaryKey,
+  modified: isPrimaryKeyModified,
 } = resettableRef((await index.fetchPrimaryKey()) as string)
-const { loading, error, handle } = useFormSubmit({
+const {
+  loading: isPrimaryKeyLoading,
+  error: primaryKeyError,
+  handle: handlePrimaryKey,
+} = useFormSubmit({
   confirm: { text: t('confirmations.primaryKey.text') },
 })
 const { handle: handleIndexDrop } = useFormSubmit({
@@ -173,26 +185,26 @@ const processTask = useTask()
 const { createToast } = useToasts()
 const self = reactive({
   primaryKey,
-  error,
+  error: null as Error | null,
   duplicateIndexUid: ref(`${props.indexUid}-copy`),
   renameIndexUid: ref(`${props.indexUid}-new`),
   isDuplicating: false,
   isRenaming: false,
 })
 
-const submit = async () => {
+const submitPrimaryKey = async () => {
   const toast = createToast({
     ...TOAST_PLEASEWAIT(t),
     immediate: false,
     title: t('toasts.primaryKey.title'),
     text: t('toasts.primaryKey.pendingText'),
   })
-  await handle(async () => {
+  await handlePrimaryKey(async () => {
     toast.spawn()
     await processTask(() => index.update({ primaryKey: self.primaryKey }), {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
-        reset(self.primaryKey)
+        resetPrimaryKey(self.primaryKey)
       },
       onCanceled: () =>
         toast.update({
@@ -207,7 +219,7 @@ const submit = async () => {
         self.error = task.error as TaskError
       },
     })
-    reset(self.primaryKey)
+    resetPrimaryKey(self.primaryKey)
   })
 }
 
@@ -255,7 +267,6 @@ const dropIndex = async () => {
     await processTask(() => meili.deleteIndex(index.uid), {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
-        reset(self.primaryKey)
         await promiseTimeout(500)
         navigateTo('/indexes', { replace: true })
       },
@@ -286,7 +297,6 @@ const deleteAllDocuments = async () => {
     await processTask(() => meili.index(index.uid).deleteAllDocuments(), {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
-        reset(self.primaryKey)
         await promiseTimeout(500)
         navigateTo(`/indexes/${index.uid}/documents`, { replace: true })
       },
@@ -310,7 +320,7 @@ useHead({
   title: `${t('titles.general')} - ${props.indexUid}`,
 })
 
-const { duplicateIndexUid, renameIndexUid, isDuplicating, isRenaming } =
+const { duplicateIndexUid, renameIndexUid, isDuplicating, isRenaming, error } =
   toRefs(self)
 </script>
 
