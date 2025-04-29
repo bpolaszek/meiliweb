@@ -16,6 +16,11 @@ export default defineI18nConfig(() => ({
           failedTask: 'Task failed.',
         },
       },
+      buttons: {
+        reset: 'Reset',
+        cancel: 'Cancel',
+        submit: 'Submit',
+      },
     },
   },
 }))

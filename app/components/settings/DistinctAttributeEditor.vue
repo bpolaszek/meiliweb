@@ -8,7 +8,10 @@
       <input v-model="self.distinctAttribute" autofocus autocomplete="off" type="text" class="form-input" />
     </UniqueId>
 
-    <footer class="flex flex-col items-center justify-end sm:flex-row">
+    <footer class="flex flex-col items-center justify-between sm:flex-row">
+      <Button size="small" type="button" :disabled="loading" @click="resetToInitialValue()">
+        {{ t('buttons.reset') }}
+      </Button>
       <Buttons>
         <Button size="small" type="reset" :disabled="!modified || loading" />
         <Button size="small" type="submit" :disabled="!modified || loading" :loading="loading" />
@@ -56,6 +59,35 @@ const submit = async () => {
   await handle(async () => {
     toast.spawn()
     await processTask(() => props.index.updateDistinctAttribute(self.distinctAttribute), {
+      onSuccess: async () => {
+        toast.update({ ...TOAST_SUCCESS(t) })
+        reset(self.distinctAttribute)
+      },
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: (task: Task) => {
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        })
+        emit('error', task.error as TaskError)
+      },
+    })
+  })
+}
+
+const resetToInitialValue = async () => {
+  const toast = createToast({
+    ...TOAST_PLEASEWAIT(t),
+    immediate: false,
+    title: t('toasts.distinctAttribute.title'),
+  })
+  await handle(async () => {
+    toast.spawn()
+    await processTask(() => props.index.resetDistinctAttribute(), {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
         reset(self.distinctAttribute)

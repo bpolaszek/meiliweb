@@ -10,7 +10,7 @@
 
     <footer class="flex flex-col items-center justify-between sm:flex-row">
       <Button size="small" type="button" :disabled="loading" @click="clearSearchCutoffMs()">
-        {{ t('actions.clearSearchCutoffMs') }}
+        {{ t('buttons.reset') }}
       </Button>
       <Buttons>
         <Button size="small" type="reset" :disabled="!modified || loading" />
@@ -120,6 +120,4 @@ en:
       title: Updating Search Cutoff settings...
   labels:
     searchCutoffMs: Search cutoff (ms)
-  actions:
-    clearSearchCutoffMs: Clear search cutoff
 </i18n>
