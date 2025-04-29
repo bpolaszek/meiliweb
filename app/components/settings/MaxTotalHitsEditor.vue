@@ -1,18 +1,11 @@
 <template>
-  <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
+  <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submitMaxTotalHits()">
     <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
       <Label :for="id" class="flex items-center gap-2">
-        <span>{{ t('labels.facetSearch') }}</span>
-        <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#facet-search" />
+        <span>{{ t('labels.maxTotalHits') }}</span>
+        <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#pagination" />
       </Label>
-      <Select :id v-model="self.facetSearch">
-        <option :value="false">
-          {{ t('labels.disabled') }}
-        </option>
-        <option :value="true">
-          {{ t('labels.enabled') }}
-        </option>
-      </Select>
+      <input v-model="maxTotalHits" autofocus autocomplete="off" type="number" min="0" class="form-input" />
     </UniqueId>
 
     <footer class="flex flex-col items-center justify-between sm:flex-row">
@@ -30,13 +23,12 @@
 <script setup lang="ts">
 import Button from '~/components/layout/forms/Button.vue'
 import Label from '~/components/layout/forms/Label.vue'
-import Select from '~/components/layout/forms/Select.vue'
-import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
-import { TaskError, useFormSubmit, useTask } from '~/composables'
-import type { Index, Task } from 'meilisearch'
-import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores'
 import { resettableRef } from '~/utils'
+import { TaskError, useFormSubmit, useTask } from '~/composables'
+import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores'
+import type { Index, Task } from 'meilisearch'
+import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 
 const emit = defineEmits<{
   (e: 'error', error: TaskError): void
@@ -49,28 +41,28 @@ const { t } = useI18n()
 const processTask = useTask()
 const { createToast } = useToasts()
 
-const initialFacetSearch = await props.index.getFacetSearch()
-const { value: facetSearch, reset, modified } = resettableRef(initialFacetSearch)
+const initialPagination = await props.index.getPagination()
+const { value: maxTotalHits, reset, modified } = resettableRef(initialPagination.maxTotalHits as number)
 const { loading, handle } = useFormSubmit({
-  confirm: { text: t('confirmations.facetSearch.text') },
+  confirm: { text: t('confirmations.maxTotalHits.text') },
 })
 
 const self = reactive({
-  facetSearch,
+  maxTotalHits,
 })
 
-const submit = async () => {
+const submitMaxTotalHits = async () => {
   const toast = createToast({
     ...TOAST_PLEASEWAIT(t),
     immediate: false,
-    title: t('toasts.facetSearch.title'),
+    title: t('toasts.maxTotalHits.title'),
   })
   await handle(async () => {
     toast.spawn()
-    await processTask(() => props.index.updateFacetSearch(self.facetSearch), {
+    await processTask(() => props.index.updatePagination({ maxTotalHits: self.maxTotalHits }), {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
-        reset(self.facetSearch)
+        reset(self.maxTotalHits)
       },
       onCanceled: () =>
         toast.update({
@@ -85,7 +77,6 @@ const submit = async () => {
         emit('error', task.error as TaskError)
       },
     })
-    reset(self.facetSearch)
   })
 }
 
@@ -93,14 +84,14 @@ const resetToInitialValue = async () => {
   const toast = createToast({
     ...TOAST_PLEASEWAIT(t),
     immediate: false,
-    title: t('toasts.facetSearch.title'),
+    title: t('toasts.maxTotalHits.title'),
   })
   await handle(async () => {
     toast.spawn()
-    await processTask(() => props.index.resetFacetSearch(), {
+    await processTask(() => props.index.resetPagination(), {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
-        reset(self.facetSearch)
+        reset(self.maxTotalHits)
       },
       onCanceled: () =>
         toast.update({
@@ -115,24 +106,18 @@ const resetToInitialValue = async () => {
         emit('error', task.error as TaskError)
       },
     })
-    reset(self.facetSearch)
   })
 }
 </script>
+
 <i18n>
 en:
   confirmations:
-    primaryKey:
-      text: Do you want to update your settings?
-    distinctAttribute:
-      text: Do you want to update your settings?
-    facetSearch:
+    maxTotalHits:
       text: Do you want to update your settings?
   toasts:
-    facetSearch:
-      title: Updating facet search...
+    maxTotalHits:
+      title: Updating pagination settings...
   labels:
-    facetSearch: Facet Search
-    enabled: Enabled
-    disabled: Disabled
+    maxTotalHits: Max total hits
 </i18n>

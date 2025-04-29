@@ -90,8 +90,8 @@ const themeClasses = computed(() => {
 
 const text = computed(() =>
   match(props.type, [
-    ['submit', 'Submit'],
-    ['reset', 'Reset'],
+    ['submit', t('buttons.submit')],
+    ['reset', t('buttons.cancel')],
     [match.default, ''],
   ]),
 )
