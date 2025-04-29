@@ -18,6 +18,8 @@
 
       <ProximityPrecisionEditor :index="index" @error="self.error = $event" />
 
+      <MaxTotalHitsEditor :index="index" @error="self.error = $event" />
+
       <PrefixSearchEditor v-if="satisfiesVersion('^1.12')" :index="index" @error="self.error = $event" />
 
       <FacetSearchEditor v-if="satisfiesVersion('^1.12')" :index="index" @error="self.error = $event" />
@@ -70,6 +72,7 @@ import IndexNameEditor from '~/components/settings/IndexNameEditor.vue'
 import DuplicateIndexEditor from '~/components/settings/DuplicateIndexEditor.vue'
 import PrefixSearchEditor from '~/components/settings/PrefixSearchEditor.vue'
 import FacetSearchEditor from '~/components/settings/FacetSearchEditor.vue'
+import MaxTotalHitsEditor from '~/components/settings/MaxTotalHitsEditor.vue'
 
 type Props = {
   indexUid: string
