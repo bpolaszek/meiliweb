@@ -18,12 +18,10 @@
         </section>
         <div class="relative grow overflow-hidden">
           <div class="absolute inset-0 overflow-auto">
-            <div>
-              <section
-                class="mx-auto max-w-7xl px-4 pb-12 pt-4 sm:px-6 lg:px-8">
-                <slot />
-              </section>
-            </div>
+            <section
+              class="mx-auto h-full w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+              <slot />
+            </section>
           </div>
         </div>
       </div>
