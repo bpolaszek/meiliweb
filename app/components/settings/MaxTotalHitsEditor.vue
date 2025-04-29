@@ -10,8 +10,8 @@
 
     <footer class="flex flex-col items-center justify-end sm:flex-row">
       <Buttons>
-        <Button type="reset" :disabled="!modified || loading" />
-        <Button type="submit" :disabled="!modified || loading" :loading="loading" />
+        <Button size="small" type="reset" :disabled="!modified || loading" />
+        <Button size="small" type="submit" :disabled="!modified || loading" :loading="loading" />
       </Buttons>
     </footer>
   </form>
