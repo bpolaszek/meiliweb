@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-bubbles flex h-dvh flex-col items-center justify-center">
+  <div class="bg-bubbles flex h-dvh flex-col items-center justify-center gap-6">
     <div
       class="-mt-20 w-full max-w-lg space-y-6 rounded-lg border-gray-200 bg-white bg-opacity-90 px-6 py-4 md:w-1/2 md:border md:px-0 md:shadow-lg">
       <NuxtLink to="/indexes" class="flex items-center justify-center gap-2">
@@ -58,6 +58,7 @@
         </Button>
       </form>
     </div>
+    <GithubButton />
   </div>
 </template>
 
@@ -68,6 +69,7 @@ import { useFormSubmit } from '~/composables'
 import Alert from '~/components/layout/Alert.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import { toRefs } from 'vue'
+import GithubButton from '~/components/layout/GithubButton.vue'
 
 const { auth, factory } = useCredentials()
 const { loading, error, handle } = useFormSubmit()
