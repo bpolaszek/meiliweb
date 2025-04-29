@@ -36,6 +36,7 @@ type Props = {
   noBorder?: boolean
   noPadding?: boolean
   noRounded?: boolean
+  size?: 'small'
 }
 const props = withDefaults(defineProps<Props>(), {
   as: 'button',
@@ -52,8 +53,9 @@ const themeClasses = computed(() => {
   const classes = []
 
   props.noBorder || classes.push('border')
-  props.noPadding || classes.push('py-1.5', 'px-4')
+  props.noPadding || classes.push(...('small' === props.size ? ['py-1', 'px-2'] : ['py-1.5', 'px-4']))
   props.noRounded || classes.push('rounded-lg')
+  'small' === props.size && classes.push('text-sm')
 
   if ('submit' === props.type || 'primary' === props.theme) {
     classes.push(

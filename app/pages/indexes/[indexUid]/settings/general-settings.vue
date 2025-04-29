@@ -11,17 +11,17 @@
       </div>
     </Alert>
 
-    <PrimaryKeyEditor :index="index" :initial-primary-key="initialPrimaryKey!" @error="self.error = $event" />
+    <PrimaryKeyEditor :index="index" @error="self.error = $event" />
 
-    <DistinctAttributeEditor
-      :index="index"
-      :initial-distinct-attribute="initialDistinctAttribute!"
-      @error="self.error = $event" />
+    <div class="grid gap-4 md:grid-cols-2">
+      <DistinctAttributeEditor :index="index" @error="self.error = $event" />
 
-    <ProximityPrecisionEditor
-      :index="index"
-      :initial-proximity-precision="initialProximityPrecision!"
-      @error="self.error = $event" />
+      <ProximityPrecisionEditor :index="index" @error="self.error = $event" />
+
+      <PrefixSearchEditor v-if="satisfiesVersion('^1.12')" :index="index" @error="self.error = $event" />
+
+      <FacetSearchEditor v-if="satisfiesVersion('^1.12')" :index="index" @error="self.error = $event" />
+    </div>
 
     <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.renameIndex') }}
@@ -68,6 +68,8 @@ import DistinctAttributeEditor from '~/components/settings/DistinctAttributeEdit
 import ProximityPrecisionEditor from '~/components/settings/ProximityPrecisionEditor.vue'
 import IndexNameEditor from '~/components/settings/IndexNameEditor.vue'
 import DuplicateIndexEditor from '~/components/settings/DuplicateIndexEditor.vue'
+import PrefixSearchEditor from '~/components/settings/PrefixSearchEditor.vue'
+import FacetSearchEditor from '~/components/settings/FacetSearchEditor.vue'
 
 type Props = {
   indexUid: string
@@ -76,12 +78,7 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 const meili = useMeiliClient()
 const index = meili.index(props.indexUid)
-
-const [initialPrimaryKey, initialDistinctAttribute, initialProximityPrecision] = await Promise.all([
-  index.fetchPrimaryKey(),
-  index.getDistinctAttribute(),
-  index.getProximityPrecision(),
-])
+const { satisfiesVersion } = useVersion()
 
 const { handle: handleIndexDrop } = useFormSubmit({
   confirm: {

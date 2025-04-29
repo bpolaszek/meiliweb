@@ -170,11 +170,10 @@ import { safeToRefs, useConfirmationDialog, useRoute } from '#imports'
 import { Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
-import { asyncComputed } from '@vueuse/core'
 import { computed, reactive, toRefs } from 'vue'
 import GithubButton from '~/components/layout/GithubButton.vue'
 import LogoutButton from '~/components/layout/LogoutButton.vue'
-import { useCredentials } from '~/stores'
+import { useCredentials, useVersion } from '~/stores'
 
 const route = useRoute()
 const navigation = reactive([
@@ -206,9 +205,8 @@ const navigation = reactive([
 ])
 
 const { credentials, records, switchInstance, removeInstance: doRemoveInstance } = safeToRefs(useCredentials())
-const meili = useMeiliClient()
 const { confirm } = useConfirmationDialog()
-const version = asyncComputed(() => meili.getVersion())
+const { version } = useVersion()
 const self: any = reactive({
   records,
   savedInstances: computed(() => Array.from(self.records.values())),
