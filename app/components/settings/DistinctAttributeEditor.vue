@@ -35,14 +35,13 @@ const emit = defineEmits<{
 }>()
 type Props = {
   index: Index
-  initialDistinctAttribute: string
 }
 const props = defineProps<Props>()
 const { t } = useI18n()
 const processTask = useTask()
 const { createToast } = useToasts()
-
-const { value: distinctAttribute, reset, modified } = resettableRef(props.initialDistinctAttribute as string)
+const initialDistinctAttribute = await props.index.getDistinctAttribute()
+const { value: distinctAttribute, reset, modified } = resettableRef(initialDistinctAttribute as string)
 const { loading, handle } = useFormSubmit({
   confirm: { text: t('confirmations.distinctAttribute.text') },
 })

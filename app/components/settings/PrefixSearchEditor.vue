@@ -2,15 +2,15 @@
   <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
     <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
       <Label :for="id" class="flex items-center gap-2">
-        <span>{{ t('labels.proximityPrecision') }}</span>
-        <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#proximity-precision" />
+        <span>{{ t('labels.prefixSearch') }}</span>
+        <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#prefix-search" />
       </Label>
-      <Select :id v-model="self.proximityPrecision">
-        <option value="byAttribute" :selected="'byAttribute' === self.proximityPrecision">
-          {{ t('labels.proximityPrecisionByAttribute') }}
+      <Select :id v-model="self.prefixSearch">
+        <option value="disabled" :selected="'disabled' === self.prefixSearch">
+          {{ t('labels.disabled') }}
         </option>
-        <option value="byWord" :selected="'byWord' === self.proximityPrecision">
-          {{ t('labels.proximityPrecisionByWord') }}
+        <option value="indexingTime" :selected="'indexingTime' === self.prefixSearch">
+          {{ t('labels.indexingTime') }}
         </option>
       </Select>
     </UniqueId>
@@ -31,7 +31,7 @@ import Select from '~/components/layout/forms/Select.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
 import { TaskError, useFormSubmit, useTask } from '~/composables'
-import type { Index, ProximityPrecision, Task } from 'meilisearch'
+import type { Index, PrefixSearch, Task } from 'meilisearch'
 import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores'
 import { resettableRef } from '~/utils'
 
@@ -46,46 +46,43 @@ const { t } = useI18n()
 const processTask = useTask()
 const { createToast } = useToasts()
 
-const initialProximityPrecision = await props.index.getProximityPrecision()
-const { value: proximityPrecision, reset, modified } = resettableRef(initialProximityPrecision as string)
+const initialPrefixSearch = await props.index.getPrefixSearch()
+const { value: prefixSearch, reset, modified } = resettableRef(initialPrefixSearch)
 const { loading, handle } = useFormSubmit({
-  confirm: { text: t('confirmations.proximityPrecision.text') },
+  confirm: { text: t('confirmations.prefixSearch.text') },
 })
 
 const self = reactive({
-  proximityPrecision,
+  prefixSearch,
 })
 
 const submit = async () => {
   const toast = createToast({
     ...TOAST_PLEASEWAIT(t),
     immediate: false,
-    title: t('toasts.proximityPrecision.title'),
+    title: t('toasts.prefixSearch.title'),
   })
   await handle(async () => {
     toast.spawn()
-    await processTask(
-      () => props.index.updateProximityPrecision(self.proximityPrecision as unknown as ProximityPrecision),
-      {
-        onSuccess: async () => {
-          toast.update({ ...TOAST_SUCCESS(t) })
-          reset(self.proximityPrecision)
-        },
-        onCanceled: () =>
-          toast.update({
-            ...TOAST_FAILURE(t),
-            text: t('toasts.texts.canceledTask'),
-          }),
-        onFailure: (task: Task) => {
-          toast.update({
-            ...TOAST_FAILURE(t),
-            text: t('toasts.texts.failedTask'),
-          })
-          emit('error', task.error as TaskError)
-        },
+    await processTask(() => props.index.updatePrefixSearch(self.prefixSearch as unknown as PrefixSearch), {
+      onSuccess: async () => {
+        toast.update({ ...TOAST_SUCCESS(t) })
+        reset(self.prefixSearch)
       },
-    )
-    reset(self.proximityPrecision)
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: (task: Task) => {
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        })
+        emit('error', task.error as TaskError)
+      },
+    })
+    reset(self.prefixSearch)
   })
 }
 </script>
@@ -96,13 +93,13 @@ en:
       text: Do you want to update your settings?
     distinctAttribute:
       text: Do you want to update your settings?
-    proximityPrecision:
+    prefixSearch:
       text: Do you want to update your settings?
   toasts:
-    proximityPrecision:
-      title: Updating proximity precision...
+    prefixSearch:
+      title: Updating prefix search...
   labels:
-    proximityPrecision: Proximity Precision
-    proximityPrecisionByWord: By Word
-    proximityPrecisionByAttribute: By Attribute
+    prefixSearch: Prefix Search
+    indexingTime: Indexing Time
+    disabled: Disabled
 </i18n>

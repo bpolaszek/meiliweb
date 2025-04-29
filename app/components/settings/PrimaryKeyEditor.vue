@@ -31,14 +31,14 @@ const emit = defineEmits<{
 }>()
 type Props = {
   index: Index
-  initialPrimaryKey: string
 }
 const props = defineProps<Props>()
 const { t } = useI18n()
 const processTask = useTask()
 const { createToast } = useToasts()
 
-const { value: primaryKey, reset, modified } = resettableRef(props.initialPrimaryKey as string)
+const initialPrimaryKey = await props.index.fetchPrimaryKey()
+const { value: primaryKey, reset, modified } = resettableRef(initialPrimaryKey as string)
 const { loading, handle } = useFormSubmit({
   confirm: { text: t('confirmations.primaryKey.text') },
 })
