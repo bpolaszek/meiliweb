@@ -12,37 +12,16 @@
     </Alert>
 
     <PrimaryKeyEditor :index="index" :initial-primary-key="initialPrimaryKey!" @error="self.error = $event" />
+
     <DistinctAttributeEditor
       :index="index"
       :initial-distinct-attribute="initialDistinctAttribute!"
       @error="self.error = $event" />
 
-    <form class="space-y-4" @reset.prevent="resetProximityPrecision()" @submit.prevent="submitProximityPrecision()">
-      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
-        <Label :for="id" class="flex items-center gap-2">
-          <span>{{ t('labels.proximityPrecision') }}</span>
-          <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#proximity-precision" />
-        </Label>
-        <Select :id v-model="self.proximityPrecision">
-          <option value="byAttribute" :selected="'byAttribute' === self.proximityPrecision">
-            {{ t('labels.proximityPrecisionByAttribute') }}
-          </option>
-          <option value="byWord" :selected="'byWord' === self.proximityPrecision">
-            {{ t('labels.proximityPrecisionByWord') }}
-          </option>
-        </Select>
-      </UniqueId>
-
-      <footer class="flex flex-col items-center justify-end sm:flex-row">
-        <Buttons>
-          <Button type="reset" :disabled="!isProximityPrecisionModified || isProximityPrecisionLoading" />
-          <Button
-            type="submit"
-            :disabled="!isProximityPrecisionModified || isProximityPrecisionLoading"
-            :loading="isProximityPrecisionLoading" />
-        </Buttons>
-      </footer>
-    </form>
+    <ProximityPrecisionEditor
+      :index="index"
+      :initial-proximity-precision="initialProximityPrecision!"
+      @error="self.error = $event" />
 
     <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.renameIndex') }}
@@ -106,20 +85,18 @@
 </template>
 
 <script setup lang="ts">
-import { resettableRef } from '~/utils'
 import { TaskError, useFormSubmit, useIndexOperations, useMeiliClient, useTask } from '~/composables'
 import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores/toasts'
 import Alert from '~/components/layout/Alert.vue'
-import Buttons from '~/components/layout/forms/Buttons.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import type { ProximityPrecision, Task } from 'meilisearch'
+import type { Task } from 'meilisearch'
 import { promiseTimeout } from '@vueuse/core'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Label from '~/components/layout/forms/Label.vue'
 import { navigateTo } from '#imports'
-import Select from '~/components/layout/forms/Select.vue'
 import PrimaryKeyEditor from '~/components/settings/PrimaryKeyEditor.vue'
 import DistinctAttributeEditor from '~/components/settings/DistinctAttributeEditor.vue'
+import ProximityPrecisionEditor from '~/components/settings/ProximityPrecisionEditor.vue'
 
 type Props = {
   indexUid: string
@@ -136,14 +113,6 @@ const [initialPrimaryKey, initialDistinctAttribute, initialProximityPrecision] =
   index.getProximityPrecision(),
 ])
 
-const {
-  value: proximityPrecision,
-  reset: resetProximityPrecision,
-  modified: isProximityPrecisionModified,
-} = resettableRef(initialProximityPrecision as string)
-const { loading: isProximityPrecisionLoading, handle: handleProximityPrecision } = useFormSubmit({
-  confirm: { text: t('confirmations.proximityPrecision.text') },
-})
 const { handle: handleIndexDrop } = useFormSubmit({
   confirm: {
     title: t('confirmations.dropIndex.title', { index: index.uid }),
@@ -161,44 +130,12 @@ const { handle: handleDeleteAllDocuments } = useFormSubmit({
 const processTask = useTask()
 const { createToast } = useToasts()
 const self = reactive({
-  proximityPrecision,
   error: null as Error | null,
   duplicateIndexUid: ref(`${props.indexUid}-copy`),
   renameIndexUid: ref(`${props.indexUid}-new`),
   isDuplicating: false,
   isRenaming: false,
 })
-
-const submitProximityPrecision = async () => {
-  const toast = createToast({
-    ...TOAST_PLEASEWAIT(t),
-    immediate: false,
-    title: t('toasts.proximityPrecision.title'),
-    text: t('toasts.proximityPrecision.pendingText'),
-  })
-  await handleProximityPrecision(async () => {
-    toast.spawn()
-    await processTask(() => index.updateProximityPrecision(self.proximityPrecision as unknown as ProximityPrecision), {
-      onSuccess: async () => {
-        toast.update({ ...TOAST_SUCCESS(t) })
-        resetProximityPrecision(self.proximityPrecision)
-      },
-      onCanceled: () =>
-        toast.update({
-          ...TOAST_FAILURE(t),
-          text: t('toasts.texts.canceledTask'),
-        }),
-      onFailure: (task: Task) => {
-        toast.update({
-          ...TOAST_FAILURE(t),
-          text: t('toasts.texts.failedTask'),
-        })
-        self.error = task.error as TaskError
-      },
-    })
-    resetProximityPrecision(self.proximityPrecision)
-  })
-}
 
 const { duplicateIndex: doDuplicateIndex, renameIndex: doRenameIndex } = useIndexOperations()
 const duplicateIndex = async () => {
@@ -305,8 +242,6 @@ en:
     renameIndex: Rename index
     dangerZone: Danger Zone
   confirmations:
-    proximityPrecision:
-      text: Do you want to update your settings?
     duplicateIndex:
       text: Duplicate this index?
     renameIndex:
@@ -320,14 +255,11 @@ en:
       text: "CAUTION: This action cannot be reversed!"
       acceptButtonText: Yes, delete forever
   toasts:
-    proximityPrecision:
-      title: Updating proximity precision...
     dropIndex:
       title: Deleting index...
     deleteAllDocuments:
       title: Deleting documents...
   labels:
-    proximityPrecision: Proximity Precision
     duplicateIndexUid: New index name
     renameIndexUid: New index name
     proximityPrecisionByWord: By Word
