@@ -33,7 +33,10 @@
 
     <form class="space-y-4" @reset.prevent="resetDistinctAttribute()" @submit.prevent="submitDistinctAttribute()">
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
-        <Label :for="id">{{ t('labels.distinctAttribute') }}</Label>
+        <Label :for="id" class="flex items-center gap-2">
+          <span>{{ t('labels.distinctAttribute') }}</span>
+          <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#distinct-attribute" />
+        </Label>
         <input v-model="self.distinctAttribute" autofocus autocomplete="off" type="text" class="form-input" />
         <p class="text-xs italic text-gray-600">
           {{ t('notices.distinctAttribute.text') }}
@@ -47,6 +50,33 @@
             type="submit"
             :disabled="!isDistinctAttributeModified || isDistinctAttributeLoading"
             :loading="isDistinctAttributeLoading" />
+        </Buttons>
+      </footer>
+    </form>
+
+    <form class="space-y-4" @reset.prevent="resetProximityPrecision()" @submit.prevent="submitProximityPrecision()">
+      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
+        <Label :for="id" class="flex items-center gap-2">
+          <span>{{ t('labels.proximityPrecision') }}</span>
+          <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#proximity-precision" />
+        </Label>
+        <Select :id v-model="self.proximityPrecision">
+          <option value="byAttribute" :selected="'byAttribute' === self.proximityPrecision">
+            {{ t('labels.proximityPrecisionByAttribute') }}
+          </option>
+          <option value="byWord" :selected="'byWord' === self.proximityPrecision">
+            {{ t('labels.proximityPrecisionByWord') }}
+          </option>
+        </Select>
+      </UniqueId>
+
+      <footer class="flex flex-col items-center justify-end sm:flex-row">
+        <Buttons>
+          <Button type="reset" :disabled="!isProximityPrecisionModified || isProximityPrecisionLoading" />
+          <Button
+            type="submit"
+            :disabled="!isProximityPrecisionModified || isProximityPrecisionLoading"
+            :loading="isProximityPrecisionLoading" />
         </Buttons>
       </footer>
     </form>
@@ -119,11 +149,12 @@ import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores/toasts'
 import Alert from '~/components/layout/Alert.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import type { Task } from 'meilisearch'
+import type { ProximityPrecision, Task } from 'meilisearch'
 import { promiseTimeout } from '@vueuse/core'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Label from '~/components/layout/forms/Label.vue'
 import { navigateTo } from '#imports'
+import Select from '~/components/layout/forms/Select.vue'
 
 type Props = {
   indexUid: string
@@ -134,9 +165,10 @@ const meili = useMeiliClient()
 const { confirm } = useConfirmationDialog()
 const index = meili.index(props.indexUid)
 
-const [initialPrimaryKey, initialDistinctAttribute] = await Promise.all([
+const [initialPrimaryKey, initialDistinctAttribute, initialProximityPrecision] = await Promise.all([
   index.fetchPrimaryKey(),
   index.getDistinctAttribute(),
+  index.getProximityPrecision(),
 ])
 
 const {
@@ -154,6 +186,14 @@ const {
 } = resettableRef(initialDistinctAttribute as string)
 const { loading: isDistinctAttributeLoading, handle: handleDistinctAttribute } = useFormSubmit({
   confirm: { text: t('confirmations.distinctAttribute.text') },
+})
+const {
+  value: proximityPrecision,
+  reset: resetProximityPrecision,
+  modified: isProximityPrecisionModified,
+} = resettableRef(initialProximityPrecision as string)
+const { loading: isProximityPrecisionLoading, handle: handleProximityPrecision } = useFormSubmit({
+  confirm: { text: t('confirmations.proximityPrecision.text') },
 })
 const { handle: handleIndexDrop } = useFormSubmit({
   confirm: {
@@ -174,6 +214,7 @@ const { createToast } = useToasts()
 const self = reactive({
   primaryKey,
   distinctAttribute,
+  proximityPrecision,
   error: null as Error | null,
   duplicateIndexUid: ref(`${props.indexUid}-copy`),
   renameIndexUid: ref(`${props.indexUid}-new`),
@@ -240,6 +281,37 @@ const submitDistinctAttribute = async () => {
       },
     })
     resetDistinctAttribute(self.distinctAttribute)
+  })
+}
+
+const submitProximityPrecision = async () => {
+  const toast = createToast({
+    ...TOAST_PLEASEWAIT(t),
+    immediate: false,
+    title: t('toasts.proximityPrecision.title'),
+    text: t('toasts.proximityPrecision.pendingText'),
+  })
+  await handleProximityPrecision(async () => {
+    toast.spawn()
+    await processTask(() => index.updateProximityPrecision(self.proximityPrecision as unknown as ProximityPrecision), {
+      onSuccess: async () => {
+        toast.update({ ...TOAST_SUCCESS(t) })
+        resetProximityPrecision(self.proximityPrecision)
+      },
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: (task: Task) => {
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        })
+        self.error = task.error as TaskError
+      },
+    })
+    resetProximityPrecision(self.proximityPrecision)
   })
 }
 
@@ -352,6 +424,8 @@ en:
       text: Do you want to update your settings?
     distinctAttribute:
       text: Do you want to update your settings?
+    proximityPrecision:
+      text: Do you want to update your settings?
     duplicateIndex:
       text: Duplicate this index?
     renameIndex:
@@ -369,6 +443,8 @@ en:
       title: Updating primary key...
     distinctAttribute:
       title: Updating distinct attribute...
+    proximityPrecision:
+      title: Updating proximity precision...
     dropIndex:
       title: Deleting index...
     deleteAllDocuments:
@@ -376,8 +452,11 @@ en:
   labels:
     primaryKey: Primary Key
     distinctAttribute: Distinct Attribute
+    proximityPrecision: Proximity Precision
     duplicateIndexUid: New index name
     renameIndexUid: New index name
+    proximityPrecisionByWord: By Word
+    proximityPrecisionByAttribute: By Attribute
   notices:
     primaryKey:
       text: You can freely update the primary key of an index as long as it contains no documents. To change the primary key of an index that already contains documents, you must first delete all documents in that index. You may then change the primary key and index your dataset again.
