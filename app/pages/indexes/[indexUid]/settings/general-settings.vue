@@ -12,29 +12,10 @@
     </Alert>
 
     <PrimaryKeyEditor :index="index" :initial-primary-key="initialPrimaryKey!" @error="self.error = $event" />
-
-    <form class="space-y-4" @reset.prevent="resetDistinctAttribute()" @submit.prevent="submitDistinctAttribute()">
-      <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
-        <Label :for="id" class="flex items-center gap-2">
-          <span>{{ t('labels.distinctAttribute') }}</span>
-          <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#distinct-attribute" />
-        </Label>
-        <input v-model="self.distinctAttribute" autofocus autocomplete="off" type="text" class="form-input" />
-        <p class="text-xs italic text-gray-600">
-          {{ t('notices.distinctAttribute.text') }}
-        </p>
-      </UniqueId>
-
-      <footer class="flex flex-col items-center justify-end sm:flex-row">
-        <Buttons>
-          <Button type="reset" :disabled="!isDistinctAttributeModified || isDistinctAttributeLoading" />
-          <Button
-            type="submit"
-            :disabled="!isDistinctAttributeModified || isDistinctAttributeLoading"
-            :loading="isDistinctAttributeLoading" />
-        </Buttons>
-      </footer>
-    </form>
+    <DistinctAttributeEditor
+      :index="index"
+      :initial-distinct-attribute="initialDistinctAttribute!"
+      @error="self.error = $event" />
 
     <form class="space-y-4" @reset.prevent="resetProximityPrecision()" @submit.prevent="submitProximityPrecision()">
       <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
@@ -138,6 +119,7 @@ import Label from '~/components/layout/forms/Label.vue'
 import { navigateTo } from '#imports'
 import Select from '~/components/layout/forms/Select.vue'
 import PrimaryKeyEditor from '~/components/settings/PrimaryKeyEditor.vue'
+import DistinctAttributeEditor from '~/components/settings/DistinctAttributeEditor.vue'
 
 type Props = {
   indexUid: string
@@ -154,14 +136,6 @@ const [initialPrimaryKey, initialDistinctAttribute, initialProximityPrecision] =
   index.getProximityPrecision(),
 ])
 
-const {
-  value: distinctAttribute,
-  reset: resetDistinctAttribute,
-  modified: isDistinctAttributeModified,
-} = resettableRef(initialDistinctAttribute as string)
-const { loading: isDistinctAttributeLoading, handle: handleDistinctAttribute } = useFormSubmit({
-  confirm: { text: t('confirmations.distinctAttribute.text') },
-})
 const {
   value: proximityPrecision,
   reset: resetProximityPrecision,
@@ -187,7 +161,6 @@ const { handle: handleDeleteAllDocuments } = useFormSubmit({
 const processTask = useTask()
 const { createToast } = useToasts()
 const self = reactive({
-  distinctAttribute,
   proximityPrecision,
   error: null as Error | null,
   duplicateIndexUid: ref(`${props.indexUid}-copy`),
@@ -195,37 +168,6 @@ const self = reactive({
   isDuplicating: false,
   isRenaming: false,
 })
-
-const submitDistinctAttribute = async () => {
-  const toast = createToast({
-    ...TOAST_PLEASEWAIT(t),
-    immediate: false,
-    title: t('toasts.distinctAttribute.title'),
-    text: t('toasts.distinctAttribute.pendingText'),
-  })
-  await handleDistinctAttribute(async () => {
-    toast.spawn()
-    await processTask(() => index.updateDistinctAttribute(self.distinctAttribute), {
-      onSuccess: async () => {
-        toast.update({ ...TOAST_SUCCESS(t) })
-        resetDistinctAttribute(self.distinctAttribute)
-      },
-      onCanceled: () =>
-        toast.update({
-          ...TOAST_FAILURE(t),
-          text: t('toasts.texts.canceledTask'),
-        }),
-      onFailure: (task: Task) => {
-        toast.update({
-          ...TOAST_FAILURE(t),
-          text: t('toasts.texts.failedTask'),
-        })
-        self.error = task.error as TaskError
-      },
-    })
-    resetDistinctAttribute(self.distinctAttribute)
-  })
-}
 
 const submitProximityPrecision = async () => {
   const toast = createToast({
@@ -363,8 +305,6 @@ en:
     renameIndex: Rename index
     dangerZone: Danger Zone
   confirmations:
-    distinctAttribute:
-      text: Do you want to update your settings?
     proximityPrecision:
       text: Do you want to update your settings?
     duplicateIndex:
@@ -380,8 +320,6 @@ en:
       text: "CAUTION: This action cannot be reversed!"
       acceptButtonText: Yes, delete forever
   toasts:
-    distinctAttribute:
-      title: Updating distinct attribute...
     proximityPrecision:
       title: Updating proximity precision...
     dropIndex:
@@ -389,15 +327,12 @@ en:
     deleteAllDocuments:
       title: Deleting documents...
   labels:
-    distinctAttribute: Distinct Attribute
     proximityPrecision: Proximity Precision
     duplicateIndexUid: New index name
     renameIndexUid: New index name
     proximityPrecisionByWord: By Word
     proximityPrecisionByAttribute: By Attribute
   notices:
-    distinctAttribute:
-      text: Updating distinct attributes will re-index all documents in the index, which can take some time. We recommend updating your index settings first and then adding documents as this reduces RAM consumption.
     duplicateIndex:
       text: Your index will be duplicated by batches of documents. Ensure that your index is not being written to during the duplication process.
   actions:
