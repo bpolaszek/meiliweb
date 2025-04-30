@@ -2,7 +2,7 @@
   <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
     <h3 class="inline-flex w-full items-start justify-between">
       <span class="inline-flex flex-col gap-1">
-        <span class="text-xl font-semibold">{{ t("title") }}</span>
+        <span class="text-xl font-semibold">{{ t('title') }}</span>
         <span class="text-sm italic text-gray-600">
           {{ t('description') }}
         </span>
@@ -125,7 +125,6 @@ const clearStopWords = async () => {
     })
   })
 }
-
 
 useHead({
   title: `${t('title')} - ${index.uid}`,
