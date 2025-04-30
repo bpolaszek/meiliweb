@@ -6,12 +6,12 @@
       </NuxtLink>
     </template>
     <div class="grid h-48 grid-cols-12 gap-4">
-      <menu class="col-span-3 space-y-3">
+      <menu class="col-span-3 mb-12 space-y-3">
         <li
           v-for="{ href, text, current } of navigation"
           class="block w-full rounded-lg shadow-md"
           :class="current ? 'bg-primary-600 text-white' : 'bg-gray-50 hover:bg-gray-100'">
-          <NuxtLink :to="href" class="block size-full px-2 py-3 text-sm">
+          <NuxtLink :to="href" class="block size-full px-2 py-2.5 text-sm">
             {{ text }}
           </NuxtLink>
         </li>
@@ -79,6 +79,21 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.dictionary'),
   },
   {
+    href: `/indexes/${index.uid}/settings/stop-words`,
+    current: computed(() => 'indexes-indexUid-settings-stop-words' === route.name),
+    text: t('menu.stopWords'),
+  },
+  {
+    href: `/indexes/${index.uid}/settings/separator-tokens`,
+    current: computed(() => 'indexes-indexUid-settings-separator-tokens' === route.name),
+    text: t('menu.separatorTokens'),
+  },
+  {
+    href: `/indexes/${index.uid}/settings/non-separator-tokens`,
+    current: computed(() => 'indexes-indexUid-settings-non-separator-tokens' === route.name),
+    text: t('menu.nonSeparatorTokens'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/local-settings`,
     current: computed(() => 'indexes-indexUid-settings-local-settings' === route.name),
     text: t('menu.localSettings'),
@@ -105,6 +120,9 @@ en:
     sortableAttributes: Sortable Attributes
     displayedAttributes: Displayed Attributes
     dictionary: Dictionary
+    stopWords: Stop Words
+    separatorTokens: Separator Tokens
+    nonSeparatorTokens: Non-Separator Tokens
     localSettings: Local settings
   actions:
     documents: Go to Documents
