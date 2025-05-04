@@ -27,5 +27,5 @@ const classes = computed(() => {
 
   return classes
 })
-const value = defineModel()
+const value = defineModel<string | undefined>()
 </script>
