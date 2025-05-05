@@ -6528,6 +6528,11 @@ smob@^1.0.0:
   resolved "https://registry.yarnpkg.com/smob/-/smob-1.5.0.tgz#85d79a1403abf128d24d3ebc1cdc5e1a9548d3ab"
   integrity sha512-g6T+p7QO8npa+/hNx9ohv1E5pVCmWrVCUzUXJyLdMmftX6ER0oiWY/w9knEonLpnOp6b6FenKnMfR8gqwWdwig==
 
+sortablejs@1.15.0:
+  version "1.15.0"
+  resolved "https://registry.yarnpkg.com/sortablejs/-/sortablejs-1.15.0.tgz#53230b8aa3502bb77a29e2005808ffdb4a5f7e2a"
+  integrity sha512-bv9qgVMjUMf89wAvM6AxVvS/4MX3sPeN0+agqShejLU5z5GX4C75ow1O2e5k4L6XItUyAK3gH6AxSbXrOM5e8w==
+
 "source-map-js@>=0.6.2 <2.0.0", source-map-js@^1.0.1, source-map-js@^1.0.2, source-map-js@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/source-map-js/-/source-map-js-1.2.0.tgz#16b809c162517b5b8c3e7dcd315a2a5c2612b2af"
@@ -7439,6 +7444,13 @@ vue-tippy@v6:
     "@vueuse/core" "^9.6.0"
     lodash.merge "^4.6.2"
     vue "^3.2.25"
+
+vue3-sortablejs@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/vue3-sortablejs/-/vue3-sortablejs-1.0.7.tgz#bcdf86de660604ac30b0b1aa5f754133de3e8a7c"
+  integrity sha512-Mk67J+TxM1+/clI++inBXE4SpZHMOfXjgrOPcth6cRg8b4/GtrjhYEJsDxXnwzJchXFl9sJbPOJSiyVlEaz+2Q==
+  dependencies:
+    sortablejs "1.15.0"
 
 vue@^3.2.25, vue@^3.4.21, vue@^3.4.32:
   version "3.4.37"
