@@ -1,4 +1,4 @@
-import 'tippy.js/dist/tippy.css' // optional for styling
+import 'tippy.js/dist/tippy.css'
 import VueTippy from 'vue-tippy'
 
 export default defineNuxtPlugin({

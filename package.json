@@ -15,6 +15,7 @@
     "semver": "^7.7.1",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
+    "vue3-sortablejs": "^1.0.7",
     "xxh32": "^2.0.4"
   },
   "devDependencies": {

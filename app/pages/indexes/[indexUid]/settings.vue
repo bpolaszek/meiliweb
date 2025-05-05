@@ -74,9 +74,19 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.displayedAttributes'),
   },
   {
+    href: `/indexes/${index.uid}/settings/ranking-rules`,
+    current: computed(() => 'indexes-indexUid-settings-ranking-rules' === route.name),
+    text: t('menu.rankingRules'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/dictionary`,
     current: computed(() => 'indexes-indexUid-settings-dictionary' === route.name),
     text: t('menu.dictionary'),
+  },
+  {
+    href: `/indexes/${index.uid}/settings/synonyms`,
+    current: computed(() => 'indexes-indexUid-settings-synonyms' === route.name),
+    text: t('menu.synonyms'),
   },
   {
     href: `/indexes/${index.uid}/settings/stop-words`,
@@ -119,7 +129,9 @@ en:
     searchableAttributes: Searchable Attributes
     sortableAttributes: Sortable Attributes
     displayedAttributes: Displayed Attributes
+    rankingRules: Ranking Rules
     dictionary: Dictionary
+    synonyms: Synonyms
     stopWords: Stop Words
     separatorTokens: Separator Tokens
     nonSeparatorTokens: Non-Separator Tokens
