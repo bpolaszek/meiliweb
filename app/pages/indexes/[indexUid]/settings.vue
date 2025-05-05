@@ -79,6 +79,11 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.rankingRules'),
   },
   {
+    href: `/indexes/${index.uid}/settings/typo-tolerance`,
+    current: computed(() => 'indexes-indexUid-settings-typo-tolerance' === route.name),
+    text: t('menu.typoTolerance'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/dictionary`,
     current: computed(() => 'indexes-indexUid-settings-dictionary' === route.name),
     text: t('menu.dictionary'),
@@ -130,6 +135,7 @@ en:
     sortableAttributes: Sortable Attributes
     displayedAttributes: Displayed Attributes
     rankingRules: Ranking Rules
+    typoTolerance: Typo Tolerance
     dictionary: Dictionary
     synonyms: Synonyms
     stopWords: Stop Words
