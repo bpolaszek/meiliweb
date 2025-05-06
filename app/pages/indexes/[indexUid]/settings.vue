@@ -5,7 +5,7 @@
         <Icon name="pajamas:documents" />
       </NuxtLink>
     </template>
-    <div class="grid h-48 grid-cols-12 gap-4">
+    <div class="grid grid-cols-12 gap-4">
       <menu class="col-span-3 mb-12 space-y-3">
         <li
           v-for="{ href, text, current } of navigation"
@@ -16,7 +16,7 @@
           </NuxtLink>
         </li>
       </menu>
-      <div class="col-span-9">
+      <div class="col-span-9 mb-12">
         <NuxtPage :index-uid="index.uid" />
       </div>
     </div>
