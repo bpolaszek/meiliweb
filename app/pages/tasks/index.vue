@@ -1,5 +1,19 @@
 <template>
   <Layout :title="t('title')">
+    <DefineTreeRendering v-slot="{ value }">
+      <div v-if="'object' === typeof value && null !== value" class="table">
+        <div v-for="[_key, _value] of Object.entries(value)" class="table-row">
+          <dt class="table-cell">{{ _key }}</dt>
+          <dd class="table-cell p-1 text-xs">
+            <DocumentationLink v-if="'link' === _key" :href="_value as string">
+              {{ _value }}
+            </DocumentationLink>
+            <UseTreeRendering v-else :value="_value" />
+          </dd>
+        </div>
+      </div>
+      <span v-else>{{ value }}</span>
+    </DefineTreeRendering>
     <Table
       :items="tasks.results"
       :columns="[
@@ -29,7 +43,10 @@
           </NuxtLink>
         </td>
         <td>
-          <span v-if="'documentAdditionOrUpdate' === tasks.results[index].type">
+          <UseTreeRendering
+            v-if="TaskStatus.TASK_FAILED === tasks.results[index].status"
+            :value="tasks.results[index].error" />
+          <span v-else-if="'documentAdditionOrUpdate' === tasks.results[index].type">
             {{
               t('labels.documentIndexRatio', {
                 indexedDocuments: tasks.results[index].details.indexedDocuments ?? 0,
@@ -37,7 +54,7 @@
               })
             }}
           </span>
-          <span v-else>{{ tasks.results[index].details }}</span>
+          <UseTreeRendering v-else :value="tasks.results[index].details" />
         </td>
         <td class="whitespace-nowrap">
           {{
@@ -81,6 +98,8 @@ import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
 import { type Task, TaskStatus } from 'meilisearch'
 import Button from '~/components/layout/forms/Button.vue'
+import DocumentationLink from '~/components/layout/DocumentationLink.vue'
+import { createReusableTemplate } from '@vueuse/core'
 
 const { t } = useI18n()
 useHead({
@@ -90,6 +109,7 @@ useHead({
 const meili = useMeiliClient()
 const { confirm } = useConfirmationDialog()
 const { createToast } = useToasts()
+const [DefineTreeRendering, UseTreeRendering] = createReusableTemplate()
 const self: any = reactive({
   tasks: await tryOrThrow(() => meili.getTasks()),
   pendingTasks: computed(() =>
