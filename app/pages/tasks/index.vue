@@ -9,6 +9,7 @@
         t('columns.details'),
         t('columns.date'),
         t('columns.duration'),
+        '',
       ]">
       <template #default="{ index }">
         <td class="whitespace-nowrap">
@@ -54,6 +55,18 @@
             {{ formatDuration(tasks.results[index].duration) }}
           </template>
         </td>
+        <td class="text-right">
+          <template v-if="[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_PROCESSING].includes(tasks.results[index].status)">
+            <Button
+              theme="primary"
+              size="small"
+              icon="mdi:close"
+              @click="cancelTask(tasks.results[index])"
+              class="w-full flex-row-reverse">
+              {{ t('buttons.cancel') }}
+            </Button>
+          </template>
+        </td>
       </template>
     </Table>
   </Layout>
@@ -67,6 +80,7 @@ import { NuxtLink } from '#components'
 import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
 import { type Task, TaskStatus } from 'meilisearch'
+import Button from '~/components/layout/forms/Button.vue'
 
 const { t } = useI18n()
 useHead({
@@ -74,6 +88,8 @@ useHead({
 })
 
 const meili = useMeiliClient()
+const { confirm } = useConfirmationDialog()
+const { createToast } = useToasts()
 const self: any = reactive({
   tasks: await tryOrThrow(() => meili.getTasks()),
   pendingTasks: computed(() =>
@@ -100,6 +116,20 @@ const stringifyTaskType = (type: string) =>
   ])
 
 const { tasks, pendingTasks } = toRefs(self)
+
+const cancelTask = async (task: Task) => {
+  if (!(await confirm({ text: t('confirmations.cancelTask') }))) {
+    return
+  }
+  const toast = createToast({
+    ...TOAST_PLEASEWAIT(t),
+    title: t('toasts.cancelTask'),
+  })
+  const cancelTask = await meili.cancelTasks({ uids: [task.uid] })
+  await meili.waitForTask(cancelTask.taskUid)
+  toast.destroy()
+  task.status = TaskStatus.TASK_CANCELED
+}
 
 const watchers = new WeakMap()
 watch(
@@ -155,4 +185,8 @@ en:
     snapshotCreation: Snapshot creation
   labels:
     documentIndexRatio: Indexed {indexedDocuments}/{receivedDocuments}
+  toasts:
+    cancelTask: Cancelling task
+  confirmations:
+    cancelTask: Are you sure you want to cancel this task?
 </i18n>
