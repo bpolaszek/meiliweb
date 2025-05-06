@@ -5,7 +5,7 @@
         <Icon name="pajamas:documents" />
       </NuxtLink>
     </template>
-    <div class="grid h-48 grid-cols-12 gap-4">
+    <div class="grid grid-cols-12 gap-4">
       <menu class="col-span-3 mb-12 space-y-3">
         <li
           v-for="{ href, text, current } of navigation"
@@ -16,7 +16,7 @@
           </NuxtLink>
         </li>
       </menu>
-      <div class="col-span-9">
+      <div class="col-span-9 mb-12">
         <NuxtPage :index-uid="index.uid" />
       </div>
     </div>
@@ -109,6 +109,11 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.nonSeparatorTokens'),
   },
   {
+    href: `/indexes/${index.uid}/settings/embedders`,
+    current: computed(() => 'indexes-indexUid-settings-embedders' === route.name),
+    text: t('menu.embedders'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/local-settings`,
     current: computed(() => 'indexes-indexUid-settings-local-settings' === route.name),
     text: t('menu.localSettings'),
@@ -141,6 +146,7 @@ en:
     stopWords: Stop Words
     separatorTokens: Separator Tokens
     nonSeparatorTokens: Non-Separator Tokens
+    embedders: Embedders
     localSettings: Local settings
   actions:
     documents: Go to Documents
