@@ -109,6 +109,11 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.nonSeparatorTokens'),
   },
   {
+    href: `/indexes/${index.uid}/settings/embedders`,
+    current: computed(() => 'indexes-indexUid-settings-embedders' === route.name),
+    text: t('menu.embedders'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/local-settings`,
     current: computed(() => 'indexes-indexUid-settings-local-settings' === route.name),
     text: t('menu.localSettings'),
@@ -141,6 +146,7 @@ en:
     stopWords: Stop Words
     separatorTokens: Separator Tokens
     nonSeparatorTokens: Non-Separator Tokens
+    embedders: Embedders
     localSettings: Local settings
   actions:
     documents: Go to Documents
