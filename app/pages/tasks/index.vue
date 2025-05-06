@@ -86,6 +86,7 @@
         </td>
       </template>
     </Table>
+    <InfiniteLoading @infinite="handleInfiniteLoading()" />
   </Layout>
 </template>
 
@@ -99,7 +100,8 @@ import Badge from '~/components/layout/Badge.vue'
 import { type Task, TaskStatus } from 'meilisearch'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate, watchImmediate } from '@vueuse/core'
+import InfiniteLoading from 'v3-infinite-loading'
 
 const { t } = useI18n()
 useHead({
@@ -110,9 +112,10 @@ const meili = useMeiliClient()
 const { confirm } = useConfirmationDialog()
 const { createToast } = useToasts()
 const [DefineTreeRendering, UseTreeRendering] = createReusableTemplate()
-const self: any = reactive({
+const self = reactive({
   tasks: await tryOrThrow(() => meili.getTasks()),
-  pendingTasks: computed(() =>
+  lastTaskUid: null! as number,
+  pendingTasks: computed((): Task[] =>
     self.tasks.results.filter((task: Task) =>
       [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_PROCESSING].includes(task.status),
     ),
@@ -136,7 +139,11 @@ const stringifyTaskType = (type: string) =>
   ])
 
 const { tasks, pendingTasks } = toRefs(self)
-
+watchImmediate(tasks, (tasks) => (self.lastTaskUid = tasks.results[tasks.results.length - 1]!.uid), { deep: true })
+const handleInfiniteLoading = async () => {
+  const nextTasks = await tryOrThrow(() => meili.getTasks({ from: self.lastTaskUid }))
+  self.tasks.results.push(...nextTasks.results)
+}
 const cancelTask = async (task: Task) => {
   if (!(await confirm({ text: t('confirmations.cancelTask') }))) {
     return
