@@ -6,7 +6,7 @@
 
   <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
     <Label :for="id">{{ t('labels.apiKey') }}</Label>
-    <input v-model="embedder!.apiKey" autocomplete="off" type="text" class="form-input w-full text-sm" />
+    <input v-model="embedder!.apiKey" autocomplete="off" type="password" class="form-input w-full text-sm" />
   </UniqueId>
 
   <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
