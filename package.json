@@ -48,7 +48,7 @@
     "match-operator": "^0.2.1",
     "meilisearch": "0.49",
     "meilisearch-filters": "github:bpolaszek/meilisearch-filters",
-    "nuxt": "^3.12.4",
+    "nuxt": "^3.16.0",
     "nuxt-icon": "^0.6.10",
     "pinia": "^2.1.7",
     "prettier": "3.2.5",
