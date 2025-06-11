@@ -20,6 +20,7 @@ import { useConfirmationDialog, useCredentials } from '~/stores'
 import { toRefs } from 'vue'
 
 const route = useRoute()
+const { locale } = useI18n()
 const { confirmationDialog } = safeToRefs(useConfirmationDialog())
 const IS_DEV_MODE = import.meta.dev
 const config = useRuntimeConfig()
@@ -49,6 +50,26 @@ useHead({
   },
 })
 </script>
+
+<i18n global>
+en:
+  toasts:
+    titles:
+      error: An error occured.
+      duplicateIndex: Copying {indexUid} to {newIndexUid}
+      renameIndex: Renaming {indexUid} to {newIndexUid}
+    texts:
+      pleaseWait: Please wait...
+      done: Done.
+      canceledTask: Task was canceled.
+      failedTask: Task failed.
+
+  buttons:
+    reset: Reset
+    cancel: Cancel
+    submit: Submit
+
+</i18n>
 
 <style lang="scss">
 @tailwind base;
