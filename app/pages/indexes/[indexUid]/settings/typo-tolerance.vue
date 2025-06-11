@@ -53,7 +53,7 @@
       <SplitLinesTextarea v-model="typoTolerance!.disableOnAttributes!" class="h-20 w-full text-sm" />
     </UniqueId>
 
-    <UniqueId v-if="satisfiesVersion('^1.15')"  v-slot="{ id }" as="div" class="col-span-8">
+    <UniqueId v-if="satisfiesVersion('^1.15')" v-slot="{ id }" as="div" class="col-span-8">
       <Label :for="id">{{ t('labels.disableOnNumbers') }}</Label>
       <SplitLinesTextarea v-model="typoTolerance!.disableOnNumbers!" class="h-20 w-full text-sm" />
     </UniqueId>
