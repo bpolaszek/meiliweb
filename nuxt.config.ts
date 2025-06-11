@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   },
   modules: [
     '@pinia/nuxt',
-    'nuxt-icon',
+    '@nuxt/icon',
     '@nuxtjs/i18n',
     [
       '@nuxtjs/tailwindcss',
