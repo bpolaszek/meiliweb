@@ -1,5 +1,5 @@
 import match from 'match-operator'
-import { MeiliSearchRequestTimeOutError, Task, type EnqueuedTask } from 'meilisearch'
+import { MeiliSearchRequestTimeOutError, type Task, type EnqueuedTask } from 'meilisearch'
 import { useMeiliClient } from '~/composables/index'
 import { TaskStatus } from '~/types'
 
