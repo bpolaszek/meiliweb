@@ -1,5 +1,5 @@
 import match from 'match-operator'
-import { MeiliSearchTimeOutError, Task, type EnqueuedTask } from 'meilisearch'
+import { MeiliSearchRequestTimeOutError, Task, type EnqueuedTask } from 'meilisearch'
 import { useMeiliClient } from '~/composables/index'
 import { TaskStatus } from '~/types'
 
@@ -9,7 +9,7 @@ type ProcessTaskOptions = {
   onSuccess: (task: Task) => void
   onCanceled: (task: Task) => void
   onFailure: (task: Task) => void
-  onTimeout: (e: MeiliSearchTimeOutError, enqueuedTask: EnqueuedTask) => void
+  onTimeout: (e: MeiliSearchRequestTimeOutError, enqueuedTask: EnqueuedTask) => void
 }
 
 export class TaskError extends Error {
@@ -58,7 +58,7 @@ export const useTask = () => {
       callback(task)
       return task
     } catch (e) {
-      if (e instanceof MeiliSearchTimeOutError) {
+      if (e instanceof MeiliSearchRequestTimeOutError) {
         onTimeout(e, enqueuedTask)
         return enqueuedTask
       }
