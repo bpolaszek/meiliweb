@@ -55,6 +55,7 @@ useHead({
 })
 
 const errorMessage = computed(() => props.error.message.replace(/`([^`]+)`/g, '<em>$1</em>'))
+onMounted(() => console.error(props.error))
 </script>
 
 <i18n>
