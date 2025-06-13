@@ -23,15 +23,15 @@
           {{
             formatDate(
               match(tasks.results[index].status, [
-                [[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED], [tasks.results[index].enqueuedAt]],
-                [TaskStatus.TASK_PROCESSING, [tasks.results[index].startedAt]],
+                [['enqueued', 'canceled'], [tasks.results[index].enqueuedAt]],
+                ['processing', [tasks.results[index].startedAt]],
                 [match.default, [tasks.results[index].finishedAt]],
               ]),
             )
           }}
         </td>
         <td>
-          <Badge :theme="TaskStatus.TASK_SUCCEEDED === tasks.results[index].status ? 'success' : 'danger'">
+          <Badge :theme="'succeeded' === tasks.results[index].status ? 'success' : 'danger'">
             {{ tasks.results[index].status }}
           </Badge>
         </td>
@@ -46,16 +46,15 @@
 </template>
 
 <script setup lang="ts">
-import { tryOrThrow, useDateFormatter, useMeiliClient, useToasts } from '#imports'
-import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from '~/stores/toasts'
-import { useFormSubmit, useTask } from '~/composables'
-import Alert from '~/components/layout/Alert.vue'
-import Table from '~/components/layout/tables/Table.vue'
-import DocumentationLink from '~/components/layout/DocumentationLink.vue'
-import Badge from '~/components/layout/Badge.vue'
-import Button from '~/components/layout/forms/Button.vue'
-import match from 'match-operator'
-import { TaskStatus } from '~/types'
+import { tryOrThrow, useDateFormatter, useMeiliClient, useToasts } from "#imports"
+import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from "~/stores/toasts"
+import { useFormSubmit, useTask } from "~/composables"
+import Alert from "~/components/layout/Alert.vue"
+import Table from "~/components/layout/tables/Table.vue"
+import DocumentationLink from "~/components/layout/DocumentationLink.vue"
+import Badge from "~/components/layout/Badge.vue"
+import Button from "~/components/layout/forms/Button.vue"
+import match from "match-operator"
 
 const { t } = useI18n()
 const meili = useMeiliClient()

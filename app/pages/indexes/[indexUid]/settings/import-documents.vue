@@ -41,20 +41,19 @@
 </template>
 
 <script setup lang="ts">
-import Label from '~/components/layout/forms/Label.vue'
-import Select from '~/components/layout/forms/Select.vue'
-import { useFormSubmit, useMeiliClient } from '~/composables'
-import { ref, type Ref } from 'vue'
-import { type ContentType, type EnqueuedTask } from 'meilisearch'
-import match from 'match-operator'
-import { readFileAsText } from '~/utils/read-file-as-text'
-import Button from '~/components/layout/forms/Button.vue'
-import Buttons from '~/components/layout/forms/Buttons.vue'
-import { useToasts } from '~/stores/toasts'
-import Alert from '~/components/layout/Alert.vue'
-import { promiseTimeout } from '@vueuse/core'
-import { useConfirmationDialog } from '~/stores'
-import { TaskStatus } from '~/types'
+import Label from "~/components/layout/forms/Label.vue"
+import Select from "~/components/layout/forms/Select.vue"
+import { useFormSubmit, useMeiliClient } from "~/composables"
+import { ref, type Ref } from "vue"
+import { type ContentType, type EnqueuedTask } from "meilisearch"
+import match from "match-operator"
+import { readFileAsText } from "~/utils/read-file-as-text"
+import Button from "~/components/layout/forms/Button.vue"
+import Buttons from "~/components/layout/forms/Buttons.vue"
+import { useToasts } from "~/stores/toasts"
+import Alert from "~/components/layout/Alert.vue"
+import { promiseTimeout } from "@vueuse/core"
+import { useConfirmationDialog } from "~/stores"
 
 type Props = {
   indexUid: string
@@ -106,21 +105,21 @@ const submit = async () => {
     toast.update({
       ttl: 5000,
       text: match(task.status, [
-        [TaskStatus.TASK_SUCCEEDED, t('toasts.success.doneText')],
-        [TaskStatus.TASK_CANCELED, t('toasts.error.canceledText')],
+        ['succeeded', t('toasts.success.doneText')],
+        ['canceled', t('toasts.error.canceledText')],
         [match.default, t('toasts.error.failedText')],
       ]),
       icon: match(task.status, [
-        [TaskStatus.TASK_SUCCEEDED, 'lets-icons:check-fill'],
+        ['succeeded', 'lets-icons:check-fill'],
         [match.default, 'clarity:error-solid'],
       ]),
       iconClasses: match(task.status, [
-        [TaskStatus.TASK_SUCCEEDED, 'text-green-600'],
+        ['succeeded', 'text-green-600'],
         [match.default, 'text-red-600'],
       ]),
     })
 
-    if (TaskStatus.TASK_SUCCEEDED === task.status) {
+    if ('succeeded' === task.status) {
       await promiseTimeout(1000)
       navigateTo(`/indexes/${props.indexUid}/documents`)
     }

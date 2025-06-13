@@ -1,7 +1,6 @@
-import match from 'match-operator'
-import { MeiliSearchRequestTimeOutError, type EnqueuedTask, type Task } from 'meilisearch'
-import { useMeiliClient } from '~/composables/index'
-import { TaskStatus } from '~/types'
+import match from "match-operator"
+import { type EnqueuedTask, MeiliSearchRequestTimeOutError, type Task } from "meilisearch"
+import { useMeiliClient } from "~/composables/index"
 
 type EnqueuedTaskPromise = () => Promise<EnqueuedTask>
 type ProcessTaskOptions = {
@@ -50,9 +49,9 @@ export const useTask = () => {
         task.error = new TaskError(task.error.message, task.error.code, task.error.type, task.error.link)
       }
       const callback = match(task.status, [
-        [TaskStatus.TASK_SUCCEEDED, onSuccess],
-        [TaskStatus.TASK_CANCELED, onCanceled],
-        [TaskStatus.TASK_FAILED, onFailure],
+        ['succeeded', onSuccess],
+        ['canceled', onCanceled],
+        ['failed', onFailure],
         [match.default, () => console.debug('Unhandled match for task', task)],
       ])
       callback(task)
