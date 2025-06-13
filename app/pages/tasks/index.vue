@@ -114,7 +114,7 @@ const { confirm } = useConfirmationDialog()
 const { createToast } = useToasts()
 const [DefineTreeRendering, UseTreeRendering] = createReusableTemplate()
 const self = reactive({
-  tasks: await tryOrThrow(() => meili.getTasks()),
+  tasks: await tryOrThrow(() => meili.tasks.getTasks()),
   lastTaskUid: null! as number,
   pendingTasks: computed((): Task[] =>
     self.tasks.results.filter((task: Task) =>
@@ -142,7 +142,7 @@ const stringifyTaskType = (type: string) =>
 const { tasks, pendingTasks } = toRefs(self)
 watchImmediate(tasks, (tasks) => (self.lastTaskUid = tasks.results[tasks.results.length - 1]!.uid), { deep: true })
 const handleInfiniteLoading = async () => {
-  const nextTasks = await tryOrThrow(() => meili.getTasks({ from: self.lastTaskUid }))
+  const nextTasks = await tryOrThrow(() => meili.tasks.getTasks({ from: self.lastTaskUid }))
   self.tasks.results.push(...nextTasks.results)
 }
 const cancelTask = async (task: Task) => {
@@ -153,8 +153,8 @@ const cancelTask = async (task: Task) => {
     ...TOAST_PLEASEWAIT(t),
     title: t('toasts.cancelTask'),
   })
-  const cancelTask = await meili.cancelTasks({ uids: [task.uid] })
-  await meili.waitForTask(cancelTask.taskUid)
+  const cancelTask = await meili.tasks.cancelTasks({ uids: [task.uid] })
+  await meili.tasks.waitForTask(cancelTask.taskUid)
   toast.destroy()
   task.status = TaskStatus.TASK_CANCELED
 }
@@ -170,7 +170,7 @@ watch(
       watchers.set(task, this)
       if (task.status === TaskStatus.TASK_ENQUEUED) {
         const interval = setInterval(async () => {
-          let updatedTask = await meili.getTask(task.uid)
+          let updatedTask = await meili.tasks.getTask(task.uid)
           if (updatedTask.status !== TaskStatus.TASK_ENQUEUED) {
             clearInterval(interval)
             watchers.delete(task)
@@ -178,8 +178,8 @@ watch(
           }
         }, 50)
       } else {
-        const updatedTask = await meili.waitForTask(task.uid, {
-          timeOutMs: 1000 * 3600 * 24,
+        const updatedTask = await meili.tasks.waitForTask(task.uid, {
+          timeout: 1000 * 3600 * 24,
         })
         Object.assign(task, updatedTask)
       }

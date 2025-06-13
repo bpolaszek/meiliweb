@@ -59,7 +59,7 @@ import { TaskStatus } from '~/types'
 
 const { t } = useI18n()
 const meili = useMeiliClient()
-const fetchTasks = () => tryOrThrow(() => meili.getTasks({ types: ['snapshotCreation'] }))
+const fetchTasks = () => tryOrThrow(() => meili.tasks.getTasks({ types: ['snapshotCreation'] }))
 const { formatDate, formatDuration } = useDateFormatter()
 const { createToast } = useToasts()
 const processTask = useTask()

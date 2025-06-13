@@ -63,7 +63,7 @@ import match from 'match-operator'
 
 const { t } = useI18n()
 const meili = useMeiliClient()
-const fetchTasks = () => tryOrThrow(() => meili.getTasks({ types: ['dumpCreation'] }))
+const fetchTasks = () => tryOrThrow(() => meili.tasks.getTasks({ types: ['dumpCreation'] }))
 const { formatDate, formatDuration } = useDateFormatter()
 const { createToast } = useToasts()
 const processTask = useTask()

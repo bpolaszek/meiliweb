@@ -43,8 +43,8 @@ export const useTask = () => {
     }
     const enqueuedTask = await enqueue()
     try {
-      const task = await meili.waitForTask(enqueuedTask.taskUid, {
-        timeOutMs,
+      const task = await meili.tasks.waitForTask(enqueuedTask.taskUid, {
+        timeout: timeOutMs,
       })
       if (task.error) {
         task.error = new TaskError(task.error.message, task.error.code, task.error.type, task.error.link)

@@ -100,8 +100,8 @@ const submit = async () => {
       throw e
     }
 
-    const task = await client.waitForTask(enqueuedTask.taskUid, {
-      timeOutMs: 3600 * 1000,
+    const task = await client.tasks.waitForTask(enqueuedTask.taskUid, {
+      timeout: 3600 * 1000,
     })
     toast.update({
       ttl: 5000,
