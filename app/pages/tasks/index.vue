@@ -97,11 +97,12 @@ import match from 'match-operator'
 import { NuxtLink } from '#components'
 import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
-import { type Task, TaskStatus } from 'meilisearch'
+import { type Task } from 'meilisearch'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import { createReusableTemplate, watchImmediate } from '@vueuse/core'
 import InfiniteLoading from 'v3-infinite-loading'
+import { TaskStatus } from '~/types'
 
 const { t } = useI18n()
 useHead({

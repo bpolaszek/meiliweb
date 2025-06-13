@@ -1,6 +1,7 @@
 import match from 'match-operator'
-import { MeiliSearchTimeOutError, Task, TaskStatus, type EnqueuedTask } from 'meilisearch'
+import { MeiliSearchTimeOutError, Task, type EnqueuedTask } from 'meilisearch'
 import { useMeiliClient } from '~/composables/index'
+import { TaskStatus } from '~/types'
 
 type EnqueuedTaskPromise = () => Promise<EnqueuedTask>
 type ProcessTaskOptions = {

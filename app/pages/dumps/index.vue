@@ -58,7 +58,7 @@ import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import { TaskStatus } from 'meilisearch'
+import { TaskStatus } from '~/types'
 import match from 'match-operator'
 
 const { t } = useI18n()

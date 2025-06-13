@@ -55,7 +55,7 @@ import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Badge from '~/components/layout/Badge.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import match from 'match-operator'
-import { TaskStatus } from 'meilisearch'
+import { TaskStatus } from '~/types'
 
 const { t } = useI18n()
 const meili = useMeiliClient()

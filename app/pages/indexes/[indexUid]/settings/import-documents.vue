@@ -45,7 +45,7 @@ import Label from '~/components/layout/forms/Label.vue'
 import Select from '~/components/layout/forms/Select.vue'
 import { useFormSubmit, useMeiliClient } from '~/composables'
 import { ref, type Ref } from 'vue'
-import { type ContentType, EnqueuedTask, TaskStatus } from 'meilisearch'
+import { type ContentType, EnqueuedTask } from 'meilisearch'
 import match from 'match-operator'
 import { readFileAsText } from '~/utils/read-file-as-text'
 import Button from '~/components/layout/forms/Button.vue'
@@ -54,6 +54,7 @@ import { useToasts } from '~/stores/toasts'
 import Alert from '~/components/layout/Alert.vue'
 import { promiseTimeout } from '@vueuse/core'
 import { useConfirmationDialog } from '~/stores'
+import { TaskStatus } from '~/types'
 
 type Props = {
   indexUid: string
