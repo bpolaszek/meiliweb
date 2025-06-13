@@ -23,15 +23,15 @@
           {{
             formatDate(
               match(tasks.results[index].status, [
-                [[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED], [tasks.results[index].enqueuedAt]],
-                [TaskStatus.TASK_PROCESSING, [tasks.results[index].startedAt]],
+                [['enqueued', 'canceled'], [tasks.results[index].enqueuedAt]],
+                ['processing', [tasks.results[index].startedAt]],
                 [match.default, [tasks.results[index].finishedAt]],
               ]),
             )
           }}
         </td>
         <td>
-          <Badge :theme="TaskStatus.TASK_SUCCEEDED === tasks.results[index].status ? 'success' : 'danger'">
+          <Badge :theme="'succeeded' === tasks.results[index].status ? 'success' : 'danger'">
             {{ tasks.results[index].status }}
           </Badge>
         </td>
@@ -55,11 +55,10 @@ import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Badge from '~/components/layout/Badge.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import match from 'match-operator'
-import { TaskStatus } from 'meilisearch'
 
 const { t } = useI18n()
 const meili = useMeiliClient()
-const fetchTasks = () => tryOrThrow(() => meili.getTasks({ types: ['snapshotCreation'] }))
+const fetchTasks = () => tryOrThrow(() => meili.tasks.getTasks({ types: ['snapshotCreation'] }))
 const { formatDate, formatDuration } = useDateFormatter()
 const { createToast } = useToasts()
 const processTask = useTask()

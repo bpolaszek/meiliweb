@@ -30,7 +30,7 @@
           {{ stringifyTaskType(tasks.results[index].type) }}
         </td>
         <td>
-          <Badge :theme="TaskStatus.TASK_SUCCEEDED === tasks.results[index].status ? 'success' : 'danger'">
+          <Badge :theme="'succeeded' === tasks.results[index].status ? 'success' : 'danger'">
             {{ tasks.results[index].status }}
           </Badge>
         </td>
@@ -43,9 +43,7 @@
           </NuxtLink>
         </td>
         <td>
-          <UseTreeRendering
-            v-if="TaskStatus.TASK_FAILED === tasks.results[index].status"
-            :value="tasks.results[index].error" />
+          <UseTreeRendering v-if="'failed' === tasks.results[index].status" :value="tasks.results[index].error" />
           <span v-else-if="'documentAdditionOrUpdate' === tasks.results[index].type">
             {{
               t('labels.documentIndexRatio', {
@@ -60,8 +58,8 @@
           {{
             formatDate(
               match(tasks.results[index].status, [
-                [[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED], [tasks.results[index].enqueuedAt]],
-                [TaskStatus.TASK_PROCESSING, [tasks.results[index].startedAt]],
+                [['enqueued', 'canceled'], [tasks.results[index].enqueuedAt]],
+                ['processing', [tasks.results[index].startedAt]],
                 [match.default, [tasks.results[index].finishedAt]],
               ]),
             )
@@ -73,7 +71,7 @@
           </template>
         </td>
         <td class="text-right">
-          <template v-if="[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_PROCESSING].includes(tasks.results[index].status)">
+          <template v-if="['enqueued', 'processing'].includes(tasks.results[index].status)">
             <Button
               theme="primary"
               size="small"
@@ -97,7 +95,7 @@ import match from 'match-operator'
 import { NuxtLink } from '#components'
 import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
-import { type Task, TaskStatus } from 'meilisearch'
+import { type Task } from 'meilisearch'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import { createReusableTemplate, watchImmediate } from '@vueuse/core'
@@ -113,12 +111,10 @@ const { confirm } = useConfirmationDialog()
 const { createToast } = useToasts()
 const [DefineTreeRendering, UseTreeRendering] = createReusableTemplate()
 const self = reactive({
-  tasks: await tryOrThrow(() => meili.getTasks()),
+  tasks: await tryOrThrow(() => meili.tasks.getTasks()),
   lastTaskUid: null! as number,
   pendingTasks: computed((): Task[] =>
-    self.tasks.results.filter((task: Task) =>
-      [TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_PROCESSING].includes(task.status),
-    ),
+    self.tasks.results.filter((task: Task) => ['enqueued', 'processing'].includes(task.status)),
   ),
 })
 const { formatDate, formatDuration } = useDateFormatter()
@@ -141,7 +137,7 @@ const stringifyTaskType = (type: string) =>
 const { tasks, pendingTasks } = toRefs(self)
 watchImmediate(tasks, (tasks) => (self.lastTaskUid = tasks.results[tasks.results.length - 1]!.uid), { deep: true })
 const handleInfiniteLoading = async () => {
-  const nextTasks = await tryOrThrow(() => meili.getTasks({ from: self.lastTaskUid }))
+  const nextTasks = await tryOrThrow(() => meili.tasks.getTasks({ from: self.lastTaskUid }))
   self.tasks.results.push(...nextTasks.results)
 }
 const cancelTask = async (task: Task) => {
@@ -152,10 +148,10 @@ const cancelTask = async (task: Task) => {
     ...TOAST_PLEASEWAIT(t),
     title: t('toasts.cancelTask'),
   })
-  const cancelTask = await meili.cancelTasks({ uids: [task.uid] })
-  await meili.waitForTask(cancelTask.taskUid)
+  const cancelTask = await meili.tasks.cancelTasks({ uids: [task.uid] })
+  await meili.tasks.waitForTask(cancelTask.taskUid)
   toast.destroy()
-  task.status = TaskStatus.TASK_CANCELED
+  task.status = 'canceled'
 }
 
 const watchers = new WeakMap()
@@ -167,18 +163,18 @@ watch(
         return
       }
       watchers.set(task, this)
-      if (task.status === TaskStatus.TASK_ENQUEUED) {
+      if (task.status === 'enqueued') {
         const interval = setInterval(async () => {
-          let updatedTask = await meili.getTask(task.uid)
-          if (updatedTask.status !== TaskStatus.TASK_ENQUEUED) {
+          let updatedTask = await meili.tasks.getTask(task.uid)
+          if (updatedTask.status !== 'enqueued') {
             clearInterval(interval)
             watchers.delete(task)
             Object.assign(task, updatedTask)
           }
         }, 50)
       } else {
-        const updatedTask = await meili.waitForTask(task.uid, {
-          timeOutMs: 1000 * 3600 * 24,
+        const updatedTask = await meili.tasks.waitForTask(task.uid, {
+          timeout: 1000 * 3600 * 24,
         })
         Object.assign(task, updatedTask)
       }
