@@ -50,15 +50,15 @@
 </template>
 
 <script setup lang="ts">
-import { tryOrThrow, useDateFormatter, useMeiliClient, useToasts } from "#imports"
-import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from "~/stores/toasts"
-import { useFormSubmit, useTask } from "~/composables"
-import Alert from "~/components/layout/Alert.vue"
-import Table from "~/components/layout/tables/Table.vue"
-import Badge from "~/components/layout/Badge.vue"
-import DocumentationLink from "~/components/layout/DocumentationLink.vue"
-import Button from "~/components/layout/forms/Button.vue"
-import match from "match-operator"
+import { tryOrThrow, useDateFormatter, useMeiliClient, useToasts } from '#imports'
+import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from '~/stores/toasts'
+import { useFormSubmit, useTask } from '~/composables'
+import Alert from '~/components/layout/Alert.vue'
+import Table from '~/components/layout/tables/Table.vue'
+import Badge from '~/components/layout/Badge.vue'
+import DocumentationLink from '~/components/layout/DocumentationLink.vue'
+import Button from '~/components/layout/forms/Button.vue'
+import match from 'match-operator'
 
 const { t } = useI18n()
 const meili = useMeiliClient()

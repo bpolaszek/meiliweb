@@ -43,9 +43,7 @@
           </NuxtLink>
         </td>
         <td>
-          <UseTreeRendering
-            v-if="'failed' === tasks.results[index].status"
-            :value="tasks.results[index].error" />
+          <UseTreeRendering v-if="'failed' === tasks.results[index].status" :value="tasks.results[index].error" />
           <span v-else-if="'documentAdditionOrUpdate' === tasks.results[index].type">
             {{
               t('labels.documentIndexRatio', {
@@ -116,9 +114,7 @@ const self = reactive({
   tasks: await tryOrThrow(() => meili.tasks.getTasks()),
   lastTaskUid: null! as number,
   pendingTasks: computed((): Task[] =>
-    self.tasks.results.filter((task: Task) =>
-      ['enqueued', 'processing'].includes(task.status),
-    ),
+    self.tasks.results.filter((task: Task) => ['enqueued', 'processing'].includes(task.status)),
   ),
 })
 const { formatDate, formatDuration } = useDateFormatter()
