@@ -5991,10 +5991,10 @@ magicast@^0.3.5:
     "@babel/types" "^7.25.4"
     source-map-js "^1.2.0"
 
-match-operator@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/match-operator/-/match-operator-0.2.1.tgz#bfe7724a2879fa3ef6ec588a053c63189cac0778"
-  integrity sha512-ZFnGx9L46jWCY41reDPJ2Bocful+gyBymYmTVGsgE0UhL6qcIVuon0IJXHXxOErr92mdRP8zd/hgQXhiITphag==
+match-operator@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/match-operator/-/match-operator-0.3.1.tgz#e0a6d860e7b0caf36b61479eb385d4e30e036947"
+  integrity sha512-Q3zyLdW51ZHQy5FwgxSd2cOowXDAv68GukqQT8+rheJFkUNcY3pa8pELGeDDBwghY/M9O7cswtqQKNxDuQS+FQ==
 
 math-intrinsics@^1.1.0:
   version "1.1.0"

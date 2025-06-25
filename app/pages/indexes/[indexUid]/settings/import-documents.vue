@@ -91,8 +91,8 @@ const submit = async () => {
     let enqueuedTask: EnqueuedTask
     try {
       enqueuedTask = await match(self.updateMode, [
-        ['replace', client.index(props.indexUid).addDocumentsFromString(documents, self.contentType)],
-        ['update', client.index(props.indexUid).updateDocumentsFromString(documents, self.contentType)],
+        ['replace', () => client.index(props.indexUid).addDocumentsFromString(documents, self.contentType)],
+        ['update', () => client.index(props.indexUid).updateDocumentsFromString(documents, self.contentType)],
       ])
     } catch (e) {
       toast.destroy()
