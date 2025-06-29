@@ -1,5 +1,5 @@
 import match from 'match-operator'
-import { MeiliSearchTimeOutError, Task, TaskStatus, type EnqueuedTask } from 'meilisearch'
+import { type EnqueuedTask, MeiliSearchRequestTimeOutError, type Task } from 'meilisearch'
 import { useMeiliClient } from '~/composables/index'
 
 type EnqueuedTaskPromise = () => Promise<EnqueuedTask>
@@ -8,7 +8,7 @@ type ProcessTaskOptions = {
   onSuccess: (task: Task) => void
   onCanceled: (task: Task) => void
   onFailure: (task: Task) => void
-  onTimeout: (e: MeiliSearchTimeOutError, enqueuedTask: EnqueuedTask) => void
+  onTimeout: (e: MeiliSearchRequestTimeOutError, enqueuedTask: EnqueuedTask) => void
 }
 
 export class TaskError extends Error {
@@ -42,22 +42,22 @@ export const useTask = () => {
     }
     const enqueuedTask = await enqueue()
     try {
-      const task = await meili.waitForTask(enqueuedTask.taskUid, {
-        timeOutMs,
+      const task = await meili.tasks.waitForTask(enqueuedTask.taskUid, {
+        timeout: timeOutMs,
       })
       if (task.error) {
         task.error = new TaskError(task.error.message, task.error.code, task.error.type, task.error.link)
       }
       const callback = match(task.status, [
-        [TaskStatus.TASK_SUCCEEDED, onSuccess],
-        [TaskStatus.TASK_CANCELED, onCanceled],
-        [TaskStatus.TASK_FAILED, onFailure],
+        ['succeeded', onSuccess],
+        ['canceled', onCanceled],
+        ['failed', onFailure],
         [match.default, () => console.debug('Unhandled match for task', task)],
       ])
       callback(task)
       return task
     } catch (e) {
-      if (e instanceof MeiliSearchTimeOutError) {
+      if (e instanceof MeiliSearchRequestTimeOutError) {
         onTimeout(e, enqueuedTask)
         return enqueuedTask
       }

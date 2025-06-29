@@ -78,8 +78,8 @@ export const useIndexOperations = () => {
       5000,
     )
 
-    await meili.waitForTasks(taskUids, {
-      timeOutMs: 1000 * 60 * 5 * taskUids.length,
+    await meili.tasks.waitForTasks(taskUids, {
+      timeout: 1000 * 60 * 5 * taskUids.length,
     })
 
     toast.update({ ...TOAST_SUCCESS(t) })

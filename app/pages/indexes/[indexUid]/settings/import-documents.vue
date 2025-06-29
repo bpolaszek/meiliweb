@@ -45,7 +45,7 @@ import Label from '~/components/layout/forms/Label.vue'
 import Select from '~/components/layout/forms/Select.vue'
 import { useFormSubmit, useMeiliClient } from '~/composables'
 import { ref, type Ref } from 'vue'
-import { type ContentType, EnqueuedTask, TaskStatus } from 'meilisearch'
+import { type ContentType, type EnqueuedTask } from 'meilisearch'
 import match from 'match-operator'
 import { readFileAsText } from '~/utils/read-file-as-text'
 import Button from '~/components/layout/forms/Button.vue'
@@ -91,35 +91,35 @@ const submit = async () => {
     let enqueuedTask: EnqueuedTask
     try {
       enqueuedTask = await match(self.updateMode, [
-        ['replace', client.index(props.indexUid).addDocumentsFromString(documents, self.contentType)],
-        ['update', client.index(props.indexUid).updateDocumentsFromString(documents, self.contentType)],
+        ['replace', () => client.index(props.indexUid).addDocumentsFromString(documents, self.contentType)],
+        ['update', () => client.index(props.indexUid).updateDocumentsFromString(documents, self.contentType)],
       ])
     } catch (e) {
       toast.destroy()
       throw e
     }
 
-    const task = await client.waitForTask(enqueuedTask.taskUid, {
-      timeOutMs: 3600 * 1000,
+    const task = await client.tasks.waitForTask(enqueuedTask.taskUid, {
+      timeout: 3600 * 1000,
     })
     toast.update({
       ttl: 5000,
       text: match(task.status, [
-        [TaskStatus.TASK_SUCCEEDED, t('toasts.success.doneText')],
-        [TaskStatus.TASK_CANCELED, t('toasts.error.canceledText')],
+        ['succeeded', t('toasts.success.doneText')],
+        ['canceled', t('toasts.error.canceledText')],
         [match.default, t('toasts.error.failedText')],
       ]),
       icon: match(task.status, [
-        [TaskStatus.TASK_SUCCEEDED, 'lets-icons:check-fill'],
+        ['succeeded', 'lets-icons:check-fill'],
         [match.default, 'clarity:error-solid'],
       ]),
       iconClasses: match(task.status, [
-        [TaskStatus.TASK_SUCCEEDED, 'text-green-600'],
+        ['succeeded', 'text-green-600'],
         [match.default, 'text-red-600'],
       ]),
     })
 
-    if (TaskStatus.TASK_SUCCEEDED === task.status) {
+    if ('succeeded' === task.status) {
       await promiseTimeout(1000)
       navigateTo(`/indexes/${props.indexUid}/documents`)
     }

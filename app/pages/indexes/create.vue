@@ -67,7 +67,7 @@ const submit = async () => {
     const task = await client.createIndex(indexUid, {
       primaryKey: self.index.primaryKey,
     })
-    await client.waitForTask(task.taskUid)
+    await client.tasks.waitForTask(task.taskUid)
     toast.update({
       ...TOAST_SUCCESS(t),
     })

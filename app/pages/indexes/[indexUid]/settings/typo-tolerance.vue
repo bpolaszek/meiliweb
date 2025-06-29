@@ -53,6 +53,11 @@
       <SplitLinesTextarea v-model="typoTolerance!.disableOnAttributes!" class="h-20 w-full text-sm" />
     </UniqueId>
 
+    <UniqueId v-if="satisfiesVersion('^1.15')" v-slot="{ id }" as="div" class="col-span-8">
+      <Label :for="id">{{ t('labels.disableOnNumbers') }}</Label>
+      <SplitLinesTextarea v-model="typoTolerance!.disableOnNumbers!" class="h-20 w-full text-sm" />
+    </UniqueId>
+
     <footer class="flex flex-col items-center justify-between sm:flex-row">
       <Button type="button" theme="primary" icon="mdi:bin" :disabled="loading" @click="resetToInitialValue()">
         {{ t('actions.resetTypoTolerance') }}
@@ -88,9 +93,10 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 const meili = useMeiliClient()
 const index = meili.index(props.indexUid)
-const { loading, error, handle } = useFormSubmit({
+const { loading, handle } = useFormSubmit({
   confirm: { text: t('confirmations.submit') },
 })
+const { satisfiesVersion } = useVersion()
 const processTask = useTask()
 const { createToast } = useToasts()
 const { confirm } = useConfirmationDialog()
@@ -169,6 +175,7 @@ en:
     minWordSizeForTwoTypos: Minimum word size for two typos
     disableOnWords: Disable on words
     disableOnAttributes: Disable on attributes
+    disableOnNumbers: Disable on numbers
   toasts:
     updateTypoTolerance:
       title: Updating Typo Tolerance settings...

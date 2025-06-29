@@ -32,8 +32,8 @@
           {{
             formatDate(
               match(tasks.results[index].status, [
-                [[TaskStatus.TASK_ENQUEUED, TaskStatus.TASK_CANCELED], [tasks.results[index].enqueuedAt]],
-                [TaskStatus.TASK_PROCESSING, [tasks.results[index].startedAt]],
+                [['enqueued', 'canceled'], [tasks.results[index].enqueuedAt]],
+                ['processing', [tasks.results[index].startedAt]],
                 [match.default, [tasks.results[index].finishedAt]],
               ]),
             )
@@ -58,12 +58,11 @@ import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import { TaskStatus } from 'meilisearch'
 import match from 'match-operator'
 
 const { t } = useI18n()
 const meili = useMeiliClient()
-const fetchTasks = () => tryOrThrow(() => meili.getTasks({ types: ['dumpCreation'] }))
+const fetchTasks = () => tryOrThrow(() => meili.tasks.getTasks({ types: ['dumpCreation'] }))
 const { formatDate, formatDuration } = useDateFormatter()
 const { createToast } = useToasts()
 const processTask = useTask()
