@@ -6,12 +6,11 @@ WORKDIR /app
 
 COPY package*.json yarn.lock ./
 
-RUN yarn install
-
 COPY . .
 
 WORKDIR /app/app  # Correct working directory for the Nuxt build
 
+RUN yarn install
 RUN yarn build
 
 EXPOSE 3000
