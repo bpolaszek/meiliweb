@@ -8,7 +8,7 @@ COPY package*.json yarn.lock ./
 
 COPY . .
 
-WORKDIR /app/app  # Correct working directory for the Nuxt build
+WORKDIR /app/app
 
 RUN yarn install
 RUN yarn build

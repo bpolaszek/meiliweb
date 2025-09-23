@@ -44,19 +44,19 @@ export class AppliedFilters {
     const update = match(status, [
       [
         StringFilterStatus.INCLUDE,
-        () => {
+        () => () => {
           this.length++
           appliedFacet.set(facetValue, StringFilterStatus.EXCLUDE)
         },
       ],
       [
         StringFilterStatus.EXCLUDE,
-        () => {
+        () => () => {
           this.length--
           appliedFacet.delete(facetValue)
         },
       ],
-      [match.default, () => appliedFacet.set(facetValue, StringFilterStatus.INCLUDE)],
+      [match.default, () => () => appliedFacet.set(facetValue, StringFilterStatus.INCLUDE)],
     ])
     update()
   }
