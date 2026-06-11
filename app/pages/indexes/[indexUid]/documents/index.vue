@@ -8,7 +8,7 @@
         :client="searchClient"
         :index-uid="index.uid"
         :sortable-attributes="sortableAttributes"
-        :filterable-attributes="filterableAttributes" />
+        :filterable-attributes="facetSearchableAttributes" />
     </SlideOver>
 
     <template #actions>
@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import { useFields, useIndexLocalSettings, useMeiliClient, useMultiTenancy, usePagination } from '~/composables'
-import { tryOrThrow } from '~/utils'
+import { getFacetSearchableAttributePatterns, getFilterableAttributePatterns, tryOrThrow } from '~/utils'
 import { NuxtLink } from '#components'
 import SlideOver from '~/components/layout/SlideOver.vue'
 import FilterPanel from '~/components/documents/FilterPanel.vue'
@@ -113,12 +113,14 @@ const searchClient = reactiveComputed(() => (tenant.tenantToken ? useMeiliClient
 const { formatDate } = useDateFormatter()
 const index = await tryOrThrow(() => meili.getIndex(indexUid as string))
 const filterPanelOpen = ref(false)
-const [primaryKey, filterableAttributes, sortableAttributes, stats] = await Promise.all([
+const [primaryKey, rawFilterableAttributes, sortableAttributes, stats] = await Promise.all([
   index.fetchPrimaryKey() as Promise<string>,
   index.getFilterableAttributes(),
   index.getSortableAttributes(),
   index.getStats(),
 ])
+const filterableAttributes = getFilterableAttributePatterns(rawFilterableAttributes)
+const facetSearchableAttributes = getFacetSearchableAttributePatterns(rawFilterableAttributes)
 
 const { fields } = useFields(primaryKey, Object.keys(stats.fieldDistribution))
 const { appliedSort, facets, itemsPerPage, viewMode } = useIndexLocalSettings(index.uid)
