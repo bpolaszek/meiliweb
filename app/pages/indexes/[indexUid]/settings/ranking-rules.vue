@@ -1,5 +1,5 @@
 <template>
-  <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
+  <form class="space-y-4" @reset.prevent="handleReset()" @submit.prevent="submit()">
     <h3 class="inline-flex w-full items-start justify-between">
       <span class="inline-flex flex-col gap-1">
         <span class="text-xl font-semibold">{{ t('title') }}</span>
@@ -10,40 +10,40 @@
       <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#ranking-rules" />
     </h3>
 
-    <section v-sortable class="space-y-2" @end="onOrderChange">
+    <section :key="rerenderKey" v-sortable class="space-y-2" @end="onOrderChange">
       <div
-        v-for="(rankingRule, i) of self.rankingRules"
-        :key="i"
+        v-for="rule in displayList"
+        :key="rule"
         role="treeitem"
         class="flex cursor-move items-center justify-between gap-2 rounded-md border border-gray-100 px-2 py-1.5 text-sm text-gray-800 shadow-sm">
         <dl class="flex-1 overflow-hidden">
-          <template v-if="isBuiltIn(rankingRule)">
-            <dt class="font-medium capitalize">{{ rankingRule }}</dt>
-            <dd class="text-xs italic text-gray-600">{{ t(`descriptions.${rankingRule}`) }}</dd>
+          <template v-if="isBuiltIn(rule)">
+            <dt class="font-medium capitalize">{{ rule }}</dt>
+            <dd class="text-xs italic text-gray-600">{{ t(`descriptions.${rule}`) }}</dd>
           </template>
           <template v-else>
             <dt class="flex items-center gap-1.5 font-medium">
               <span
                 class="inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-xs font-semibold"
                 :class="
-                  parseCustomRule(rankingRule)?.direction === 'asc'
+                  parseCustomRule(rule)?.direction === 'asc'
                     ? 'bg-blue-100 text-blue-700'
                     : 'bg-orange-100 text-orange-700'
                 ">
-                {{ parseCustomRule(rankingRule)?.direction === 'asc' ? '↑ asc' : '↓ desc' }}
+                {{ parseCustomRule(rule)?.direction === 'asc' ? '↑ asc' : '↓ desc' }}
               </span>
-              <span class="truncate">{{ parseCustomRule(rankingRule)?.field }}</span>
+              <span class="truncate">{{ parseCustomRule(rule)?.field }}</span>
             </dt>
             <dd class="text-xs italic text-gray-600">{{ t('descriptions.custom') }}</dd>
           </template>
         </dl>
         <div class="flex shrink-0 items-center gap-1">
           <button
-            v-if="!isBuiltIn(rankingRule)"
+            v-if="!isBuiltIn(rule)"
             type="button"
             class="text-gray-400 transition-colors hover:text-red-500"
             :title="t('actions.removeRule')"
-            @click="removeRule(i)">
+            @click="removeRule(rule)">
             <Icon name="mdi:close" />
           </button>
           <Icon name="uil:draggabledots" />
@@ -132,12 +132,24 @@ const initialRankingRules = await index.getRankingRules()
 const { value: rankingRules, reset, modified } = resettableRef([...initialRankingRules])
 const self = reactive({ rankingRules })
 
+// Separate display list: only updated on add/remove (not on drag-and-drop reorder).
+// This prevents Vue from re-rendering during a drag and conflicting with Sortable's DOM manipulation.
+const displayList = ref([...initialRankingRules])
+// Bumping this key force-remounts the <section>, reinitializing Sortable with the fresh DOM.
+const rerenderKey = ref(0)
+
+function syncDisplay() {
+  displayList.value = [...self.rankingRules]
+  rerenderKey.value++
+}
+
 const newRuleDirection = ref<'asc' | 'desc'>('asc')
 const newRuleField = ref('')
 
 function onOrderChange(event: Event & { oldIndex: number; newIndex: number }) {
   const item = self.rankingRules.splice(event.oldIndex, 1)[0]
   self.rankingRules.splice(event.newIndex, 0, item!)
+  // Intentionally NOT calling syncDisplay() — Sortable owns the DOM for reorders.
 }
 
 function addCustomRule() {
@@ -145,10 +157,18 @@ function addCustomRule() {
   if (!field) return
   self.rankingRules.push(`${field}:${newRuleDirection.value}`)
   newRuleField.value = ''
+  syncDisplay()
 }
 
-function removeRule(i: number) {
-  self.rankingRules.splice(i, 1)
+function removeRule(rule: string) {
+  const idx = self.rankingRules.indexOf(rule)
+  if (idx !== -1) self.rankingRules.splice(idx, 1)
+  syncDisplay()
+}
+
+function handleReset() {
+  reset()
+  syncDisplay()
 }
 
 const submit = async () => {
@@ -163,6 +183,7 @@ const submit = async () => {
       onSuccess: async () => {
         toast.update({ ...TOAST_SUCCESS(t) })
         reset(self.rankingRules)
+        syncDisplay()
       },
       onCanceled: () =>
         toast.update({
@@ -194,7 +215,9 @@ const resetToInitialValue = async () => {
   await processTask(() => index.resetRankingRules(), {
     onSuccess: async () => {
       toast.update({ ...TOAST_SUCCESS(t) })
-      reset(await index.getRankingRules())
+      const freshRules = await index.getRankingRules()
+      reset(freshRules)
+      syncDisplay()
     },
     onCanceled: () =>
       toast.update({
