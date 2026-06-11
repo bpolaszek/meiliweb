@@ -1,6 +1,7 @@
 export * from './applied-filters'
 export * from './create-jwt'
 export * from './exporter'
+export * from './filterable-attributes'
 export * from './lazy-collection'
 export * from './looks-like-a-picture-url'
 export * from './process-iterator-by-chunks'

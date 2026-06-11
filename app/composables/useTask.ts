@@ -48,13 +48,12 @@ export const useTask = () => {
       if (task.error) {
         task.error = new TaskError(task.error.message, task.error.code, task.error.type, task.error.link)
       }
-      const callback = match(task.status, [
-        ['succeeded', onSuccess],
-        ['canceled', onCanceled],
-        ['failed', onFailure],
+      match(task.status, [
+        ['succeeded', () => onSuccess(task)],
+        ['canceled', () => onCanceled(task)],
+        ['failed', () => onFailure(task)],
         [match.default, () => console.debug('Unhandled match for task', task)],
       ])
-      callback(task)
       return task
     } catch (e) {
       if (e instanceof MeiliSearchRequestTimeOutError) {

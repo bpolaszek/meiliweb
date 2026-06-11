@@ -146,7 +146,7 @@ import { useMeiliClient } from '~/composables'
 import { MenuButton, MenuItem } from '@headlessui/vue'
 import type { Key, TokenSearchRules } from 'meilisearch'
 import type { ComputedRef } from 'vue'
-import { createJwt } from '~/utils/create-jwt'
+import { createJwt, getFilterableAttributePatterns } from '~/utils'
 import { field } from 'meilisearch-filters'
 import { createReusableTemplate, watchArray } from '@vueuse/core'
 import humanizeString from 'humanize-string'
@@ -201,7 +201,7 @@ const suggestPlaceholder = async (indexUid: string) => {
   if (placeholders.has(indexUid)) {
     return
   }
-  const filterableAttributes = await meili.index(indexUid).getFilterableAttributes()
+  const filterableAttributes = getFilterableAttributePatterns(await meili.index(indexUid).getFilterableAttributes())
   const searchResults = await meili.index(indexUid).search(null, { facets: filterableAttributes, limit: 0 })
   let stringFilterCandidate: [string | null, string | number | null, number] = [null, null, 0]
   for (const [facetName, facetValue] of Object.entries(searchResults.facetDistribution ?? {})) {
