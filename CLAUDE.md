@@ -218,6 +218,135 @@ Enforced by ESLint (`standard-with-typescript` + `vue/flat/essential`) and Prett
 - `prettier-plugin-organize-imports` cleans up imports — let it
 - Always run `yarn format` before committing significant changes; CI runs `yarn lint` (Prettier check), which will fail on unformatted code
 
+## Autonomous development workflow
+
+This section enables developing and testing features end-to-end without human input: a controlled Meilisearch instance, real datasets, and Playwright browser automation.
+
+### Fixed constants (used throughout)
+
+```
+MEILI_URL  = http://127.0.0.1:7700
+MEILI_KEY  = meiliweb-dev-masterkey
+MEILI_DATA = /tmp/meiliweb-test-meili
+```
+
+### 1. Start a test Meilisearch instance
+
+```bash
+mkdir -p /tmp/meiliweb-test-meili
+meilisearch \
+  --http-addr 127.0.0.1:7700 \
+  --master-key meiliweb-dev-masterkey \
+  --db-path /tmp/meiliweb-test-meili \
+  --no-analytics \
+  --env development &
+MEILI_PID=$!
+
+# Poll until ready
+until curl -sf http://127.0.0.1:7700/health > /dev/null; do sleep 0.3; done
+```
+
+Stop and wipe: `kill $MEILI_PID && rm -rf /tmp/meiliweb-test-meili`
+
+> If port 7700 is already in use, pick a free port:
+> `MEILI_PORT=7700; while lsof -ti:$MEILI_PORT > /dev/null 2>&1; do MEILI_PORT=$((MEILI_PORT+1)); done`
+
+### 2. Seed test data
+
+Datasets from https://github.com/meilisearch/datasets — download via `gh api` to avoid rate limits.
+
+**movies** (32 K docs, 19 MB) — canonical Meilisearch demo; rich for search/filter/sort/facet testing:
+```bash
+gh api repos/meilisearch/datasets/contents/datasets/movies/movies.json --jq '.download_url' \
+  | xargs curl -s \
+  | curl -sX POST http://127.0.0.1:7700/indexes/movies/documents \
+    -H "Authorization: Bearer meiliweb-dev-masterkey" \
+    -H "Content-Type: application/json" --data-binary @-
+
+curl -sX PATCH http://127.0.0.1:7700/indexes/movies/settings \
+  -H "Authorization: Bearer meiliweb-dev-masterkey" \
+  -H "Content-Type: application/json" \
+  -d '{"filterableAttributes":["genres","release_date"],"sortableAttributes":["release_date","title"]}'
+```
+
+**books** (244 docs, 94 KB) — fast to index; good for nested objects and quick iteration:
+```bash
+gh api repos/meilisearch/datasets/contents/datasets/books/books.json --jq '.download_url' \
+  | xargs curl -s \
+  | curl -sX POST http://127.0.0.1:7700/indexes/books/documents \
+    -H "Authorization: Bearer meiliweb-dev-masterkey" \
+    -H "Content-Type: application/json" --data-binary @-
+```
+
+**restaurants** (200 docs, 178 KB, with bundled `settings.json`) — ready-made for filter/facet/category testing:
+```bash
+gh api repos/meilisearch/datasets/contents/datasets/restaurants/restaurants.json --jq '.download_url' \
+  | xargs curl -s \
+  | curl -sX POST http://127.0.0.1:7700/indexes/restaurants/documents \
+    -H "Authorization: Bearer meiliweb-dev-masterkey" \
+    -H "Content-Type: application/json" --data-binary @-
+
+gh api repos/meilisearch/datasets/contents/datasets/restaurants/settings.json --jq '.content' \
+  | base64 -d \
+  | curl -sX PATCH http://127.0.0.1:7700/indexes/restaurants/settings \
+    -H "Authorization: Bearer meiliweb-dev-masterkey" \
+    -H "Content-Type: application/json" --data-binary @-
+```
+
+Wait for all indexing tasks to finish before testing the UI:
+```bash
+until [ "$(curl -s 'http://127.0.0.1:7700/tasks?statuses=enqueued,processing' \
+  -H 'Authorization: Bearer meiliweb-dev-masterkey' | python3 -c 'import json,sys; print(json.load(sys.stdin)["total"])')" = "0" ]; do sleep 1; done
+```
+
+### 3. Start Meiliweb dev server
+
+Port 3000 may already be occupied. Find the next free port and start:
+
+```bash
+PORT=3000
+while lsof -ti:$PORT > /dev/null 2>&1; do PORT=$((PORT+1)); done
+PORT=$PORT yarn dev &
+NUXT_PID=$!
+
+# Poll until ready
+until curl -sf http://localhost:$PORT > /dev/null 2>&1; do sleep 1; done
+echo "Meiliweb ready at http://localhost:$PORT"
+```
+
+### 4. Authenticate via Playwright
+
+Always take a snapshot first to get exact `target` references for form fields.
+
+```
+browser_navigate  → http://localhost:<PORT>/login
+browser_snapshot  → identify input targets (e.g. [ref=e12], [ref=e13], ...)
+browser_fill_form → fill Instance URL, Access Token, Instance Name
+browser_click     → submit button
+browser_wait_for  → wait for redirect / index list to appear
+browser_take_screenshot → verify visually
+```
+
+Example fill_form call (after snapshot, adapt `target` refs):
+```json
+{
+  "fields": [
+    { "target": "input[placeholder='http://localhost:7700']", "name": "Instance URL",    "type": "textbox", "value": "http://127.0.0.1:7700" },
+    { "target": "input[type='password']",                    "name": "Access Token",    "type": "textbox", "value": "meiliweb-dev-masterkey" },
+    { "target": "input[placeholder='Local instance']",       "name": "Instance Name",   "type": "textbox", "value": "Dev instance" }
+  ]
+}
+```
+
+### 5. Cleanup
+
+```bash
+kill $MEILI_PID $NUXT_PID 2>/dev/null
+rm -rf /tmp/meiliweb-test-meili
+```
+
+---
+
 ## Things not to do
 
 - **Don't add SSR-dependent code.** `ssr: false` is intentional — the app must work as a static SPA (it's deployed on Cloudflare Pages).
