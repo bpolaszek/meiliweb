@@ -52,16 +52,16 @@
     </section>
 
     <div class="flex items-center gap-2">
-      <select v-model="newRuleDirection" class="form-input shrink-0 text-sm">
-        <option value="asc">↑ asc</option>
-        <option value="desc">↓ desc</option>
-      </select>
       <input
         v-model="newRuleField"
         type="text"
         class="form-input flex-1 text-sm"
         :placeholder="t('placeholders.fieldName')"
         @keydown.enter.prevent="addCustomRule()" />
+      <select v-model="newRuleDirection" class="form-input shrink-0 text-sm">
+        <option value="asc">↑ asc</option>
+        <option value="desc">↓ desc</option>
+      </select>
       <Button
         type="button"
         theme="secondary"

@@ -256,6 +256,7 @@ Stop and wipe: `kill $MEILI_PID && rm -rf /tmp/meiliweb-test-meili`
 Datasets from https://github.com/meilisearch/datasets — download via `gh api` to avoid rate limits.
 
 **movies** (32 K docs, 19 MB) — canonical Meilisearch demo; rich for search/filter/sort/facet testing:
+
 ```bash
 gh api repos/meilisearch/datasets/contents/datasets/movies/movies.json --jq '.download_url' \
   | xargs curl -s \
@@ -270,6 +271,7 @@ curl -sX PATCH http://127.0.0.1:7700/indexes/movies/settings \
 ```
 
 **books** (244 docs, 94 KB) — fast to index; good for nested objects and quick iteration:
+
 ```bash
 gh api repos/meilisearch/datasets/contents/datasets/books/books.json --jq '.download_url' \
   | xargs curl -s \
@@ -279,6 +281,7 @@ gh api repos/meilisearch/datasets/contents/datasets/books/books.json --jq '.down
 ```
 
 **restaurants** (200 docs, 178 KB, with bundled `settings.json`) — ready-made for filter/facet/category testing:
+
 ```bash
 gh api repos/meilisearch/datasets/contents/datasets/restaurants/restaurants.json --jq '.download_url' \
   | xargs curl -s \
@@ -294,6 +297,7 @@ gh api repos/meilisearch/datasets/contents/datasets/restaurants/settings.json --
 ```
 
 Wait for all indexing tasks to finish before testing the UI:
+
 ```bash
 until [ "$(curl -s 'http://127.0.0.1:7700/tasks?statuses=enqueued,processing' \
   -H 'Authorization: Bearer meiliweb-dev-masterkey' | python3 -c 'import json,sys; print(json.load(sys.stdin)["total"])')" = "0" ]; do sleep 1; done
@@ -328,12 +332,28 @@ browser_take_screenshot → verify visually
 ```
 
 Example fill_form call (after snapshot, adapt `target` refs):
+
 ```json
 {
   "fields": [
-    { "target": "input[placeholder='http://localhost:7700']", "name": "Instance URL",    "type": "textbox", "value": "http://127.0.0.1:7700" },
-    { "target": "input[type='password']",                    "name": "Access Token",    "type": "textbox", "value": "meiliweb-dev-masterkey" },
-    { "target": "input[placeholder='Local instance']",       "name": "Instance Name",   "type": "textbox", "value": "Dev instance" }
+    {
+      "target": "input[placeholder='http://localhost:7700']",
+      "name": "Instance URL",
+      "type": "textbox",
+      "value": "http://127.0.0.1:7700"
+    },
+    {
+      "target": "input[type='password']",
+      "name": "Access Token",
+      "type": "textbox",
+      "value": "meiliweb-dev-masterkey"
+    },
+    {
+      "target": "input[placeholder='Local instance']",
+      "name": "Instance Name",
+      "type": "textbox",
+      "value": "Dev instance"
+    }
   ]
 }
 ```
