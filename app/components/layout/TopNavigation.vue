@@ -202,6 +202,11 @@ const navigation = reactive([
     href: '/snapshots',
     current: computed(() => route.name?.startsWith('snapshots')),
   },
+  {
+    name: 'Experimental',
+    href: '/experimental-features',
+    current: computed(() => route.name?.startsWith('experimental-features')),
+  },
 ])
 
 const { credentials, records, switchInstance, removeInstance: doRemoveInstance } = safeToRefs(useCredentials())
