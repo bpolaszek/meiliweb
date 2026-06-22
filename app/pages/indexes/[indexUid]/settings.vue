@@ -114,6 +114,11 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.embedders'),
   },
   {
+    href: `/indexes/${index.uid}/settings/foreign-keys`,
+    current: computed(() => 'indexes-indexUid-settings-foreign-keys' === route.name),
+    text: t('menu.foreignKeys'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/local-settings`,
     current: computed(() => 'indexes-indexUid-settings-local-settings' === route.name),
     text: t('menu.localSettings'),
@@ -147,6 +152,7 @@ en:
     separatorTokens: Separator Tokens
     nonSeparatorTokens: Non-Separator Tokens
     embedders: Embedders
+    foreignKeys: Foreign Keys
     localSettings: Local settings
   actions:
     documents: Go to Documents
