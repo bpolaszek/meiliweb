@@ -193,6 +193,11 @@ const navigation = reactive([
     current: computed(() => route.name?.startsWith('tasks')),
   },
   {
+    name: 'Network',
+    href: '/network',
+    current: computed(() => route.name?.startsWith('network')),
+  },
+  {
     name: 'Dumps',
     href: '/dumps',
     current: computed(() => route.name?.startsWith('dumps')),
