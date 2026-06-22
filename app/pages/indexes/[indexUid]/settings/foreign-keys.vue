@@ -123,7 +123,9 @@ try {
 }
 
 // Index uids for the foreign index dropdown.
-const indexUids = (await meili.getRawIndexes({ limit: 1000 })).results.map(({ uid }) => uid)
+const indexUids = (await meili.getRawIndexes({ limit: 1000 })).results
+  .map(({ uid }) => uid)
+  .filter((indexUid: string) => indexUid !== props.indexUid)
 
 const savedRows = ref<ForeignKey[]>([])
 const rows = ref<ForeignKey[]>([])
