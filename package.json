@@ -1,5 +1,8 @@
 {
   "name": "meiliweb",
+  "engines": {
+    "node": ">=20.12"
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
