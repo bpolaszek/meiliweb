@@ -31,6 +31,12 @@ export default defineNuxtConfig({
       },
     ],
   ],
+  i18n: {
+    // Single-locale SPA with inline <i18n> SFC blocks: keep routes unprefixed.
+    strategy: 'no_prefix',
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
   compatibilityDate: '2024-08-15',
   vite: {
     build: {
