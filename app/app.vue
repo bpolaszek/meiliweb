@@ -1,14 +1,15 @@
 <template>
-  <!--  <Login v-if="!credentials" />-->
-  <div class="relative h-dvh">
-    <NuxtPage :page-key="pageKey" />
-    <DebugMemory
-      v-if="IS_DEV_MODE && config.public.debugMemoryUsage"
-      class="absolute bottom-0 flex w-full items-center justify-center gap-4 pb-6 text-xs text-gray-600" />
-  </div>
-  <Toaster />
-  <ConfirmationDialog v-if="confirmationDialog" v-bind="confirmationDialog" />
-  <PromisifiedDialogs />
+  <UApp>
+    <div class="relative h-dvh">
+      <NuxtPage :page-key="pageKey" />
+      <DebugMemory
+        v-if="IS_DEV_MODE && config.public.debugMemoryUsage"
+        class="absolute bottom-0 flex w-full items-center justify-center gap-4 pb-6 text-xs text-gray-600" />
+    </div>
+    <Toaster />
+    <ConfirmationDialog v-if="confirmationDialog" v-bind="confirmationDialog" />
+    <PromisifiedDialogs />
+  </UApp>
 </template>
 
 <script setup lang="ts">
