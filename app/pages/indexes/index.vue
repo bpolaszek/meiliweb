@@ -49,37 +49,7 @@
             {{ item.numberOfDocuments }}
           </td>
           <td class="text-right">
-            <ContextualMenu>
-              <MenuItem v-slot="{ active }">
-                <NuxtLink
-                  :to="`/indexes/${item.uid}/settings`"
-                  class="flex w-full items-center justify-start gap-2 p-2"
-                  :class="{ 'bg-gray-50': active }">
-                  <Icon name="heroicons-outline:cog" class="size-5 opacity-70" />
-                  <span>{{ t('actions.settings') }}</span>
-                </NuxtLink>
-              </MenuItem>
-              <MenuItem v-slot="{ active }">
-                <button
-                  type="button"
-                  class="flex w-full items-center justify-start gap-2 p-2"
-                  :class="{ 'bg-gray-50': active }"
-                  @click="renameIndex(item.uid)">
-                  <Icon name="heroicons:pencil" class="size-5 opacity-70" />
-                  <span>{{ t('actions.rename') }}</span>
-                </button>
-              </MenuItem>
-              <MenuItem v-slot="{ active }">
-                <button
-                  type="button"
-                  class="flex w-full items-center justify-start gap-2 p-2"
-                  :class="{ 'bg-gray-50': active }"
-                  @click="duplicateIndex(item.uid)">
-                  <Icon name="heroicons:document-duplicate" class="size-5 opacity-70" />
-                  <span>{{ t('actions.duplicate') }}</span>
-                </button>
-              </MenuItem>
-            </ContextualMenu>
+            <ContextualMenu :items="indexMenuItems(item)" />
           </td>
         </template>
       </Table>
@@ -116,7 +86,7 @@ import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import ContextualMenu from '~/components/layout/ContextualMenu.vue'
-import { MenuItem } from '@headlessui/vue'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import { Index } from 'meilisearch'
 import { promiseTimeout, whenever } from '@vueuse/core'
 import { navigateTo } from '#imports'
@@ -174,6 +144,24 @@ const renameIndex = async (indexUid: string) => {
   await promiseTimeout(1000)
   await navigateTo(`/indexes/${newIndexUid}/documents`)
 }
+const indexMenuItems = (item: Index): DropdownMenuItem[] => [
+  {
+    label: t('actions.settings'),
+    icon: 'heroicons-outline:cog',
+    to: `/indexes/${item.uid}/settings`,
+  },
+  {
+    label: t('actions.rename'),
+    icon: 'heroicons:pencil',
+    onSelect: () => renameIndex(item.uid),
+  },
+  {
+    label: t('actions.duplicate'),
+    icon: 'heroicons:document-duplicate',
+    onSelect: () => duplicateIndex(item.uid),
+  },
+]
+
 const { indexes } = toRefs(self)
 watch(offset, async (offset) => {
   self.indexes = []

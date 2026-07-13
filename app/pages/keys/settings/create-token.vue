@@ -6,26 +6,12 @@
     </h3>
 
     <DefineAddRuleMenu v-slot="{ big }">
-      <ContextualMenu v-if="availableIndexes.length > 0">
+      <ContextualMenu v-if="availableIndexes.length > 0" :items="addRuleMenuItems">
         <template #button>
-          <MenuButton>
-            <Button theme="primary" icon="zondicons:add-solid" :no-padding="!big" :class="big || 'px-2 py-1 text-xs'">
-              {{ t('labels.addRule') }}
-            </Button>
-          </MenuButton>
+          <Button theme="primary" icon="zondicons:add-solid" :no-padding="!big" :class="big || 'px-2 py-1 text-xs'">
+            {{ t('labels.addRule') }}
+          </Button>
         </template>
-        <div class="block w-full cursor-default px-2 py-1.5 text-left text-xs font-light text-gray-500 italic">
-          {{ t('labels.pickAnIndex') }}
-        </div>
-        <MenuItem v-for="indexUid of availableIndexes" :key="indexUid" v-slot="{ active }">
-          <button
-            type="button"
-            class="block w-full px-2 py-1.5 text-left text-sm font-light"
-            :class="[active ? 'bg-primary-100' : 'bg-transparent']"
-            @click="addSearchRule(indexUid)">
-            {{ humanizeString(indexUid) }}
-          </button>
-        </MenuItem>
       </ContextualMenu>
     </DefineAddRuleMenu>
 
@@ -143,7 +129,7 @@ import UniqueId from '~/components/UniqueId.vue'
 import ClipboardButton from '~/components/layout/forms/ClipboardButton.vue'
 import ContextualMenu from '~/components/layout/ContextualMenu.vue'
 import { useMeiliClient } from '~/composables'
-import { MenuButton, MenuItem } from '@headlessui/vue'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Key, TokenSearchRules } from 'meilisearch'
 import type { ComputedRef } from 'vue'
 import { createJwt, getFilterableAttributePatterns } from '~/utils'
@@ -192,6 +178,13 @@ const [indexes, keys] = await Promise.all([
   meili.getKeys(),
 ])
 const availableIndexes = computed(() => indexes.filter((indexUid) => ![...searchRulesMap.keys()].includes(indexUid)))
+const addRuleMenuItems = computed<DropdownMenuItem[]>(() => [
+  { type: 'label', label: t('labels.pickAnIndex') },
+  ...availableIndexes.value.map((indexUid) => ({
+    label: humanizeString(indexUid),
+    onSelect: () => addSearchRule(indexUid),
+  })),
+])
 
 const addSearchRule = async (indexUid: string) => {
   searchRulesMap.set(indexUid, { filter: '' })

@@ -1,59 +1,12 @@
 <template>
-  <TransitionRoot as="template" :show="state.open">
-    <Dialog as="div" class="relative z-10" @close="state.open = false">
-      <TransitionChild
-        as="template"
-        enter="ease-out duration-300"
-        enter-from="opacity-0"
-        enter-to="opacity-100"
-        leave="ease-in duration-200"
-        leave-from="opacity-100"
-        leave-to="opacity-0">
-        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" />
-      </TransitionChild>
-
-      <div class="fixed inset-0 z-10 overflow-y-auto">
-        <div
-          class="flex min-h-full justify-center p-4 text-center sm:items-center sm:p-0"
-          :class="[centerOnMobile ? 'items-center' : 'items-end']">
-          <TransitionChild
-            as="template"
-            enter="ease-out duration-300"
-            enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            enter-to="opacity-100 translate-y-0 sm:scale-100"
-            leave="ease-in duration-200"
-            leave-from="opacity-100 translate-y-0 sm:scale-100"
-            leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-            <DialogPanel
-              class="dark:bg-primary-700 relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-              <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                <button
-                  type="button"
-                  class="focus:ring-primary-500 rounded-md text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-offset-2 focus:outline-hidden dark:text-gray-200"
-                  @click="state.open = false">
-                  <span class="sr-only">Close</span>
-                  <Icon name="heroicons:x-mark" class="h-6 w-6" aria-hidden="true" />
-                </button>
-              </div>
-              <DialogTitle
-                v-if="title"
-                as="h3"
-                class="mb-3 text-base leading-6 font-semibold text-gray-900 empty:hidden dark:text-gray-100">
-                {{ title }}
-              </DialogTitle>
-              <p class="text-sm">
-                <slot :state="state" />
-              </p>
-            </DialogPanel>
-          </TransitionChild>
-        </div>
-      </div>
-    </Dialog>
-  </TransitionRoot>
+  <UModal v-model:open="state.open" :title="title ? String(title) : undefined" :ui="{ body: 'text-sm' }">
+    <template #body>
+      <slot :state="state" />
+    </template>
+  </UModal>
 </template>
 
 <script lang="ts">
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { type MaybeRef, watchDebounced } from '@vueuse/core'
 import { reactive, ref, watch } from 'vue'
 
