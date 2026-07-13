@@ -14,9 +14,10 @@
           <span class="font-medium text-gray-900">{{ labelFor(feature) }}</span>
           <span v-if="descriptionFor(feature)" class="text-sm text-gray-500">{{ descriptionFor(feature) }}</span>
         </div>
-        <Toggle
+        <USwitch
           :model-value="!!features[feature]"
           :disabled="pending.has(feature)"
+          size="lg"
           @update:model-value="toggle(feature, $event)" />
       </li>
     </ul>
@@ -28,7 +29,6 @@ import { useMeiliClient, useToasts } from '#imports'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from '~/stores/toasts'
 import Alert from '~/components/layout/Alert.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
-import Toggle from '~/components/layout/forms/Toggle.vue'
 import { humanize } from '~/utils'
 import type { RuntimeTogglableFeatures } from 'meilisearch'
 

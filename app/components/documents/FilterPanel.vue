@@ -29,14 +29,15 @@
       <h3 class="text-md font-medium">{{ t('titles.facets') }}</h3>
       <UniqueId v-if="filterableAttributes.length > 0" v-slot="{ id }">
         <div class="space-y-1 text-sm">
-          <MultiCombobox
+          <UInputMenu
             v-model="facets"
+            multiple
+            open-on-click
+            open-on-focus
             :items="filterableAttributes.filter((a) => '_geo' !== a)"
+            :placeholder="t('placeholders.enableFacets')"
             class="block w-full"
-            :input-attrs="{
-              class: 'text-xs',
-              placeholder: t('placeholders.enableFacets'),
-            }" />
+            :ui="{ base: 'text-xs' }" />
         </div>
       </UniqueId>
       <i18n-t v-else keypath="emptyStates.facets.text" tag="p" class="text-sm font-light text-gray-600 italic">
@@ -73,7 +74,6 @@
 
 <script setup lang="ts">
 import { useMeiliClient } from '~/composables'
-import MultiCombobox from '~/components/layout/forms/MultiCombobox.vue'
 import StringFacet from '~/components/documents/StringFacet.vue'
 import type { AppliedFilters } from '~/utils/applied-filters'
 import { type FacetDistribution, type FacetStats, Meilisearch } from 'meilisearch'

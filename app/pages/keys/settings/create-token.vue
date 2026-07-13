@@ -6,13 +6,11 @@
     </h3>
 
     <DefineAddRuleMenu v-slot="{ big }">
-      <ContextualMenu v-if="availableIndexes.length > 0" :items="addRuleMenuItems">
-        <template #button>
-          <Button theme="primary" icon="zondicons:add-solid" :no-padding="!big" :class="big || 'px-2 py-1 text-xs'">
-            {{ t('labels.addRule') }}
-          </Button>
-        </template>
-      </ContextualMenu>
+      <UDropdownMenu v-if="availableIndexes.length > 0" :items="addRuleMenuItems" :content="{ align: 'start' }">
+        <Button theme="primary" icon="zondicons:add-solid" :no-padding="!big" :class="big || 'px-2 py-1 text-xs'">
+          {{ t('labels.addRule') }}
+        </Button>
+      </UDropdownMenu>
     </DefineAddRuleMenu>
 
     <div v-if="0 === Object.entries(searchRules).length" class="flex items-center justify-center py-10">
@@ -127,7 +125,6 @@ import Select from '~/components/layout/forms/Select.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import UniqueId from '~/components/UniqueId.vue'
 import ClipboardButton from '~/components/layout/forms/ClipboardButton.vue'
-import ContextualMenu from '~/components/layout/ContextualMenu.vue'
 import { useMeiliClient } from '~/composables'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Key, TokenSearchRules } from 'meilisearch'

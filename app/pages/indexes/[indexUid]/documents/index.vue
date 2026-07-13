@@ -1,15 +1,22 @@
 <template>
   <Layout :title="humanizeString(index.uid)" :subtitle="subtitle">
-    <SlideOver no-padding v-model:open="filterPanelOpen" :title="t('labels.filters')">
-      <FilterPanel
-        v-model:applied-sort="appliedSort"
-        v-model:facets="facets"
-        v-model:applied-filters="appliedFilters"
-        :client="searchClient"
-        :index-uid="index.uid"
-        :sortable-attributes="sortableAttributes"
-        :filterable-attributes="facetSearchableAttributes" />
-    </SlideOver>
+    <USlideover
+      v-model:open="filterPanelOpen"
+      :title="t('labels.filters')"
+      side="right"
+      :overlay="false"
+      :ui="{ content: 'max-w-lg', title: 'text-2xl font-semibold', body: 'p-0 sm:p-0' }">
+      <template #body>
+        <FilterPanel
+          v-model:applied-sort="appliedSort"
+          v-model:facets="facets"
+          v-model:applied-filters="appliedFilters"
+          :client="searchClient"
+          :index-uid="index.uid"
+          :sortable-attributes="sortableAttributes"
+          :filterable-attributes="facetSearchableAttributes" />
+      </template>
+    </USlideover>
 
     <template #actions>
       <div
@@ -28,7 +35,13 @@
         </Button>
       </div>
 
-      <SearchInput v-model="searchTerms" class="grow lg:w-80" />
+      <UInput
+        v-model="searchTerms"
+        type="search"
+        icon="heroicons:magnifying-glass-20-solid"
+        :placeholder="t('labels.search')"
+        :ui="{ base: 'rounded-lg' }"
+        class="grow lg:w-80" />
 
       <button v-tippy="t('actions.documentView')" @click="viewMode = 'documents'">
         <Icon
@@ -92,11 +105,9 @@
 import { useFields, useIndexLocalSettings, useMeiliClient, useMultiTenancy, usePagination } from '~/composables'
 import { getFacetSearchableAttributePatterns, getFilterableAttributePatterns, tryOrThrow } from '~/utils'
 import { NuxtLink } from '#components'
-import SlideOver from '~/components/layout/SlideOver.vue'
 import FilterPanel from '~/components/documents/FilterPanel.vue'
 import { AppliedFilters } from '~/utils/applied-filters'
 import humanizeString from 'humanize-string'
-import SearchInput from '~/components/layout/forms/SearchInput.vue'
 import match from 'match-operator'
 import DocumentsAsCards from '~/components/documents/DocumentsAsCards.vue'
 import DocumentsAsTable from '~/components/documents/DocumentsAsTable.vue'
@@ -184,4 +195,5 @@ en:
   labels:
     filters: Sort & Filter
     multitenancyEnabled: Tenant preview
+    search: Search...
 </i18n>

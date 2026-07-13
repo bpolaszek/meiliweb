@@ -49,18 +49,27 @@
             {{ item.numberOfDocuments }}
           </td>
           <td class="text-right">
-            <ContextualMenu :items="indexMenuItems(item)" />
+            <UDropdownMenu :items="indexMenuItems(item)" :content="{ align: 'end' }" :ui="{ content: 'w-48' }">
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden">
+                <span class="sr-only">{{ t('actions.openMenu') }}</span>
+                <Icon name="heroicons-solid:dots-vertical" aria-hidden="true" />
+              </button>
+            </UDropdownMenu>
           </td>
         </template>
       </Table>
 
       <div class="mt-4 flex items-center justify-between">
         <PageSize v-model="itemsPerPage" />
-        <Pagination
-          :current-page="currentPage"
-          :last-page="lastPage"
-          :previous-page="previousPage"
-          :next-page="nextPage"
+        <UPagination
+          :page="currentPage"
+          :total="lastPage"
+          :items-per-page="1"
+          :sibling-count="2"
+          active-color="primary"
+          variant="ghost"
           @update:page="handlePageChange" />
       </div>
 
@@ -85,12 +94,10 @@ import ServerStats from '~/components/settings/ServerStats.vue'
 import Table from '~/components/layout/tables/Table.vue'
 import Badge from '~/components/layout/Badge.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import ContextualMenu from '~/components/layout/ContextualMenu.vue'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import { Index } from 'meilisearch'
 import { promiseTimeout, whenever } from '@vueuse/core'
 import { navigateTo } from '#imports'
-import Pagination from '~/components/layout/pagination/Pagination.vue'
 import PageSize from '~/components/layout/pagination/PageSize.vue'
 
 const { t } = useI18n()
@@ -193,4 +200,5 @@ en:
     settings: Settings
     duplicate: Duplicate
     rename: Rename
+    openMenu: Open menu
 </i18n>
