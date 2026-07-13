@@ -8,7 +8,7 @@ Web-based admin panel for [Meilisearch](https://meilisearch.com): manage indexes
 - **Vue 3** (Composition API, `<script setup lang="ts">`)
 - **TypeScript** — strict via Nuxt's generated `tsconfig`
 - **Pinia** for state, with `@vueuse/core` `useLocalStorage` for persisted stores
-- **TailwindCSS** (`@tailwindcss/forms` with `strategy: 'class'`, `@tailwindcss/container-queries`)
+- **Tailwind CSS 4** (CSS-first config in `app/assets/css/main.css`) + **@nuxt/ui v4** (`@tailwindcss/forms` kept with `strategy: 'class'` for native inputs)
 - **@nuxtjs/i18n** — translations live **inline** in each component via `<i18n>` SFC blocks (YAML), not in a central locale file
 - **meilisearch** (official JS client) + **meilisearch-filters** for filter expressions
 - **Yarn** for package management
@@ -203,9 +203,11 @@ Global app-wide strings live in `app.vue`'s `<i18n global>` block. There is no c
 
 ## Styling
 
-- Tailwind utility-first. Custom primary palette (pink) defined in `tailwind.config.js`.
-- Forms use the `class` strategy: apply `form-input`, `form-checkbox`, etc. explicitly (see `app.vue`'s `@layer components` for the project-wide tweaks).
-- `prettier-plugin-tailwindcss` auto-sorts class lists — don't fight the order.
+- **Tailwind CSS 4** (CSS-first config) + **@nuxt/ui v4**. No `tailwind.config.js`: theme lives in `app/assets/css/main.css`.
+- The brand palette (pink) is declared as the custom `meili` color in `main.css` (`@theme static`) and mapped to the `primary` semantic color in `app/app.config.ts`. `--ui-primary` is anchored on shade 600.
+- UI building blocks are Nuxt UI components (`UButton`, `UModal`, `USlideover`, `UDropdownMenu`, `UInputMenu`, `USwitch`, `UAlert`, `UBadge`, `UPagination`, toasts via `useToast`), usually wrapped by the app's own components in `components/layout/` which keep their historical props API — prefer those wrappers.
+- Native `<input>`/`<select>` still use `@tailwindcss/forms` with the `class` strategy (`form-input`, `form-checkbox`, ...).
+- `prettier-plugin-tailwindcss` auto-sorts class lists (config: `tailwindStylesheet` in `.prettierrc`) — don't fight the order.
 - SCSS is allowed (`sass` is installed) but rare; prefer Tailwind.
 
 ## Code style

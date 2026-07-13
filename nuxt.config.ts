@@ -48,9 +48,6 @@ export default defineNuxtConfig({
     },
     optimizeDeps: {
       include: [
-        '@headlessui/vue',
-        '@heroicons/vue/20/solid',
-        '@heroicons/vue/24/outline',
         '@vue/devtools-core',
         '@vue/devtools-kit',
         '@vueform/slider',
