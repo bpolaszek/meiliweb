@@ -11,7 +11,7 @@
         </li>
         <li>
           <div class="flex items-center">
-            <ChevronRightIcon class="h-5 w-5 flex-shrink-0 text-gray-400" aria-hidden="true" />
+            <ChevronRightIcon class="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
             <a href="#" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Breadcrumbs</a>
           </div>
         </li>

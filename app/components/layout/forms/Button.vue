@@ -61,7 +61,7 @@ const themeClasses = computed(() => {
     classes.push(
       'text-white',
       'bg-primary-600',
-      'focus-visible:outline',
+      'focus-visible:outline-solid',
       'focus-visible:outline-2',
       'focus-visible:outline-offset-2',
       'focus-visible:outline-primary-600',
@@ -75,7 +75,7 @@ const themeClasses = computed(() => {
     classes.push(
       'text-white',
       'bg-gray-700',
-      'focus-visible:outline',
+      'focus-visible:outline-solid',
       'focus-visible:outline-2',
       'focus-visible:outline-offset-2',
       'focus-visible:outline-gray-600',

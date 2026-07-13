@@ -1,4 +1,4 @@
-import TailwindConfig from './tailwind.config'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
   future: {
@@ -11,17 +11,16 @@ export default defineNuxtConfig({
       debugMemoryUsage: false,
     },
   },
+  css: ['@vueform/slider/themes/default.css', '~/assets/css/main.css'],
+  icon: {
+    // Keep icon base styles in a cascade layer so Tailwind utilities
+    // (e.g. size-14) can override them (Tailwind v4 uses real @layer rules).
+    cssLayer: 'base',
+  },
   modules: [
     '@pinia/nuxt',
     '@nuxt/icon',
     '@nuxtjs/i18n',
-    [
-      '@nuxtjs/tailwindcss',
-      {
-        editorSupport: true,
-        config: TailwindConfig,
-      },
-    ],
     [
       '@nuxtjs/google-fonts',
       {
@@ -39,6 +38,7 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2024-08-15',
   vite: {
+    plugins: [tailwindcss()],
     build: {
       rollupOptions: {
         external: ['crypto'],

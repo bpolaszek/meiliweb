@@ -1,7 +1,7 @@
 <template>
   <div class="bg-bubbles flex h-dvh flex-col items-center justify-center gap-6">
     <div
-      class="-mt-20 w-full max-w-lg space-y-6 rounded-lg border-gray-200 bg-white bg-opacity-90 px-6 py-4 md:w-1/2 md:border md:px-0 md:shadow-lg">
+      class="-mt-20 w-full max-w-lg space-y-6 rounded-lg border-gray-200 bg-white/90 px-6 py-4 md:w-1/2 md:border md:px-0 md:shadow-lg">
       <NuxtLink to="/indexes" class="flex items-center justify-center gap-2">
         <img class="-ml-10 size-16 shrink-0 grow-0" src="~/assets/images/logo.svg" alt="Meiliweb" />
         <span class="text-3xl font-semibold">Meiliweb</span>

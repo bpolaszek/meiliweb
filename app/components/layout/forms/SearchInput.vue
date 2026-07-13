@@ -7,7 +7,7 @@
       v-model="value"
       name="search"
       autocomplete="off"
-      class="block w-full rounded-lg border-0 bg-white py-1 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6"
+      class="focus:ring-primary-500 block w-full rounded-lg border-0 bg-white py-1 pr-3 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:outline-hidden focus:ring-inset sm:text-sm sm:leading-6"
       :placeholder="t('placeholder')"
       type="search"
       v-bind="inputAttrs" />

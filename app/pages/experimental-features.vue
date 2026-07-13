@@ -8,7 +8,7 @@
       {{ t('errors.unavailable.text') }}
     </Alert>
 
-    <ul v-else class="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow-sm">
+    <ul v-else class="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow-xs">
       <li v-for="feature in sortedFeatures" :key="feature" class="flex items-center justify-between gap-6 px-4 py-4">
         <div class="flex flex-col gap-1">
           <span class="font-medium text-gray-900">{{ labelFor(feature) }}</span>

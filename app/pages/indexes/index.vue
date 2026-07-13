@@ -26,18 +26,18 @@
           <th />
         </template>
         <template #default="{ item }">
-          <td class="whitespace-nowrap font-medium">
+          <td class="font-medium whitespace-nowrap">
             <span class="inline-flex items-center gap-2">
               <NuxtLink
                 :to="`/indexes/${item.uid}/documents`"
-                class="font-semibold hover:text-primary-700 hover:underline">
+                class="hover:text-primary-700 font-semibold hover:underline">
                 {{ item.uid }}
               </NuxtLink>
               <Badge v-if="item.isIndexing" class="text-xs uppercase">
                 {{ t('labels.isIndexing') }}
               </Badge>
             </span>
-            <div class="absolute bottom-0 right-full h-px w-screen bg-gray-100" />
+            <div class="absolute right-full bottom-0 h-px w-screen bg-gray-100" />
             <div class="absolute bottom-0 left-0 h-px w-screen bg-gray-100" />
           </td>
           <td>

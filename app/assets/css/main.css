@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+@plugin '@tailwindcss/forms' {
+  strategy: 'class';
+}
+
+@theme {
+  --color-primary-50: #fef1f7;
+  --color-primary-100: #fee5f2;
+  --color-primary-200: #ffcbe7;
+  --color-primary-300: #ffa1d1;
+  --color-primary-400: #ff5caa;
+  --color-primary-500: #fa3a90;
+  --color-primary-600: #ea186c;
+  --color-primary-700: #cc0a52;
+  --color-primary-800: #a80c44;
+  --color-primary-900: #8c0f3b;
+  --color-primary-950: #56011f;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* Tailwind v3 preflight compatibility: pointer cursor on buttons,
+     gray placeholders (v4 defaults to currentcolor at 50% opacity) */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+    opacity: 1;
+  }
+}
+
+@utility form-input {
+  /* @tailwindcss/forms enhancement */
+  @apply focus:border-primary-300 focus:ring-primary-600 rounded-md border-gray-300 shadow-xs focus:ring-2 focus:outline-hidden;
+}
+
+@utility form-checkbox {
+  @apply focus:border-primary-300 focus:ring-primary-600 rounded-md border-gray-300 shadow-xs focus:ring-2 focus:outline-hidden;
+  @apply text-primary-600 rounded-xs;
+}
+
+@layer components {
+  /* Ensure main container has full height */
+  #__nuxt {
+    @apply h-full;
+  }
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* @vueform/slider default theme, tinted with the primary palette */
+:root {
+  --slider-connect-bg: #fa3a90;
+  --slider-tooltip-bg: #fa3a90;
+  --slider-handle-ring-color: #fa3a9030;
+}

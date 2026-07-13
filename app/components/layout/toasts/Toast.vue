@@ -8,12 +8,12 @@
     leave-to-class="opacity-0">
     <div
       v-if="show"
-      class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+      class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5"
       @mouseover="progressBarPaused = true"
       @mouseleave="progressBarPaused = false">
       <div class="p-4">
         <div class="flex items-start">
-          <div v-if="toast.icon" class="flex-shrink-0">
+          <div v-if="toast.icon" class="shrink-0">
             <Icon :name="toast.icon" class="size-6" aria-hidden="true" :class="toast.iconClasses" />
           </div>
           <div class="ml-3 w-0 flex-1 pt-0.5">
@@ -22,11 +22,11 @@
               {{ toast.text }}
             </p>
           </div>
-          <div v-if="toast.dismissable" class="ml-4 flex flex-shrink-0">
+          <div v-if="toast.dismissable" class="ml-4 flex shrink-0">
             <button
               type="button"
               @click="destroy()"
-              class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+              class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
               <span class="sr-only">Close</span>
               <XMarkIcon class="h-5 w-5" aria-hidden="true" />
             </button>
@@ -37,7 +37,7 @@
         <div class="flex h-0.5 overflow-hidden text-xs">
           <div
             :style="{ width: progressBar + '%' }"
-            class="flex flex-col justify-center whitespace-nowrap bg-gray-200 text-center text-white shadow-none"></div>
+            class="flex flex-col justify-center bg-gray-200 text-center whitespace-nowrap text-white shadow-none"></div>
         </div>
       </div>
     </div>

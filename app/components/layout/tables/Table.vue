@@ -26,7 +26,7 @@
               <template v-for="(key, index) of keys">
                 <td v-if="0 === index" class="font-medium">
                   {{ item[key] }}
-                  <div class="absolute bottom-0 right-full h-px w-screen bg-gray-100" />
+                  <div class="absolute right-full bottom-0 h-px w-screen bg-gray-100" />
                   <div class="absolute bottom-0 left-0 h-px w-screen bg-gray-100" />
                 </td>
                 <td v-else class="px-3 py-4 text-sm text-gray-500">

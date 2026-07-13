@@ -24,7 +24,7 @@
           no-border
           no-rounded
           @click="tenant.clearTenantToken()">
-          <Icon name="uil:times" class="size-6 text-primary-600" />
+          <Icon name="uil:times" class="text-primary-600 size-6" />
         </Button>
       </div>
 

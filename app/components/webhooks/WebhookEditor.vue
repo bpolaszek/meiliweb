@@ -41,7 +41,7 @@
               autocomplete="off"
               spellcheck="false"
               @input="header.redacted = false" />
-            <p v-if="header.redacted" class="mt-1 text-xs font-light italic text-gray-500">
+            <p v-if="header.redacted" class="mt-1 text-xs font-light text-gray-500 italic">
               {{ t('hints.redacted') }}
             </p>
           </div>

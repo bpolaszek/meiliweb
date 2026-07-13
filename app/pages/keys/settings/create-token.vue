@@ -14,7 +14,7 @@
             </Button>
           </MenuButton>
         </template>
-        <div class="block w-full cursor-default px-2 py-1.5 text-left text-xs font-light italic text-gray-500">
+        <div class="block w-full cursor-default px-2 py-1.5 text-left text-xs font-light text-gray-500 italic">
           {{ t('labels.pickAnIndex') }}
         </div>
         <MenuItem v-for="indexUid of availableIndexes" :key="indexUid" v-slot="{ active }">
@@ -48,7 +48,7 @@
         v-slot="{ id }"
         class="space-y-1">
         <header class="flex items-center justify-between">
-          <Label :for="id" class="text-sm font-light capitalize text-primary-800">
+          <Label :for="id" class="text-primary-800 text-sm font-light capitalize">
             {{ indexUid }}
           </Label>
           <button v-tippy="t('labels.removeRule')" type="button" @click="searchRulesMap.delete(indexUid)">
@@ -68,7 +68,7 @@
           type="text"
           class="form-input w-full" />
         <div v-if="filterStats.has(indexUid)" class="text-xs">
-          <span class="italic text-green-600">
+          <span class="text-green-600 italic">
             {{
               t('hints.matchingDocuments', {
                 nbFilteredDocuments: (filterStats.get(indexUid) as FilterStat)[0],
@@ -80,12 +80,12 @@
           <RouterLink
             v-if="jwt"
             :to="`/indexes/${indexUid}/documents?tenantToken=${jwt}`"
-            class="italic text-primary-700 hover:text-primary-800"
+            class="text-primary-700 hover:text-primary-800 italic"
             target="_blank">
             {{ t('labels.preview') }}
           </RouterLink>
         </div>
-        <span v-else class="text-xs italic text-red-600">
+        <span v-else class="text-xs text-red-600 italic">
           {{ t('hints.invalidFilterQuery') }}
         </span>
       </UniqueId>
@@ -109,7 +109,7 @@
           <Label :for="id">{{ t('labels.expiresAt') }}</Label>
           <div>
             <label class="inline-flex cursor-pointer items-center gap-2">
-              <span class="text-sm font-light italic text-gray-600">
+              <span class="text-sm font-light text-gray-600 italic">
                 {{ t('labels.neverExpires') }}
               </span>
               <input :disabled="expires" type="checkbox" v-model="expires" class="form-checkbox" />
@@ -126,7 +126,7 @@
           <h4 class="font-medium">{{ t('labels.jwt') }}</h4>
           <ClipboardButton :source="jwt" class="size-6 shrink-0" />
         </header>
-        <p class="break-words font-mono text-sm">
+        <p class="font-mono text-sm wrap-break-word">
           {{ jwt }}
         </p>
       </section>

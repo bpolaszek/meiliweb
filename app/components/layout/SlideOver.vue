@@ -18,13 +18,13 @@
                 <div class="flex h-full flex-col overflow-y-auto bg-white/95 py-6 shadow-xl">
                   <div class="px-4 sm:px-6">
                     <div class="flex items-start" :class="title ? 'justify-between' : 'justify-end'">
-                      <DialogTitle v-if="title" class="text-2xl font-semibold leading-6 text-gray-900">
+                      <DialogTitle v-if="title" class="text-2xl leading-6 font-semibold text-gray-900">
                         {{ title }}
                       </DialogTitle>
                       <div class="ml-3 flex h-7 items-center">
                         <button
                           type="button"
-                          class="relative rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                          class="focus:ring-primary-500 relative rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-offset-2 focus:outline-hidden"
                           @click="open = false">
                           <span class="absolute -inset-2.5" />
                           <span class="sr-only">Close panel</span>

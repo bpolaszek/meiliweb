@@ -1,5 +1,5 @@
 <template>
-  <span v-if="null == value" class="italic text-gray-400">null</span>
+  <span v-if="null == value" class="text-gray-400 italic">null</span>
   <Component v-else-if="component" :is="component" :index-uid="indexUid" :field="field" :value="value" :level="level" />
   <a
     v-else-if="'string' == typeof value && value.startsWith('http')"

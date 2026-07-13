@@ -31,7 +31,7 @@
         <Label :for="id">{{ t('labels.indexes') }}</Label>
         <div>
           <label class="inline-flex cursor-pointer items-center gap-2">
-            <span class="text-sm font-light italic text-gray-600">
+            <span class="text-sm font-light text-gray-600 italic">
               {{ t('labels.allIndexes') }}
             </span>
             <input type="checkbox" v-model="key.indexes" value="*" class="form-checkbox" />
@@ -156,7 +156,7 @@
         <Label :for="id">{{ t('labels.expiresAt') }}</Label>
         <div>
           <label class="inline-flex cursor-pointer items-center gap-2">
-            <span class="text-sm font-light italic text-gray-600">
+            <span class="text-sm font-light text-gray-600 italic">
               {{ t('labels.neverExpires') }}
             </span>
             <input :disabled="expires" type="checkbox" v-model="expires" class="form-checkbox" />

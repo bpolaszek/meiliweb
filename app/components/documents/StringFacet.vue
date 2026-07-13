@@ -60,7 +60,7 @@
           </li>
         </template>
       </ul>
-      <p v-else class="block text-center text-sm italic text-gray-500">
+      <p v-else class="block text-center text-sm text-gray-500 italic">
         {{ t('emptyState') }}
       </p>
     </div>

@@ -5,15 +5,15 @@
     @keyup="({ code }) => ['ArrowUp', 'ArrowDown'].includes(code) && showOptions()">
     <Combobox as="div" v-model="selectedKeys" multiple>
       <slot name="label">
-        <ComboboxLabel class="block text-sm font-medium leading-5 text-gray-700 empty:hidden">
+        <ComboboxLabel class="block text-sm leading-5 font-medium text-gray-700 empty:hidden">
           {{ label }}
         </ComboboxLabel>
       </slot>
 
       <div class="relative">
-        <span class="inline-block w-full shadow-sm">
+        <span class="inline-block w-full shadow-xs">
           <div
-            class="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-2 pr-10 text-left transition duration-150 ease-in-out focus-within:border-primary-500 focus-within:outline-none focus-within:ring-1 focus-within:ring-primary-500 sm:text-sm sm:leading-5">
+            class="focus-within:border-primary-500 focus-within:ring-primary-500 relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pr-10 pl-2 text-left transition duration-150 ease-in-out focus-within:ring-1 focus-within:outline-hidden sm:text-sm sm:leading-5">
             <span class="flex flex-wrap gap-2">
               <span v-if="selectedKeys.length === 0" class="cursor-pointer p-0.5 empty:hidden" @click="focus">
                 <slot name="empty-state" />
@@ -22,7 +22,7 @@
               <template v-if="!hideTags">
                 <span v-for="item in selectedItems" :key="uniqueKey(item)">
                   <slot name="selected-items" v-bind="{ item, stringify, remove }">
-                    <span class="flex items-center gap-1 rounded-lg bg-primary-600 px-2 py-0.5 text-white">
+                    <span class="bg-primary-600 flex items-center gap-1 rounded-lg px-2 py-0.5 text-white">
                       <span>{{ stringify(item) }}</span>
                       <button role="button" @click="remove(item)">
                         <XMarkIcon class="h-4 w-4" />
@@ -36,13 +36,13 @@
                 ref="input"
                 autocomplete="off"
                 v-bind="inputAttrs"
-                class="grow border-none p-0 outline-none focus:ring-0"
+                class="grow border-none p-0 outline-hidden focus:ring-0"
                 @focus="showOptions"
                 @blur="onBlur($event.target)"
                 @change="query = $event.target.value" />
             </span>
 
-            <div class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
+            <div class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
               <button v-if="clearable" type="button" @click="clear">
                 <XMarkIcon v-if="0 !== selectedKeys.length" class="h-5 w-5 text-gray-300" aria-hidden="true" />
               </button>
@@ -57,7 +57,7 @@
           <ComboboxOptions
             :static="!autoHide"
             v-if="availableItems.length > 0"
-            class="shadow-xs max-h-60 overflow-auto rounded-md py-1 text-base leading-6 focus:outline-none sm:text-sm sm:leading-5">
+            class="max-h-60 overflow-auto rounded-md py-1 text-base leading-6 shadow-2xs focus:outline-hidden sm:text-sm sm:leading-5">
             <ComboboxOption
               v-for="item of availableItems"
               :key="uniqueKey(item)"
@@ -67,7 +67,7 @@
               @click="() => autoHide && hideOptions()">
               <slot v-bind="{ item, active, selected, stringify }">
                 <li
-                  class="relative cursor-default select-none py-2 pl-3 pr-9 focus:outline-none"
+                  class="relative cursor-default py-2 pr-9 pl-3 select-none focus:outline-hidden"
                   :class="active ? 'bg-primary-600 text-white' : 'text-gray-900'">
                   <span
                     class="block"

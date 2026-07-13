@@ -10,7 +10,7 @@
 
     <div v-else class="space-y-8">
       <!-- Identity: self & leader -->
-      <section class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <section class="rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
         <h2 class="mb-1 text-lg font-semibold text-gray-900">{{ t('identity.title') }}</h2>
         <p class="mb-4 text-sm text-gray-500">{{ t('identity.subtitle') }}</p>
         <form class="flex flex-col gap-4 sm:flex-row sm:items-end" @submit.prevent="saveIdentity()">
@@ -73,20 +73,20 @@
               <span v-if="remoteEntries[i].searchApiKey" class="font-mono text-sm">
                 {{ remoteEntries[i].searchApiKey }}
               </span>
-              <span v-else class="text-sm font-light italic text-gray-500">{{ t('placeholders.none') }}</span>
+              <span v-else class="text-sm font-light text-gray-500 italic">{{ t('placeholders.none') }}</span>
             </td>
             <td>
               <span v-if="remoteEntries[i].writeApiKey" class="font-mono text-sm">
                 {{ remoteEntries[i].writeApiKey }}
               </span>
-              <span v-else class="text-sm font-light italic text-gray-500">{{ t('placeholders.none') }}</span>
+              <span v-else class="text-sm font-light text-gray-500 italic">{{ t('placeholders.none') }}</span>
             </td>
             <td>
               <div class="flex items-center gap-2">
                 <button
                   type="button"
                   v-tippy="t('actions.edit')"
-                  class="text-gray-500 hover:text-primary-600"
+                  class="hover:text-primary-600 text-gray-500"
                   @click="editRemote(remoteEntries[i])">
                   <Icon name="heroicons:pencil-square" />
                 </button>
@@ -128,14 +128,14 @@
               <div v-if="shardEntries[i].remotes.length" class="flex flex-wrap gap-1">
                 <Badge v-for="name in shardEntries[i].remotes" :key="name" theme="neutral">{{ name }}</Badge>
               </div>
-              <span v-else class="text-sm font-light italic text-gray-500">{{ t('placeholders.none') }}</span>
+              <span v-else class="text-sm font-light text-gray-500 italic">{{ t('placeholders.none') }}</span>
             </td>
             <td>
               <div class="flex items-center gap-2">
                 <button
                   type="button"
                   v-tippy="t('actions.edit')"
-                  class="text-gray-500 hover:text-primary-600"
+                  class="hover:text-primary-600 text-gray-500"
                   @click="editShard(shardEntries[i])">
                   <Icon name="heroicons:pencil-square" />
                 </button>
