@@ -1,12 +1,12 @@
 <template>
-  <Component :is="as" class="rounded-lg px-1.5 py-0.5" :class="classes">
+  <UBadge :as="as" :color="color" :variant="variant" class="rounded-lg">
     <slot />
-  </Component>
+  </UBadge>
 </template>
 
 <script setup lang="ts">
-import type { ComponentPublicInstance } from 'vue'
 import match from 'match-operator'
+import type { ComponentPublicInstance } from 'vue'
 
 type Props = {
   as?: string | ComponentPublicInstance
@@ -17,12 +17,14 @@ const props = withDefaults(defineProps<Props>(), {
   as: 'span',
   theme: 'primary',
 })
-const classes = computed(() =>
-  match(props.theme, [
-    ['primary', ['bg-primary-800', 'text-white']],
-    ['success', ['bg-green-600', 'text-white']],
-    ['danger', ['bg-red-600', 'text-white']],
-    ['neutral', ['border border-gray-200']],
-  ]),
+const color = computed(
+  () =>
+    match(props.theme, [
+      ['primary', 'primary'],
+      ['success', 'success'],
+      ['danger', 'error'],
+      ['neutral', 'neutral'],
+    ]) as 'primary' | 'success' | 'error' | 'neutral',
 )
+const variant = computed(() => ('neutral' === props.theme ? 'outline' : 'solid'))
 </script>

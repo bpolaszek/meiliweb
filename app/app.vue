@@ -6,14 +6,12 @@
         v-if="IS_DEV_MODE && config.public.debugMemoryUsage"
         class="absolute bottom-0 flex w-full items-center justify-center gap-4 pb-6 text-xs text-gray-600" />
     </div>
-    <Toaster />
     <ConfirmationDialog v-if="confirmationDialog" v-bind="confirmationDialog" />
     <PromisifiedDialogs />
   </UApp>
 </template>
 
 <script setup lang="ts">
-import Toaster from '~/components/layout/toasts/Toaster.vue'
 import ConfirmationDialog from '~/components/layout/ConfirmationDialog.vue'
 import PromisifiedDialogs from '~/components/layout/dialogs/PromisifiedDialogs.vue'
 import { safeToRefs } from '~/utils'

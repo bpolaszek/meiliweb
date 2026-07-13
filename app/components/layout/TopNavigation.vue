@@ -63,7 +63,7 @@
                 <label for="search" class="sr-only">Search</label>
                 <div class="relative">
                   <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <Icon name="heroicons:magnifying-glass-20-solid" class="h-5 w-5 text-gray-400" aria-hidden="true" />
                   </div>
                   <input
                     id="search"
@@ -83,8 +83,8 @@
               @click="mobileMenuOpen = !mobileMenuOpen">
               <span class="absolute -inset-0.5" />
               <span class="sr-only">Open menu</span>
-              <Bars3Icon v-if="!mobileMenuOpen" class="block h-6 w-6" aria-hidden="true" />
-              <XMarkIcon v-else class="block h-6 w-6" aria-hidden="true" />
+              <Icon v-if="!mobileMenuOpen" name="heroicons:bars-3" class="block h-6 w-6" aria-hidden="true" />
+              <Icon v-else name="heroicons:x-mark" class="block h-6 w-6" aria-hidden="true" />
             </button>
           </div>
           <div class="hidden lg:flex lg:items-center lg:justify-end xl:col-span-4">
@@ -134,8 +134,6 @@
 
 <script setup lang="ts">
 import { safeToRefs, useConfirmationDialog, useRoute } from '#imports'
-import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
-import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import { computed, reactive, ref, toRefs } from 'vue'
 import GithubButton from '~/components/layout/GithubButton.vue'

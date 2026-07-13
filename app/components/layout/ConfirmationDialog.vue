@@ -5,7 +5,7 @@
         <div class="sm:flex sm:items-start">
           <div
             class="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-            <ExclamationTriangleIcon class="h-6 w-6 text-red-600" aria-hidden="true" />
+            <Icon name="heroicons:exclamation-triangle" class="h-6 w-6 text-red-600" aria-hidden="true" />
           </div>
           <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
             <h3 class="text-base leading-6 font-semibold text-gray-900">
@@ -30,7 +30,6 @@
 </template>
 
 <script setup lang="ts">
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 import { promiseTimeout } from '@vueuse/core'
 import Button from '~/components/layout/forms/Button.vue'
 import { type ConfirmationDialog, useConfirmationDialog } from '~/stores'
