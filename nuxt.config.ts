@@ -44,5 +44,30 @@ export default defineNuxtConfig({
         external: ['crypto'],
       },
     },
+    optimizeDeps: {
+      include: [
+        '@headlessui/vue',
+        '@heroicons/vue/20/solid',
+        '@heroicons/vue/24/outline',
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        '@vueform/slider',
+        '@vueuse/core',
+        'file-size', // CJS
+        'humanize-string',
+        'json-oneline-stringify',
+        'jwt-encode', // CJS
+        'match-operator',
+        'meilisearch',
+        'meilisearch-filters',
+        'semver/preload', // CJS
+        'ulid',
+        'vue-tippy',
+        'vue3-leaflet',
+        'vue3-sortablejs',
+        'xxh32',
+        'yaml',
+      ],
+    },
   },
 })

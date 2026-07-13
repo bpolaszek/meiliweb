@@ -1,9 +1,7 @@
 <template>
   <a v-tippy="t('hint')" target="meilidocs" :href class="text-gray-600 hover:text-gray-700">
-    <slot>
-      <slot :icon="icon">
-        <Icon :name="icon" />
-      </slot>
+    <slot :icon="icon">
+      <Icon :name="icon" />
     </slot>
   </a>
 </template>
