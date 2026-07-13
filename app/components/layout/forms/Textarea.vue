@@ -1,8 +1,5 @@
 <template>
-  <textarea :disabled :class="classes" v-if="undefined !== value" v-model="value"></textarea>
-  <component :disabled :class="classes" v-else is="textarea">
-    <slot />
-  </component>
+  <UTextarea v-model="value" :disabled="disabled" :ui="{ base: baseClasses }" />
 </template>
 
 <script setup lang="ts">
@@ -18,14 +15,13 @@ const props = withDefaults(defineProps<Props>(), {
   noPadding: false,
   noRounded: false,
 })
-const classes = computed(() => {
-  const classes = ['focus:outline-hidden', 'focus:ring-2', 'focus:ring-primary-600']
-
-  props.noBorder || classes.push('border')
-  props.noPadding || classes.push('py-1.5', 'px-4')
-  props.noRounded || classes.push('rounded-md')
-
-  return classes
-})
+const attrs = useAttrs()
+// Caller classes (heights, fonts, ...) must reach the inner <textarea>, not only the root wrapper
+const baseClasses = computed(() => [
+  attrs.class as string,
+  ...(props.noBorder ? ['ring-0'] : []),
+  ...(props.noPadding ? ['p-0'] : []),
+  ...(props.noRounded ? ['rounded-none'] : []),
+])
 const value = defineModel<string | undefined>()
 </script>

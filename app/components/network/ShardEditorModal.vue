@@ -20,11 +20,11 @@
       <section class="flex flex-col gap-1">
         <Label>{{ t('labels.remotes') }}</Label>
         <p class="text-sm font-light text-gray-600">{{ t('hints.remotes') }}</p>
-        <MultiCombobox v-model="form.remotes" :items="remoteNames" auto-hide>
-          <template #empty-state>
-            <span class="text-gray-400">{{ t('placeholders.remotes') }}</span>
-          </template>
-        </MultiCombobox>
+        <MultiCombobox
+          v-model="form.remotes"
+          :items="remoteNames"
+          auto-hide
+          :input-attrs="{ placeholder: t('placeholders.remotes') }" />
       </section>
 
       <Buttons>

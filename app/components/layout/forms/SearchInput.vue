@@ -1,22 +1,16 @@
 <template>
-  <div class="relative">
-    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-      <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-    </div>
-    <input
-      v-model="value"
-      name="search"
-      autocomplete="off"
-      class="focus:ring-primary-500 block w-full rounded-lg border-0 bg-white py-1 pr-3 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:outline-hidden focus:ring-inset sm:text-sm sm:leading-6"
-      :placeholder="t('placeholder')"
-      type="search"
-      v-bind="inputAttrs" />
-  </div>
+  <UInput
+    v-model="value"
+    type="search"
+    name="search"
+    autocomplete="off"
+    icon="heroicons:magnifying-glass-20-solid"
+    :placeholder="t('placeholder')"
+    :ui="{ base: 'rounded-lg' }"
+    v-bind="inputAttrs" />
 </template>
 
 <script setup lang="ts">
-import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
-
 type Props = {
   inputAttrs?: any
 }
