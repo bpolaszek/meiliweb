@@ -1,13 +1,13 @@
 <template>
   <div class="divide-y divide-gray-200">
-    <section class="space-y-2 px-4 pb-6 sm:px-6">
+    <section class="space-y-2 px-4 pt-6 pb-6 sm:px-6">
       <h3 class="text-md font-medium">{{ t('titles.sort') }}</h3>
       <UniqueId v-if="sortableAttributes.length > 0" v-slot="{ id }">
         <div class="flex items-center justify-between gap-1 text-sm">
           <Label :for="id" class="text-gray-400">
             {{ t('labels.sortBy') }}
           </Label>
-          <Select :id="id" v-model="appliedSort">
+          <Select :id="id" v-model="appliedSort" class="w-56">
             <option :value="[]">Default</option>
             <template v-for="attribute of sortableAttributes">
               <option :value="[`${attribute}:asc`]">{{ humanizeString(attribute) }} ⬆</option>
@@ -105,6 +105,12 @@ const self = reactive({
 })
 
 const hydrateFacetsTypes = async (facets: string[]) => {
+  if (0 === facets.length) {
+    self.facetsTypeMap = new Map()
+    self.facetStats = {} as FacetStats
+    return
+  }
+
   const search = await meili.index(props.indexUid).search(
     null,
     reactive({
