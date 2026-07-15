@@ -68,7 +68,7 @@
                   <input
                     id="search"
                     name="search"
-                    class="focus:ring-primary-500 block w-full rounded-lg border-0 bg-white py-1.5 pr-3 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+                    class="block w-full rounded-lg border-0 bg-white py-1.5 pr-3 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-primary-500 focus:ring-inset sm:text-sm sm:leading-6"
                     placeholder="Search"
                     type="search" />
                 </div>
@@ -79,7 +79,7 @@
             <!-- Mobile menu button -->
             <button
               type="button"
-              class="focus:ring-primary-500 relative -mx-2 inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:ring-2 focus:outline-hidden focus:ring-inset"
+              class="relative -mx-2 inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:ring-2 focus:ring-primary-500 focus:outline-hidden focus:ring-inset"
               @click="mobileMenuOpen = !mobileMenuOpen">
               <span class="absolute -inset-0.5" />
               <span class="sr-only">Open menu</span>

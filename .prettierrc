@@ -5,6 +5,9 @@
   "semi": false,
   "singleQuote": true,
   "htmlWhitespaceSensitivity": "ignore",
-  "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-tailwindcss"],
+  "plugins": [
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-tailwindcss"
+  ],
   "tailwindStylesheet": "./app/assets/css/main.css"
 }

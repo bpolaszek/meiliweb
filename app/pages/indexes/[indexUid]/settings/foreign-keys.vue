@@ -44,7 +44,7 @@
                   :placeholder="t('placeholders.fieldName')" />
               </td>
               <td class="px-2 py-1.5">
-                <select v-model="row.foreignIndexUid" class="form-select w-full text-sm">
+                <select v-model="row.foreignIndexUid" class="w-full form-select text-sm">
                   <option value="" disabled>{{ t('placeholders.foreignIndex') }}</option>
                   <option v-for="uid in indexUidsFor(row)" :key="uid" :value="uid">{{ uid }}</option>
                 </select>

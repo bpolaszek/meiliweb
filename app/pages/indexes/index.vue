@@ -30,7 +30,7 @@
             <span class="inline-flex items-center gap-2">
               <NuxtLink
                 :to="`/indexes/${item.uid}/documents`"
-                class="hover:text-primary-700 font-semibold hover:underline">
+                class="font-semibold hover:text-primary-700 hover:underline">
                 {{ item.uid }}
               </NuxtLink>
               <Badge v-if="item.isIndexing" class="text-xs uppercase">

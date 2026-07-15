@@ -11,7 +11,7 @@
     <main>
       <h1 class="text-center text-5xl">😵 {{ t('title') }}</h1>
       <div class="mt-6 flex max-w-xl items-center gap-4">
-        <p v-if="error.statusCode" class="text-primary-600 text-5xl font-semibold">
+        <p v-if="error.statusCode" class="text-5xl font-semibold text-primary-600">
           {{ error.statusCode }}
         </p>
         <p class="text-justify text-base leading-2 text-gray-600" v-html="errorMessage" />

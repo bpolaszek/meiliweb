@@ -2,11 +2,11 @@
   <button
     type="button"
     v-tippy="t('label')"
-    class="focus:ring-primary-500 relative ml-5 shrink-0 rounded-full bg-white p-1 text-gray-800 hover:text-gray-600 focus:ring-2 focus:ring-offset-2 focus:outline-hidden"
+    class="relative ml-5 shrink-0 rounded-full bg-white p-1 text-gray-800 hover:text-gray-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-hidden"
     @click="confirmLogout()">
     <span class="absolute -inset-1.5" />
     <span class="sr-only">{{ t('label') }}</span>
-    <Icon name="ant-design:logout-outlined" class="hover:text-primary-800 size-6 -rotate-90" aria-hidden="true" />
+    <Icon name="ant-design:logout-outlined" class="size-6 -rotate-90 hover:text-primary-800" aria-hidden="true" />
   </button>
 </template>
 

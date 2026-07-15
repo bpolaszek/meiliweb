@@ -38,7 +38,7 @@
           <NuxtLink
             v-if="tasks.results[index].indexUid"
             :to="`/indexes/${tasks.results[index].indexUid}/documents`"
-            class="text-primary-800 hover:text-primary-700 font-semibold hover:underline">
+            class="font-semibold text-primary-800 hover:text-primary-700 hover:underline">
             {{ tasks.results[index].indexUid }}
           </NuxtLink>
         </td>

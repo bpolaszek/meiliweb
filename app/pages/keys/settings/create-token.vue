@@ -32,7 +32,7 @@
         v-slot="{ id }"
         class="space-y-1">
         <header class="flex items-center justify-between">
-          <Label :for="id" class="text-primary-800 text-sm font-light capitalize">
+          <Label :for="id" class="text-sm font-light text-primary-800 capitalize">
             {{ indexUid }}
           </Label>
           <button v-tippy="t('labels.removeRule')" type="button" @click="searchRulesMap.delete(indexUid)">
@@ -64,7 +64,7 @@
           <RouterLink
             v-if="jwt"
             :to="`/indexes/${indexUid}/documents?tenantToken=${jwt}`"
-            class="text-primary-700 hover:text-primary-800 italic"
+            class="text-primary-700 italic hover:text-primary-800"
             target="_blank">
             {{ t('labels.preview') }}
           </RouterLink>

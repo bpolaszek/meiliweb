@@ -57,12 +57,12 @@
 
 @utility form-input {
   /* @tailwindcss/forms enhancement */
-  @apply focus:border-primary-300 focus:ring-primary-600 rounded-md border-gray-300 shadow-xs focus:ring-2 focus:outline-hidden;
+  @apply rounded-md border-gray-300 shadow-xs focus:border-primary-300 focus:ring-2 focus:ring-primary-600 focus:outline-hidden;
 }
 
 @utility form-checkbox {
-  @apply focus:border-primary-300 focus:ring-primary-600 rounded-md border-gray-300 shadow-xs focus:ring-2 focus:outline-hidden;
-  @apply text-primary-600 rounded-xs;
+  @apply rounded-md border-gray-300 shadow-xs focus:border-primary-300 focus:ring-2 focus:ring-primary-600 focus:outline-hidden;
+  @apply rounded-xs text-primary-600;
 }
 
 @layer components {

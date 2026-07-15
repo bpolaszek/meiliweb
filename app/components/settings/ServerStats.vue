@@ -2,10 +2,10 @@
   <div class="grid justify-items-stretch gap-6 md:grid-cols-3">
     <DefineCard v-slot="{ $slots, title, icon }">
       <section class="flex gap-6 rounded-xl border border-gray-300 p-4">
-        <Icon :name="icon" class="text-primary-700 size-14" />
+        <Icon :name="icon" class="size-14 text-primary-700" />
         <div class="space-y-4">
           <h2 class="block text-lg font-light text-gray-600">{{ title }}</h2>
-          <span class="text-primary-700 font-bold tracking-wide">
+          <span class="font-bold tracking-wide text-primary-700">
             <Component :is="$slots.default" />
           </span>
         </div>

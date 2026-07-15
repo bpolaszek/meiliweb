@@ -1,6 +1,6 @@
 <template>
   <ul v-if="renderAsBadges && value.length > 0" class="flex flex-wrap gap-1">
-    <Badge as="li" v-for="_value of displayedValues" class="bg-primary-800 rounded-lg px-1.5 py-0.5 text-xs text-white">
+    <Badge as="li" v-for="_value of displayedValues" class="rounded-lg bg-primary-800 px-1.5 py-0.5 text-xs text-white">
       {{ _value }}
     </Badge>
     <li v-if="isTruncated">
@@ -20,7 +20,7 @@
     <li v-if="isTruncated">
       <button
         @click="showMore = !showMore"
-        class="text-primary-500 hover:text-primary-700 text-xs focus:outline-hidden">
+        class="text-xs text-primary-500 hover:text-primary-700 focus:outline-hidden">
         <template v-if="showMore">{{ t('labels.showLess') }}</template>
         <template v-else>
           {{ t('labels.showMore', { count: nbRemainingValues }) }}

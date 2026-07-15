@@ -86,7 +86,7 @@
                 <button
                   type="button"
                   v-tippy="t('actions.edit')"
-                  class="hover:text-primary-600 text-gray-500"
+                  class="text-gray-500 hover:text-primary-600"
                   @click="editRemote(remoteEntries[i])">
                   <Icon name="heroicons:pencil-square" />
                 </button>
@@ -135,7 +135,7 @@
                 <button
                   type="button"
                   v-tippy="t('actions.edit')"
-                  class="hover:text-primary-600 text-gray-500"
+                  class="text-gray-500 hover:text-primary-600"
                   @click="editShard(shardEntries[i])">
                   <Icon name="heroicons:pencil-square" />
                 </button>
