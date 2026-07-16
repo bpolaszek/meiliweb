@@ -171,7 +171,7 @@ watch(
             watchers.delete(task)
             Object.assign(task, updatedTask)
           }
-        }, 50)
+        }, 500)
       } else {
         const updatedTask = await meili.tasks.waitForTask(task.uid, {
           timeout: 1000 * 3600 * 24,
