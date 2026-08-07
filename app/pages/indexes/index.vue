@@ -88,8 +88,8 @@
 
 <script setup lang="ts">
 import { tryOrThrow } from '~/utils'
-import { useDateFormatter, useIndexOperations, useMeiliClient, usePagination } from '~/composables'
-import { DismissedDialog } from '~/stores'
+import { EXPORT_MIN_VERSION, useDateFormatter, useIndexOperations, useMeiliClient, usePagination } from '~/composables'
+import { DismissedDialog, useVersion } from '~/stores'
 import { NuxtLink } from '#components'
 import ServerStats from '~/components/settings/ServerStats.vue'
 import Table from '~/components/layout/tables/Table.vue'
@@ -139,6 +139,7 @@ whenever(
   { immediate: true },
 )
 
+const { satisfiesVersion } = useVersion()
 const { duplicateIndex: doDuplicateIndex } = useIndexOperations()
 const duplicateIndex = async (indexUid: string) => {
   const newIndexUid = await doDuplicateIndex(indexUid)
@@ -164,8 +165,6 @@ const swapIndex = async (indexUid: string) => {
 }
 
 const { compactIndex } = useIndexOperations()
-
-const { satisfiesVersion } = useVersion()
 
 const indexMenuItems = (item: Index): DropdownMenuItem[] => [
   {
@@ -194,6 +193,15 @@ const indexMenuItems = (item: Index): DropdownMenuItem[] => [
           label: t('actions.compact'),
           icon: 'heroicons:sparkles',
           onSelect: () => compactIndex(item.uid),
+        },
+      ]
+    : []),
+  ...(satisfiesVersion(EXPORT_MIN_VERSION)
+    ? [
+        {
+          label: t('actions.export'),
+          icon: 'heroicons:arrow-up-tray',
+          to: `/indexes/${item.uid}/settings/export`,
         },
       ]
     : []),
@@ -232,5 +240,6 @@ en:
     rename: Rename
     swap: Swap with…
     compact: Compact
+    export: Export
     openMenu: Open menu
 </i18n>

@@ -138,6 +138,7 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import { computed, reactive, ref, toRefs } from 'vue'
 import GithubButton from '~/components/layout/GithubButton.vue'
 import LogoutButton from '~/components/layout/LogoutButton.vue'
+import { EXPORT_MIN_VERSION } from '~/composables'
 import { useChatAvailability, useCredentials, useVersion } from '~/stores'
 
 const route = useRoute()
@@ -185,6 +186,12 @@ const navigation = reactive([
     visible: computed(() => chatAvailable.value),
   },
   {
+    name: 'Export',
+    href: '/export',
+    current: computed(() => route.name?.startsWith('export')),
+    visible: computed(() => satisfiesVersion(EXPORT_MIN_VERSION)),
+  },
+  {
     name: 'Experimental',
     href: '/experimental-features',
     current: computed(() => route.name?.startsWith('experimental-features')),
@@ -196,7 +203,7 @@ const visibleNavigation = computed(() => navigation.filter((item) => item.visibl
 
 const { credentials, records, switchInstance, removeInstance: doRemoveInstance } = safeToRefs(useCredentials())
 const { confirm } = useConfirmationDialog()
-const { version } = useVersion()
+const { version, satisfiesVersion } = useVersion()
 const mobileMenuOpen = ref(false)
 const self: any = reactive({
   records,
