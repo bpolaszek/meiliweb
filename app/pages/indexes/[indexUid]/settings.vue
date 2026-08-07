@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { NuxtLink, NuxtPage } from '#components'
 import { onMounted } from 'vue'
-import { useMeiliClient } from '~/composables'
+import { EXPORT_MIN_VERSION, useMeiliClient } from '~/composables'
 import { useChatAvailability, useVersion } from '~/stores'
 import { safeToRefs, tryOrThrow } from '~/utils'
 import humanizeString from 'humanize-string'
@@ -140,6 +140,12 @@ const navigation: Array<NavigationItem> = reactive([
     current: computed(() => 'indexes-indexUid-settings-local-settings' === route.name),
     text: t('menu.localSettings'),
   },
+  {
+    href: `/indexes/${index.uid}/settings/export`,
+    current: computed(() => 'indexes-indexUid-settings-export' === route.name),
+    visible: computed(() => satisfiesVersion(EXPORT_MIN_VERSION)),
+    text: t('menu.export'),
+  },
 ])
 
 const visibleNavigation = computed(() => navigation.filter(({ visible }) => visible ?? true))
@@ -175,6 +181,7 @@ en:
     foreignKeys: Foreign Keys
     fields: Fields
     localSettings: Local settings
+    export: Export
   actions:
     documents: Go to Documents
 </i18n>
