@@ -1,5 +1,11 @@
 <template>
-  <Layout :title="t('title')">
+  <div>
+    <div v-if="batchUids" class="mb-4 flex items-center gap-3 text-sm text-gray-600">
+      <span>{{ t('labels.filteredByBatch', { batchUids: batchUids.join(', ') }) }}</span>
+      <NuxtLink to="/tasks" class="font-semibold text-primary-800 hover:text-primary-700 hover:underline">
+        {{ t('buttons.clearBatchFilter') }}
+      </NuxtLink>
+    </div>
     <DefineTreeRendering v-slot="{ value }">
       <div v-if="'object' === typeof value && null !== value" class="table">
         <div v-for="[_key, _value] of Object.entries(value)" class="table-row">
@@ -85,7 +91,7 @@
       </template>
     </Table>
     <InfiniteLoading @infinite="handleInfiniteLoading()" />
-  </Layout>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -107,11 +113,27 @@ useHead({
 })
 
 const meili = useMeiliClient()
+const route = useRoute()
 const { confirm } = useConfirmationDialog()
 const { createToast } = useToasts()
 const [DefineTreeRendering, UseTreeRendering] = createReusableTemplate()
+
+// Optional `?batchUids=1,2` filter, used by the Batches tab to drill down into a batch.
+// `app.vue`'s pageKey contains the full path, so changing the query re-runs this setup.
+const batchUids = computed(() => {
+  const { batchUids } = route.query
+  if (!batchUids) {
+    return null
+  }
+  return String(batchUids)
+    .split(',')
+    .map(Number)
+    .filter((uid) => !isNaN(uid))
+})
+const tasksQuery = computed(() => (batchUids.value ? { batchUids: batchUids.value } : {}))
+
 const self = reactive({
-  tasks: await tryOrThrow(() => meili.tasks.getTasks()),
+  tasks: await tryOrThrow(() => meili.tasks.getTasks(tasksQuery.value)),
   lastTaskUid: null! as number,
   pendingTasks: computed((): Task[] =>
     self.tasks.results.filter((task: Task) => ['enqueued', 'processing'].includes(task.status)),
@@ -135,9 +157,9 @@ const stringifyTaskType = (type: string) =>
   ])
 
 const { tasks, pendingTasks } = toRefs(self)
-watchImmediate(tasks, (tasks) => (self.lastTaskUid = tasks.results[tasks.results.length - 1]!.uid), { deep: true })
+watchImmediate(tasks, (tasks) => (self.lastTaskUid = tasks.results[tasks.results.length - 1]?.uid!), { deep: true })
 const handleInfiniteLoading = async () => {
-  const nextTasks = await tryOrThrow(() => meili.tasks.getTasks({ from: self.lastTaskUid }))
+  const nextTasks = await tryOrThrow(() => meili.tasks.getTasks({ ...tasksQuery.value, from: self.lastTaskUid }))
   self.tasks.results.push(...nextTasks.results)
 }
 const cancelTask = async (task: Task) => {
@@ -209,6 +231,9 @@ en:
     snapshotCreation: Snapshot creation
   labels:
     documentIndexRatio: Indexed {indexedDocuments}/{receivedDocuments}
+    filteredByBatch: 'Showing only the tasks of batch {batchUids}.'
+  buttons:
+    clearBatchFilter: Show all tasks
   toasts:
     cancelTask: Cancelling task
   confirmations:
