@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { useMeiliClient, useDateFormatter } from '#imports'
+import { useMeiliClient, useDateFormatter, useTaskStream } from '#imports'
 import { tryOrThrow } from '~/utils'
 import match from 'match-operator'
 import { NuxtLink } from '#components'
@@ -176,10 +176,34 @@ const cancelTask = async (task: Task) => {
   task.status = 'canceled'
 }
 
+// Live updates come from the SSE stream when the instance supports it (Meilisearch >= 1.52
+// with the `tasksStreamingRoute` experimental feature). The stream carries no backlog, so it
+// only patches the tasks fetched above and prepends the ones enqueued while we watch.
+const { streaming } = useTaskStream({
+  query: batchUids.value ? { batchUids: batchUids.value } : {},
+  onMessage: (task: Task) => {
+    const known = self.tasks.results.find((candidate: Task) => candidate.uid === task.uid)
+    if (known) {
+      Object.assign(known, task)
+      return
+    }
+    // Results are sorted newest first. Anything below the oldest row we loaded belongs to a
+    // page the user has not scrolled to yet, so only genuinely newer tasks go on top.
+    const [newest] = self.tasks.results
+    if (!newest || task.uid > newest.uid) {
+      self.tasks.results.unshift(task)
+    }
+  },
+})
+
 const watchers = new WeakMap()
 watch(
-  pendingTasks,
-  (tasks: Task[]) => {
+  [pendingTasks, streaming],
+  ([tasks, streaming]) => {
+    // Polling fallback: only used when the stream is unavailable, so we never do both.
+    if (streaming) {
+      return
+    }
     tasks.forEach(async (task) => {
       if (watchers.has(task)) {
         return

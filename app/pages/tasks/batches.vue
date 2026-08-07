@@ -11,6 +11,10 @@
       </div>
       <span v-else>{{ value }}</span>
     </DefineTreeRendering>
+    <div v-if="streaming" class="mb-3 flex items-center gap-2 text-xs text-gray-500">
+      <span class="size-2 animate-pulse rounded-full bg-primary-600" />
+      {{ t('labels.live') }}
+    </div>
     <Table
       :items="batches.results"
       :columns="[
@@ -149,6 +153,26 @@ const formatProgressStep = (progress: BatchProgress) => {
 }
 
 const { batches } = toRefs(self)
+
+// Live updates when the instance supports streaming (Meilisearch >= 1.52 with the
+// `tasksStreamingRoute` experimental feature). The server re-pushes processing batches about
+// once a second, which is what keeps the progress bars moving. There is no polling fallback
+// here on purpose: refetching the whole list on a timer is exactly what streaming replaces.
+const { streaming } = useBatchStream({
+  onMessage: (batch: Batch) => {
+    const known = self.batches.results.find((candidate: Batch) => candidate.uid === batch.uid)
+    if (known) {
+      Object.assign(known, batch)
+      return
+    }
+    // Results are sorted newest first, so only batches newer than the top row are prepended;
+    // anything older belongs to a page the user has not scrolled to yet.
+    const [newest] = self.batches.results
+    if (!newest || batch.uid > newest.uid) {
+      self.batches.results.unshift(batch)
+    }
+  },
+})
 
 // `v3-infinite-loading` does not re-export its `StateHandler` type from the package root.
 type InfiniteLoadingState = { loaded: () => void; complete: () => void; error: () => void }
