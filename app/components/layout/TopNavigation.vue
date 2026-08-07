@@ -94,7 +94,7 @@
         </div>
         <nav class="hidden lg:flex lg:space-x-8 lg:py-2" aria-label="Global">
           <NuxtLink
-            v-for="item in navigation"
+            v-for="item in visibleNavigation"
             :key="item.name"
             :to="item.href"
             :class="[
@@ -110,7 +110,7 @@
       <nav v-if="mobileMenuOpen" class="lg:hidden" aria-label="Global">
         <div class="mx-auto max-w-3xl space-y-1 px-2 pt-2 pb-3 sm:px-4">
           <NuxtLink
-            v-for="item in navigation"
+            v-for="item in visibleNavigation"
             :key="item.name"
             :to="item.href"
             :aria-current="item.current ? 'page' : undefined"
@@ -138,9 +138,10 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import { computed, reactive, ref, toRefs } from 'vue'
 import GithubButton from '~/components/layout/GithubButton.vue'
 import LogoutButton from '~/components/layout/LogoutButton.vue'
-import { useCredentials, useVersion } from '~/stores'
+import { useChatAvailability, useCredentials, useVersion } from '~/stores'
 
 const route = useRoute()
+const { available: chatAvailable } = safeToRefs(useChatAvailability())
 const navigation = reactive([
   {
     name: 'Indexes',
@@ -178,11 +179,20 @@ const navigation = reactive([
     current: computed(() => route.name?.startsWith('search-rules')),
   },
   {
+    name: 'Chat',
+    href: '/chat',
+    current: computed(() => route.name?.startsWith('chat')),
+    visible: computed(() => chatAvailable.value),
+  },
+  {
     name: 'Experimental',
     href: '/experimental-features',
     current: computed(() => route.name?.startsWith('experimental-features')),
   },
 ])
+
+// Entries without a `visible` flag are always shown.
+const visibleNavigation = computed(() => navigation.filter((item) => item.visible ?? true))
 
 const { credentials, records, switchInstance, removeInstance: doRemoveInstance } = safeToRefs(useCredentials())
 const { confirm } = useConfirmationDialog()

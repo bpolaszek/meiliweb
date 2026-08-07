@@ -1,3 +1,4 @@
+export * from './useChatWorkspaces'
 export * from './useDateFormatter'
 export * from './useFields'
 export * from './useFormSubmit'

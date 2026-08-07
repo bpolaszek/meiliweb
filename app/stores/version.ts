@@ -12,7 +12,11 @@ export const useVersion = defineStore('version', {
   },
   actions: {
     satisfiesVersion(version: string) {
-      return semver.satisfies(unref(this.version)?.pkgVersion, version)
+      // `this.version` is an asyncComputed: it is undefined until the first fetch resolves,
+      // and semver.satisfies() throws on undefined. Treat "not known yet" as "not satisfied".
+      const pkgVersion = unref(this.version)?.pkgVersion
+      // Dev/RC builds report e.g. `1.52.0-rc.1`, which would not match `>=1.52.0` otherwise.
+      return !!pkgVersion && semver.satisfies(pkgVersion, version, { includePrerelease: true })
     },
   },
 })
