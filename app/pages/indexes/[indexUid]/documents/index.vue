@@ -66,6 +66,12 @@
             appliedFilters.length > 0 ? 'text-primary-600 hover:text-primary-800' : 'text-gray-600 hover:text-gray-800'
           " />
       </button>
+      <HybridSearchControl
+        v-if="hasEmbedders"
+        v-model:enabled="hybridEnabled"
+        v-model:embedder="hybridEmbedder"
+        v-model:semantic-ratio="hybridSemanticRatio"
+        :embedders="embedderNames" />
     </template>
     <template #title-actions>
       <NuxtLink :to="`/indexes/${index.uid}/settings`" v-tippy="t('actions.goToSettings')">
@@ -113,6 +119,7 @@ import DocumentsAsCards from '~/components/documents/DocumentsAsCards.vue'
 import DocumentsAsTable from '~/components/documents/DocumentsAsTable.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentsAsMap from '~/components/documents/DocumentsAsMap.vue'
+import HybridSearchControl from '~/components/documents/HybridSearchControl.vue'
 import { reactiveComputed } from '@vueuse/core'
 
 const { t } = useI18n()
@@ -134,16 +141,57 @@ const filterableAttributes = getFilterableAttributePatterns(rawFilterableAttribu
 const facetSearchableAttributes = getFacetSearchableAttributePatterns(rawFilterableAttributes)
 
 const { fields } = useFields(primaryKey, Object.keys(stats.fieldDistribution))
-const { appliedSort, facets, itemsPerPage, viewMode } = useIndexLocalSettings(index.uid)
+const {
+  appliedSort,
+  facets,
+  itemsPerPage,
+  viewMode,
+  hybridEnabled,
+  hybridEmbedder,
+  hybridSemanticRatio,
+  resetHybridSearch,
+} = useIndexLocalSettings(index.uid)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
 const searchTerms = ref('')
 const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } = usePagination(itemsPerPage)
+
+// Direct call (not tryOrThrow): older instances (or ones without the vector store feature
+// enabled) don't expose embedders — degrade to "no hybrid search" rather than the fatal
+// error page. See app/pages/experimental-features.vue for the same pattern.
+let embedders: Record<string, unknown> = {}
+try {
+  embedders = (await index.getEmbedders()) ?? {}
+} catch {
+  embedders = {}
+}
+const embedderNames = Object.keys(embedders)
+const hasEmbedders = embedderNames.length > 0
+
+// The embedder stored in localStorage may no longer exist (renamed/deleted since the user
+// last configured hybrid search) — reconcile against the live list *before* it can ever be
+// sent to Meilisearch, which would otherwise reject the search and break the page.
+if (!hasEmbedders) {
+  if (hybridEnabled.value || hybridEmbedder.value) resetHybridSearch()
+} else if (hybridEmbedder.value && !embedderNames.includes(hybridEmbedder.value)) {
+  resetHybridSearch()
+}
+// Pre-select an embedder for convenience once one exists — this only fills the dropdown,
+// it does NOT turn hybrid search on (hybridEnabled stays whatever it was/defaults to false).
+if (hasEmbedders && !hybridEmbedder.value) {
+  hybridEmbedder.value = embedderNames[0]
+}
+
 const searchParams = reactive({
   q: searchTerms,
   sort: appliedSort,
   limit: itemsPerPage,
   offset,
   filter: computed(() => `${appliedFilters}`),
+  hybrid: computed(() =>
+    hybridEnabled.value && hybridEmbedder.value
+      ? { embedder: hybridEmbedder.value, semanticRatio: hybridSemanticRatio.value }
+      : undefined,
+  ),
 })
 const resultset = ref(await tryOrThrow(() => searchClient.index(index.uid).search(null, searchParams)))
 
@@ -165,6 +213,9 @@ watch(appliedSort, () => (searchParams.offset = 0))
 watch(appliedFilters, () => (searchParams.offset = 0))
 watch(itemsPerPage, () => (searchParams.offset = 0))
 watch(searchTerms, () => (searchParams.offset = 0))
+watch(hybridEnabled, () => (searchParams.offset = 0))
+watch(hybridEmbedder, () => (searchParams.offset = 0))
+watch(hybridSemanticRatio, () => (searchParams.offset = 0))
 watch(
   searchParams,
   async (searchParams) => (self.resultset = await searchClient.index(index.uid).search(null, searchParams)),
