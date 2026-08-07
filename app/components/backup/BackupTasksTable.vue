@@ -2,12 +2,6 @@
   <template v-if="tasks.results.length > 0">
     <Table :items="tasks.results" :columns="columns">
       <template #default="{ index }">
-        <td v-if="uidLabel" class="whitespace-nowrap">{{ tasks.results[index].details?.dumpUid }}</td>
-        <td>
-          <Badge :theme="statusTheme(tasks.results[index].status)">
-            {{ tasks.results[index].status }}
-          </Badge>
-        </td>
         <td class="whitespace-nowrap">
           {{
             formatDate(
@@ -19,6 +13,12 @@
             )
           }}
         </td>
+        <td>
+          <Badge :theme="statusTheme(tasks.results[index].status)">
+            {{ tasks.results[index].status }}
+          </Badge>
+        </td>
+        <td v-if="uidLabel" class="whitespace-nowrap">{{ tasks.results[index].details?.dumpUid }}</td>
         <td class="text-right">
           <template v-if="tasks.results[index].duration">
             {{ formatDuration(tasks.results[index].duration) }}
@@ -53,9 +53,9 @@ const { t } = useI18n()
 const { formatDate, formatDuration } = useDateFormatter()
 
 const columns = computed(() => [
-  ...(props.uidLabel ? [props.uidLabel] : []),
-  t('columns.status'),
   t('columns.date'),
+  t('columns.status'),
+  ...(props.uidLabel ? [props.uidLabel] : []),
   t('columns.duration'),
 ])
 
