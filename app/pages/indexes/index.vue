@@ -89,6 +89,7 @@
 <script setup lang="ts">
 import { tryOrThrow } from '~/utils'
 import { useDateFormatter, useIndexOperations, useMeiliClient, usePagination } from '~/composables'
+import { DismissedDialog } from '~/stores'
 import { NuxtLink } from '#components'
 import ServerStats from '~/components/settings/ServerStats.vue'
 import Table from '~/components/layout/tables/Table.vue'
@@ -151,6 +152,17 @@ const renameIndex = async (indexUid: string) => {
   await promiseTimeout(1000)
   await navigateTo(`/indexes/${newIndexUid}/documents`)
 }
+
+const { swapIndex: doSwapIndex } = useIndexOperations()
+const swapIndex = async (indexUid: string) => {
+  try {
+    await doSwapIndex(indexUid)
+    self.indexes = await fetchIndexes()
+  } catch (error) {
+    if (!(error instanceof DismissedDialog)) throw error
+  }
+}
+
 const indexMenuItems = (item: Index): DropdownMenuItem[] => [
   {
     label: t('actions.settings'),
@@ -166,6 +178,11 @@ const indexMenuItems = (item: Index): DropdownMenuItem[] => [
     label: t('actions.duplicate'),
     icon: 'heroicons:document-duplicate',
     onSelect: () => duplicateIndex(item.uid),
+  },
+  {
+    label: t('actions.swap'),
+    icon: 'heroicons:arrows-right-left',
+    onSelect: () => swapIndex(item.uid),
   },
 ]
 
@@ -200,5 +217,6 @@ en:
     settings: Settings
     duplicate: Duplicate
     rename: Rename
+    swap: Swap with…
     openMenu: Open menu
 </i18n>
