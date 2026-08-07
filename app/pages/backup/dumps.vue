@@ -14,56 +14,29 @@
       </Button>
     </template>
 
+    <PageTabs :items="tabs" />
+
     <Alert v-if="error" dismissable theme="danger" @close="error = null">
       {{ error }}
     </Alert>
 
-    <Table
-      :items="tasks.results"
-      :columns="[t('columns.dumpUid'), t('columns.status'), t('columns.date'), t('columns.duration')]">
-      <template #default="{ index }">
-        <td>{{ tasks.results[index].details.dumpUid }}</td>
-        <td>
-          <Badge :theme="'succeeded' === tasks.results[index].status ? 'success' : 'danger'">
-            {{ tasks.results[index].status }}
-          </Badge>
-        </td>
-        <td class="whitespace-nowrap">
-          {{
-            formatDate(
-              match(tasks.results[index].status, [
-                [['enqueued', 'canceled'], [tasks.results[index].enqueuedAt]],
-                ['processing', [tasks.results[index].startedAt]],
-                [match.default, [tasks.results[index].finishedAt]],
-              ]),
-            )
-          }}
-        </td>
-        <td class="text-right">
-          <template v-if="tasks.results[index].duration">
-            {{ formatDuration(tasks.results[index].duration) }}
-          </template>
-        </td>
-      </template>
-    </Table>
+    <BackupTasksTable :tasks="tasks" :uid-label="t('columns.dumpUid')" :empty-text="t('emptyState')" />
   </Layout>
 </template>
 
 <script setup lang="ts">
-import { tryOrThrow, useDateFormatter, useMeiliClient, useToasts } from '#imports'
+import { tryOrThrow, useMeiliClient, useToasts } from '#imports'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from '~/stores/toasts'
 import { useFormSubmit, useTask } from '~/composables'
 import Alert from '~/components/layout/Alert.vue'
-import Table from '~/components/layout/tables/Table.vue'
-import Badge from '~/components/layout/Badge.vue'
+import PageTabs from '~/components/layout/PageTabs.vue'
+import BackupTasksTable from '~/components/backup/BackupTasksTable.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import match from 'match-operator'
 
 const { t } = useI18n()
 const meili = useMeiliClient()
 const fetchTasks = () => tryOrThrow(() => meili.tasks.getTasks({ types: ['dumpCreation'] }))
-const { formatDate, formatDuration } = useDateFormatter()
 const { createToast } = useToasts()
 const processTask = useTask()
 const { loading, error, handle } = useFormSubmit({
@@ -72,6 +45,10 @@ const { loading, error, handle } = useFormSubmit({
     text: t('confirmations.create.text'),
   },
 })
+const tabs = [
+  { label: t('tabs.dumps'), to: '/backup/dumps' },
+  { label: t('tabs.snapshots'), to: '/backup/snapshots' },
+]
 const self = reactive({
   tasks: await fetchTasks(),
 })
@@ -104,20 +81,21 @@ const createDump = async () => {
 }
 
 useHead({
-  title: t('title'),
+  title: t('pageTitle'),
 })
 const { tasks } = toRefs(self)
 </script>
 
 <i18n>
 en:
-  title: Dumps
+  title: Backup
+  pageTitle: Dumps
+  tabs:
+    dumps: Dumps
+    snapshots: Snapshots
   columns:
     dumpUid: Dump Uid
-    status: Status
-    type: Type
-    date: Date
-    duration: Duration
+  emptyState: No dumps yet.
   actions:
     create: Create dump
   confirmations:
