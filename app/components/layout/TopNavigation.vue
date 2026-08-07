@@ -1,14 +1,14 @@
 <template>
-  <Popover as="template" v-slot="{ open }">
+  <div>
     <header
       :class="[
-        open ? 'fixed inset-0 z-40 overflow-y-auto' : '',
+        mobileMenuOpen ? 'fixed inset-0 z-40 overflow-y-auto' : '',
         'relative z-10 bg-white lg:static lg:overflow-y-visible', // Added z-50 and relative
       ]">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="relative flex justify-between lg:gap-8 xl:grid xl:grid-cols-12">
           <div class="flex md:absolute md:inset-y-0 md:left-0 lg:static xl:col-span-2">
-            <div class="flex flex-shrink-0 items-center">
+            <div class="flex shrink-0 items-center">
               <div class="flex items-center gap-2">
                 <a href="/">
                   <img class="size-16 shrink-0 grow-0" src="~/assets/images/logo.svg" alt="Meiliweb" />
@@ -20,73 +20,38 @@
                       {{ credentials!.baseUri }} - Meilisearch
                       {{ version?.pkgVersion }}
                     </a>
-                    <Menu as="div" class="relative -mt-1">
-                      <MenuButton
+                    <UDropdownMenu :items="instanceMenuItems" :content="{ align: 'end' }" :ui="{ content: 'w-72' }">
+                      <button
+                        type="button"
                         v-tippy="t('actions.switchInstance')"
-                        class="rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50">
+                        class="relative -mt-1 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50">
                         <Icon name="heroicons:chevron-down" class="size-4" />
-                      </MenuButton>
-                      <transition
-                        enter-active-class="transition ease-out duration-100"
-                        enter-from-class="transform opacity-0 scale-95"
-                        enter-to-class="transform opacity-100 scale-100"
-                        leave-active-class="transition ease-in duration-75"
-                        leave-from-class="transform opacity-100 scale-100"
-                        leave-to-class="transform opacity-0 scale-95">
-                        <MenuItems
-                          class="absolute right-0 mt-2 w-72 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                          <div v-if="savedInstances.length > 0">
-                            <MenuItem
-                              v-for="instance in savedInstances.filter(({ id }) => id !== credentials?.id)"
-                              :key="instance.baseUri"
-                              v-slot="{ active }">
-                              <span
-                                :class="[
-                                  active ? 'bg-gray-50' : '',
-                                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs',
-                                ]">
-                                <button
-                                  type="button"
-                                  class="flex w-full items-center gap-2"
-                                  @click="switchInstance(instance.id)">
-                                  <Icon
-                                    :name="
-                                      instance.baseUri === credentials?.baseUri
-                                        ? 'heroicons:server'
-                                        : 'heroicons:server'
-                                    "
-                                    class="h-5 w-5" />
-                                  <span class="flex flex-col items-start">
-                                    <span>
-                                      {{ instance.name || instance.baseUri }}
-                                    </span>
-                                    <span v-if="instance.name" class="text-xs text-gray-500">
-                                      {{ instance.baseUri }}
-                                    </span>
-                                  </span>
-                                </button>
-                                <button @click="removeInstance(instance.id)" class="text-gray-400 hover:text-gray-600">
-                                  <Icon name="heroicons:trash" class="h-4 w-4" />
-                                </button>
+                      </button>
+                      <template #instance="{ item }">
+                        <span class="flex w-full items-center justify-between text-xs">
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2"
+                            @click="switchInstance(item.instance.id)">
+                            <Icon name="heroicons:server" class="h-5 w-5" />
+                            <span class="flex flex-col items-start">
+                              <span>
+                                {{ item.instance.name || item.instance.baseUri }}
                               </span>
-                            </MenuItem>
-                          </div>
-                          <div>
-                            <MenuItem v-slot="{ active }">
-                              <NuxtLink
-                                to="/login"
-                                :class="[
-                                  active ? 'bg-gray-50' : '',
-                                  'flex items-center gap-2 rounded-md px-2 py-1.5 text-xs',
-                                ]">
-                                <Icon name="heroicons:plus-circle" class="h-5 w-5" />
-                                {{ t('actions.connectToInstance') }}
-                              </NuxtLink>
-                            </MenuItem>
-                          </div>
-                        </MenuItems>
-                      </transition>
-                    </Menu>
+                              <span v-if="item.instance.name" class="text-xs text-gray-500">
+                                {{ item.instance.baseUri }}
+                              </span>
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            class="text-gray-400 hover:text-gray-600"
+                            @click.stop="removeInstance(item.instance.id)">
+                            <Icon name="heroicons:trash" class="h-4 w-4" />
+                          </button>
+                        </span>
+                      </template>
+                    </UDropdownMenu>
                   </div>
                 </div>
               </div>
@@ -98,12 +63,12 @@
                 <label for="search" class="sr-only">Search</label>
                 <div class="relative">
                   <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <Icon name="heroicons:magnifying-glass-20-solid" class="h-5 w-5 text-gray-400" aria-hidden="true" />
                   </div>
                   <input
                     id="search"
                     name="search"
-                    class="block w-full rounded-lg border-0 bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6"
+                    class="block w-full rounded-lg border-0 bg-white py-1.5 pr-3 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-primary-500 focus:ring-inset sm:text-sm sm:leading-6"
                     placeholder="Search"
                     type="search" />
                 </div>
@@ -112,13 +77,15 @@
           </div>
           <div class="flex items-center md:absolute md:inset-y-0 md:right-0 lg:hidden">
             <!-- Mobile menu button -->
-            <PopoverButton
-              class="relative -mx-2 inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
+            <button
+              type="button"
+              class="relative -mx-2 inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:ring-2 focus:ring-primary-500 focus:outline-hidden focus:ring-inset"
+              @click="mobileMenuOpen = !mobileMenuOpen">
               <span class="absolute -inset-0.5" />
               <span class="sr-only">Open menu</span>
-              <Bars3Icon v-if="!open" class="block h-6 w-6" aria-hidden="true" />
-              <XMarkIcon v-else class="block h-6 w-6" aria-hidden="true" />
-            </PopoverButton>
+              <Icon v-if="!mobileMenuOpen" name="heroicons:bars-3" class="block h-6 w-6" aria-hidden="true" />
+              <Icon v-else name="heroicons:x-mark" class="block h-6 w-6" aria-hidden="true" />
+            </button>
           </div>
           <div class="hidden lg:flex lg:items-center lg:justify-end xl:col-span-4">
             <GithubButton />
@@ -140,8 +107,8 @@
         </nav>
       </div>
 
-      <PopoverPanel as="nav" class="lg:hidden" aria-label="Global">
-        <div class="mx-auto max-w-3xl space-y-1 px-2 pb-3 pt-2 sm:px-4">
+      <nav v-if="mobileMenuOpen" class="lg:hidden" aria-label="Global">
+        <div class="mx-auto max-w-3xl space-y-1 px-2 pt-2 pb-3 sm:px-4">
           <NuxtLink
             v-for="item in navigation"
             :key="item.name"
@@ -154,23 +121,21 @@
             {{ item.name }}
           </NuxtLink>
         </div>
-        <div class="border-t border-gray-200 pb-3 pt-4">
+        <div class="border-t border-gray-200 pt-4 pb-3">
           <div class="mx-auto flex max-w-3xl items-center justify-center px-4 sm:px-6">
             <GithubButton />
             <LogoutButton />
           </div>
         </div>
-      </PopoverPanel>
+      </nav>
     </header>
-  </Popover>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { safeToRefs, useConfirmationDialog, useRoute } from '#imports'
-import { Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
-import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
-import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
-import { computed, reactive, toRefs } from 'vue'
+import type { DropdownMenuItem } from '@nuxt/ui'
+import { computed, reactive, ref, toRefs } from 'vue'
 import GithubButton from '~/components/layout/GithubButton.vue'
 import LogoutButton from '~/components/layout/LogoutButton.vue'
 import { useCredentials, useVersion } from '~/stores'
@@ -222,10 +187,24 @@ const navigation = reactive([
 const { credentials, records, switchInstance, removeInstance: doRemoveInstance } = safeToRefs(useCredentials())
 const { confirm } = useConfirmationDialog()
 const { version } = useVersion()
+const mobileMenuOpen = ref(false)
 const self: any = reactive({
   records,
   savedInstances: computed(() => Array.from(self.records.values())),
 })
+
+const instanceMenuItems = computed<DropdownMenuItem[][]>(() => [
+  self.savedInstances
+    .filter(({ id }: { id: string }) => id !== credentials.value?.id)
+    .map((instance: any) => ({ slot: 'instance' as const, instance })),
+  [
+    {
+      label: t('actions.connectToInstance'),
+      icon: 'heroicons:plus-circle',
+      to: '/login',
+    },
+  ],
+])
 
 const removeInstance = async (id: string) => {
   if (await confirm({ text: t('confirm.removeInstance') })) {

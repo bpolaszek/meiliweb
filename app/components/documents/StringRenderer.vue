@@ -6,7 +6,7 @@
     <button
       v-if="self.showExpandButton"
       @click="self.truncated = !self.truncated"
-      class="text-xs text-primary-500 hover:text-primary-700 focus:outline-none">
+      class="text-xs text-primary-500 hover:text-primary-700 focus:outline-hidden">
       <template v-if="self.truncated">
         {{ t('actions.showMore') }}
       </template>

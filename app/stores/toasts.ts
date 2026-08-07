@@ -1,6 +1,6 @@
+import { useToast } from '#imports'
 import { defineStore } from 'pinia'
 import { ulid } from 'ulid'
-import { toRef } from 'vue'
 import { type I18nT } from '../utils'
 
 type CreateToastOptions = {
@@ -13,10 +13,8 @@ type CreateToastOptions = {
   ttl?: number
 }
 
-export type Toast = CreateToastOptions & {
+export type Toast = {
   id: string
-  dismissable: boolean
-  show: boolean
   spawn: () => void
   destroy: () => void
   update: (options: Partial<CreateToastOptions>) => void
@@ -45,42 +43,45 @@ export const TOAST_FAILURE = (t: I18nT) => ({
 })
 
 export const useToasts = defineStore('toasts', () => {
-  const toasts: Map<string, Toast> = reactive(new Map())
+  const nuxtToasts = useToast()
+
+  // Adapt the historical toast options to Nuxt UI's toast props
+  const toToastProps = (options: CreateToastOptions) => ({
+    title: options.title,
+    description: options.text,
+    icon: options.icon,
+    duration: 0 === (options.ttl ?? TOAST_DEFAULT_TTL) ? Infinity : options.ttl ?? TOAST_DEFAULT_TTL,
+    close: options.dismissable ?? true,
+    ui: {
+      icon: ['size-6', ...(Array.isArray(options.iconClasses) ? options.iconClasses : [options.iconClasses ?? ''])]
+        .join(' ')
+        .trim(),
+    },
+  })
 
   const createToast = (options: CreateToastOptions): Toast => {
     const id = ulid()
-    const toast = reactive(
-      Object.assign(options, {
-        id,
-        dismissable: options.dismissable ?? true,
-        immediate: options.immediate ?? true,
-        ttl: options.ttl ?? TOAST_DEFAULT_TTL,
-        show: false,
-        spawn() {
-          this.show = true
-        },
-        destroy() {
-          toasts.delete(id)
-        },
-        update(options: Partial<CreateToastOptions>) {
-          Object.assign(this, options)
-        },
-      }),
-    )
-    toasts.set(id, toast)
-    if (toast.immediate) {
+    const current: CreateToastOptions = { ...options }
+    const toast: Toast = {
+      id,
+      spawn() {
+        nuxtToasts.add({ id, ...toToastProps(current) })
+      },
+      destroy() {
+        nuxtToasts.remove(id)
+      },
+      update(options: Partial<CreateToastOptions>) {
+        Object.assign(current, options)
+        nuxtToasts.update(id, toToastProps(current))
+      },
+    }
+    if (options.immediate ?? true) {
       toast.spawn()
     }
     return toast
   }
 
-  const self: any = reactive({
-    toasts: computed(() => [...toasts].map(([id, toast]) => toast)),
-    visibleToasts: computed(() => self.toasts.filter((toast: Toast) => toast.show)),
-  })
-
   return {
     createToast,
-    toasts: toRef(self, 'visibleToasts'),
   }
 })

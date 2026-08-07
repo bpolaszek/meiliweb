@@ -6,27 +6,11 @@
     </h3>
 
     <DefineAddRuleMenu v-slot="{ big }">
-      <ContextualMenu v-if="availableIndexes.length > 0">
-        <template #button>
-          <MenuButton>
-            <Button theme="primary" icon="zondicons:add-solid" :no-padding="!big" :class="big || 'px-2 py-1 text-xs'">
-              {{ t('labels.addRule') }}
-            </Button>
-          </MenuButton>
-        </template>
-        <div class="block w-full cursor-default px-2 py-1.5 text-left text-xs font-light italic text-gray-500">
-          {{ t('labels.pickAnIndex') }}
-        </div>
-        <MenuItem v-for="indexUid of availableIndexes" :key="indexUid" v-slot="{ active }">
-          <button
-            type="button"
-            class="block w-full px-2 py-1.5 text-left text-sm font-light"
-            :class="[active ? 'bg-primary-100' : 'bg-transparent']"
-            @click="addSearchRule(indexUid)">
-            {{ humanizeString(indexUid) }}
-          </button>
-        </MenuItem>
-      </ContextualMenu>
+      <UDropdownMenu v-if="availableIndexes.length > 0" :items="addRuleMenuItems" :content="{ align: 'start' }">
+        <Button theme="primary" icon="zondicons:add-solid" :no-padding="!big" :class="big || 'px-2 py-1 text-xs'">
+          {{ t('labels.addRule') }}
+        </Button>
+      </UDropdownMenu>
     </DefineAddRuleMenu>
 
     <div v-if="0 === Object.entries(searchRules).length" class="flex items-center justify-center py-10">
@@ -48,7 +32,7 @@
         v-slot="{ id }"
         class="space-y-1">
         <header class="flex items-center justify-between">
-          <Label :for="id" class="text-sm font-light capitalize text-primary-800">
+          <Label :for="id" class="text-sm font-light text-primary-800 capitalize">
             {{ indexUid }}
           </Label>
           <button v-tippy="t('labels.removeRule')" type="button" @click="searchRulesMap.delete(indexUid)">
@@ -68,7 +52,7 @@
           type="text"
           class="form-input w-full" />
         <div v-if="filterStats.has(indexUid)" class="text-xs">
-          <span class="italic text-green-600">
+          <span class="text-green-600 italic">
             {{
               t('hints.matchingDocuments', {
                 nbFilteredDocuments: (filterStats.get(indexUid) as FilterStat)[0],
@@ -80,12 +64,12 @@
           <RouterLink
             v-if="jwt"
             :to="`/indexes/${indexUid}/documents?tenantToken=${jwt}`"
-            class="italic text-primary-700 hover:text-primary-800"
+            class="text-primary-700 italic hover:text-primary-800"
             target="_blank">
             {{ t('labels.preview') }}
           </RouterLink>
         </div>
-        <span v-else class="text-xs italic text-red-600">
+        <span v-else class="text-xs text-red-600 italic">
           {{ t('hints.invalidFilterQuery') }}
         </span>
       </UniqueId>
@@ -109,7 +93,7 @@
           <Label :for="id">{{ t('labels.expiresAt') }}</Label>
           <div>
             <label class="inline-flex cursor-pointer items-center gap-2">
-              <span class="text-sm font-light italic text-gray-600">
+              <span class="text-sm font-light text-gray-600 italic">
                 {{ t('labels.neverExpires') }}
               </span>
               <input :disabled="expires" type="checkbox" v-model="expires" class="form-checkbox" />
@@ -126,7 +110,7 @@
           <h4 class="font-medium">{{ t('labels.jwt') }}</h4>
           <ClipboardButton :source="jwt" class="size-6 shrink-0" />
         </header>
-        <p class="break-words font-mono text-sm">
+        <p class="font-mono text-sm wrap-break-word">
           {{ jwt }}
         </p>
       </section>
@@ -141,9 +125,8 @@ import Select from '~/components/layout/forms/Select.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import UniqueId from '~/components/UniqueId.vue'
 import ClipboardButton from '~/components/layout/forms/ClipboardButton.vue'
-import ContextualMenu from '~/components/layout/ContextualMenu.vue'
 import { useMeiliClient } from '~/composables'
-import { MenuButton, MenuItem } from '@headlessui/vue'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Key, TokenSearchRules } from 'meilisearch'
 import type { ComputedRef } from 'vue'
 import { createJwt, getFilterableAttributePatterns } from '~/utils'
@@ -192,6 +175,13 @@ const [indexes, keys] = await Promise.all([
   meili.getKeys(),
 ])
 const availableIndexes = computed(() => indexes.filter((indexUid) => ![...searchRulesMap.keys()].includes(indexUid)))
+const addRuleMenuItems = computed<DropdownMenuItem[]>(() => [
+  { type: 'label', label: t('labels.pickAnIndex') },
+  ...availableIndexes.value.map((indexUid) => ({
+    label: humanizeString(indexUid),
+    onSelect: () => addSearchRule(indexUid),
+  })),
+])
 
 const addSearchRule = async (indexUid: string) => {
   searchRulesMap.set(indexUid, { filter: '' })

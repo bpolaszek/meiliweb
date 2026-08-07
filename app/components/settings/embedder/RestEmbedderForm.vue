@@ -11,29 +11,17 @@
 
   <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
     <Label :for="id">{{ t('labels.request') }}</Label>
-    <Textarea
-      v-model="embedder!.request as unknown as string"
-      no-padding
-      class="form-input w-full font-mono text-xs"
-      rows="6" />
+    <Textarea v-model="embedder!.request as unknown as string" class="w-full font-mono text-xs" rows="6" />
   </UniqueId>
 
   <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
     <Label :for="id">{{ t('labels.response') }}</Label>
-    <Textarea
-      v-model="embedder!.response as unknown as string"
-      no-padding
-      class="form-input w-full font-mono text-xs"
-      rows="6" />
+    <Textarea v-model="embedder!.response as unknown as string" class="w-full font-mono text-xs" rows="6" />
   </UniqueId>
 
   <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
     <Label :for="id">{{ t('labels.headers') }}</Label>
-    <Textarea
-      v-model="embedder!.headers as unknown as string"
-      no-padding
-      class="form-input w-full font-mono text-xs"
-      rows="6" />
+    <Textarea v-model="embedder!.headers as unknown as string" class="w-full font-mono text-xs" rows="6" />
   </UniqueId>
 
   <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">

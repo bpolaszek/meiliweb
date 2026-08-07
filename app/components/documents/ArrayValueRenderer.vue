@@ -18,7 +18,9 @@
       <ValueRenderer class="grow" :index-uid="indexUid" :field="field" :value="_value" :level="level + 1" />
     </li>
     <li v-if="isTruncated">
-      <button @click="showMore = !showMore" class="text-xs text-primary-500 hover:text-primary-700 focus:outline-none">
+      <button
+        @click="showMore = !showMore"
+        class="text-xs text-primary-500 hover:text-primary-700 focus:outline-hidden">
         <template v-if="showMore">{{ t('labels.showLess') }}</template>
         <template v-else>
           {{ t('labels.showMore', { count: nbRemainingValues }) }}
@@ -26,7 +28,7 @@
       </button>
     </li>
   </ul>
-  <span v-else class="italic text-gray-400">[]</span>
+  <span v-else class="text-gray-400 italic">[]</span>
 </template>
 
 <script setup lang="ts">

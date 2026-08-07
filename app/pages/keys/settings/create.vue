@@ -31,19 +31,23 @@
         <Label :for="id">{{ t('labels.indexes') }}</Label>
         <div>
           <label class="inline-flex cursor-pointer items-center gap-2">
-            <span class="text-sm font-light italic text-gray-600">
+            <span class="text-sm font-light text-gray-600 italic">
               {{ t('labels.allIndexes') }}
             </span>
             <input type="checkbox" v-model="key.indexes" value="*" class="form-checkbox" />
           </label>
         </div>
       </header>
-      <MultiCombobox
+      <UInputMenu
+        :id
+        v-model="key.indexes"
+        multiple
+        open-on-click
+        open-on-focus
         autofocus
         :items="indexes"
-        v-model="key.indexes"
-        class="w-full"
-        :input-attrs="{ id, disabled: key.indexes.includes('*') }" />
+        :disabled="key.indexes.includes('*')"
+        class="w-full" />
     </UniqueId>
 
     <UniqueId as="section" v-slot="{ id }" class="space-y-1">
@@ -156,7 +160,7 @@
         <Label :for="id">{{ t('labels.expiresAt') }}</Label>
         <div>
           <label class="inline-flex cursor-pointer items-center gap-2">
-            <span class="text-sm font-light italic text-gray-600">
+            <span class="text-sm font-light text-gray-600 italic">
               {{ t('labels.neverExpires') }}
             </span>
             <input :disabled="expires" type="checkbox" v-model="expires" class="form-checkbox" />
@@ -186,7 +190,6 @@ import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Alert from '~/components/layout/Alert.vue'
 import Textarea from '~/components/layout/forms/Textarea.vue'
 import Badge from '~/components/layout/Badge.vue'
-import MultiCombobox from '~/components/layout/forms/MultiCombobox.vue'
 import ClipboardButton from '~/components/layout/forms/ClipboardButton.vue'
 import { useFormSubmit, useMeiliClient } from '~/composables'
 import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores/toasts'
