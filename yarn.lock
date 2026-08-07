@@ -6938,10 +6938,10 @@ meilisearch-filters@^1.1.0:
   resolved "https://registry.yarnpkg.com/meilisearch-filters/-/meilisearch-filters-1.1.0.tgz#fecc51c5e97239a328702b703e080f05a5ac3b5f"
   integrity sha512-CAUNisEDynkmXBLoZmpiolsskdOcpQ3m3OolZzclhx2QcB2Yj7b4irG6v9pUh/MQa2vAL7DgpoR8Qu+WbSYr+A==
 
-meilisearch@^0.51.0:
-  version "0.51.0"
-  resolved "https://registry.yarnpkg.com/meilisearch/-/meilisearch-0.51.0.tgz#508ab5bb2c2935e0f2ff71de1cf28fef598ca050"
-  integrity sha512-IuNsYyT8r/QLhU33XDZdXWUT6cA/nACCHHZc+NHkNuaU55LELRxff1uBJhpJcwjYaAPEEmeWrzBhYl2XlhJdAg==
+meilisearch@^0.59.0:
+  version "0.59.0"
+  resolved "https://registry.yarnpkg.com/meilisearch/-/meilisearch-0.59.0.tgz#9b38d213a631e00fd9e61efd72b068a4a4ecdcf4"
+  integrity sha512-9KxasX98+qYhOVa4PPeaX/yY/ukM9DMuJlUJRgJVwrdCkWw+mkkiIh6EJmYyCxU8nXhj0VEzdYr3dNUJT1BQow==
 
 merge-stream@^2.0.0:
   version "2.0.0"
