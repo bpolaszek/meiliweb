@@ -43,21 +43,31 @@
         :ui="{ base: 'rounded-lg' }"
         class="grow lg:w-80" />
 
+      <HybridSearchControl
+        v-if="hasEmbedders"
+        v-model:enabled="hybridEnabled"
+        v-model:embedder="hybridEmbedder"
+        v-model:semantic-ratio="hybridSemanticRatio"
+        :embedders="embedderNames" />
+
       <button v-tippy="t('actions.documentView')" @click="viewMode = 'documents'">
         <Icon
           name="fa-solid:id-card"
           :class="['documents' === viewMode ? 'text-primary-700' : 'text-gray-600 hover:text-gray-800', 'size-6']" />
       </button>
+
       <button v-tippy="t('actions.tableView')" type="button" @click="viewMode = 'table'">
         <Icon
           name="nimbus:list"
           :class="['table' === viewMode ? 'text-primary-700' : 'text-gray-600 hover:text-gray-800', 'size-6']" />
       </button>
+
       <button v-if="hasGeoDocuments" v-tippy="t('actions.mapView')" type="button" @click="viewMode = 'map'">
         <Icon
           name="gis:poi-map"
           :class="['map' === viewMode ? 'text-primary-700' : 'text-gray-600 hover:text-gray-800', 'size-6']" />
       </button>
+
       <button v-tippy="t('actions.toggleFilters')" @click="filterPanelOpen = true">
         <Icon
           name="ph:funnel-fill"
@@ -66,12 +76,6 @@
             appliedFilters.length > 0 ? 'text-primary-600 hover:text-primary-800' : 'text-gray-600 hover:text-gray-800'
           " />
       </button>
-      <HybridSearchControl
-        v-if="hasEmbedders"
-        v-model:enabled="hybridEnabled"
-        v-model:embedder="hybridEmbedder"
-        v-model:semantic-ratio="hybridSemanticRatio"
-        :embedders="embedderNames" />
     </template>
     <template #title-actions>
       <NuxtLink :to="`/indexes/${index.uid}/settings`" v-tippy="t('actions.goToSettings')">
