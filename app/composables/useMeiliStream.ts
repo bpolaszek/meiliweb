@@ -23,6 +23,16 @@ type StreamResource = 'tasks' | 'batches'
 
 type StreamQuery = Record<string, string | number | Array<string | number> | undefined | null>
 
+/**
+ * - `connecting`   — first connection attempt (or waiting on the instance's version/features).
+ * - `streaming`    — connected, live updates flowing.
+ * - `reconnecting` — connection dropped, retrying within the backoff budget.
+ * - `disconnected` — retry budget exhausted; nothing will happen until `reconnect()` is called.
+ * - `unsupported`  — instance is too old or the experimental feature is off; this is permanent
+ *   for the lifetime of the composable, callers should fall back to polling.
+ */
+export type StreamStatus = 'connecting' | 'streaming' | 'reconnecting' | 'disconnected' | 'unsupported'
+
 type MeiliStreamOptions<T> = {
   /** Same filters as the matching list endpoint — the stream routes accept `TasksFilterQuery`. */
   query?: StreamQuery
@@ -43,10 +53,13 @@ type MeiliStreamOptions<T> = {
  * connection because this app never sets `timeout` on the client config.
  *
  * The stream carries no backlog: it emits objects whose status changed *after* connecting.
- * Callers keep doing their initial `getTasks()` / `getBatches()` fetch and merge from there.
+ * Callers keep doing their initial `getTasks()` / `getBatches()` fetch and merge from there —
+ * and must repeat that fetch on `reconnect()`, since anything that happened while disconnected
+ * would otherwise stay missing.
  *
- * `streaming` is `false` until the connection is established, and drops back to `false` for
- * good once the retry budget is spent — callers gate their polling fallback on it.
+ * `status` starts at `connecting` and moves through the states documented on {@link StreamStatus}.
+ * Once it reaches `disconnected` it stays there until `reconnect()` is called — deliberately no
+ * silent fallback to polling here, so the UI can surface an explicit "stale, reconnect" state.
  */
 const useMeiliStream = <T>(resource: StreamResource, options: MeiliStreamOptions<T>) => {
   const meili = useMeiliClient()
@@ -54,7 +67,7 @@ const useMeiliStream = <T>(resource: StreamResource, options: MeiliStreamOptions
   const { credentials } = toRefs(useCredentials())
 
   const self = reactive({
-    streaming: false,
+    status: 'connecting' as StreamStatus,
   })
 
   let controller: AbortController | null = null
@@ -108,7 +121,7 @@ const useMeiliStream = <T>(resource: StreamResource, options: MeiliStreamOptions
       extraRequestInit: { signal, headers: { Accept: 'text/event-stream' } },
     })
 
-    self.streaming = true
+    self.status = 'streaming'
     const reader = body.pipeThrough(new TextDecoderStream()).getReader()
     let buffer = ''
     for (;;) {
@@ -138,7 +151,12 @@ const useMeiliStream = <T>(resource: StreamResource, options: MeiliStreamOptions
     })
 
   const run = async () => {
-    if (!(await isSupported()) || stopped) {
+    if (stopped) {
+      return
+    }
+    self.status = 'connecting'
+    if (!(await isSupported())) {
+      self.status = 'unsupported'
       return
     }
 
@@ -152,11 +170,13 @@ const useMeiliStream = <T>(resource: StreamResource, options: MeiliStreamOptions
       } catch {
         // Network blip, server restart or intentional abort — all handled by the loop below.
       } finally {
-        self.streaming = false
+        if ('streaming' === self.status) {
+          self.status = 'reconnecting'
+        }
       }
 
       if (stopped) {
-        break
+        return
       }
       // Only refill the budget for connections that actually held, so a server that accepts
       // then immediately drops us can never spin this loop.
@@ -167,14 +187,24 @@ const useMeiliStream = <T>(resource: StreamResource, options: MeiliStreamOptions
       await delay(Math.min(BASE_BACKOFF * 2 ** (attempt - 1), MAX_BACKOFF))
     }
 
-    self.streaming = false
+    if (!stopped) {
+      self.status = 'disconnected'
+    }
   }
 
   const stop = () => {
     stopped = true
     wakeUp?.()
     controller?.abort()
-    self.streaming = false
+  }
+
+  /** Restarts a stream that gave up after exhausting its retry budget. No-op otherwise. */
+  const reconnect = () => {
+    if ('disconnected' !== self.status) {
+      return
+    }
+    stopped = false
+    run()
   }
 
   // Closed on unmount and on navigation away (the page's setup scope is disposed), and on
@@ -184,9 +214,9 @@ const useMeiliStream = <T>(resource: StreamResource, options: MeiliStreamOptions
 
   run()
 
-  const { streaming } = toRefs(self)
+  const { status } = toRefs(self)
 
-  return { streaming: readonly(streaming), stop }
+  return { status: readonly(status), reconnect, stop }
 }
 
 export const useTaskStream = (options: MeiliStreamOptions<Task>) => useMeiliStream<Task>('tasks', options)
