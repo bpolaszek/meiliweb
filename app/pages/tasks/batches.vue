@@ -11,10 +11,7 @@
       </div>
       <span v-else>{{ value }}</span>
     </DefineTreeRendering>
-    <div v-if="streaming" class="mb-3 flex items-center gap-2 text-xs text-gray-500">
-      <span class="size-2 animate-pulse rounded-full bg-primary-600" />
-      {{ t('labels.live') }}
-    </div>
+    <StreamStatusIndicator :status="status" @reconnect="reconnect" />
     <Table
       :items="batches.results"
       :columns="[
@@ -103,6 +100,7 @@ import InfiniteLoading from 'v3-infinite-loading'
 import { createReusableTemplate } from '@vueuse/core'
 import Badge from '~/components/layout/Badge.vue'
 import Button from '~/components/layout/forms/Button.vue'
+import StreamStatusIndicator from '~/components/layout/StreamStatusIndicator.vue'
 import Table from '~/components/layout/tables/Table.vue'
 import { tryOrThrow } from '~/utils'
 
@@ -158,7 +156,9 @@ const { batches } = toRefs(self)
 // `tasksStreamingRoute` experimental feature). The server re-pushes processing batches about
 // once a second, which is what keeps the progress bars moving. There is no polling fallback
 // here on purpose: refetching the whole list on a timer is exactly what streaming replaces.
-const { streaming } = useBatchStream({
+// Once the stream gives up (`status === 'disconnected'`), `StreamStatusIndicator` surfaces that
+// instead, with a manual reconnect action.
+const { status, reconnect: reconnectStream } = useBatchStream({
   onMessage: (batch: Batch) => {
     const known = self.batches.results.find((candidate: Batch) => candidate.uid === batch.uid)
     if (known) {
@@ -173,6 +173,13 @@ const { streaming } = useBatchStream({
     }
   },
 })
+
+// The stream carries no backlog, so re-opening it alone would miss anything that happened while
+// disconnected — the list has to be re-fetched too.
+const reconnect = async () => {
+  reconnectStream()
+  self.batches = await tryOrThrow(() => meili.batches.getBatches())
+}
 
 // `v3-infinite-loading` does not re-export its `StateHandler` type from the package root.
 type InfiniteLoadingState = { loaded: () => void; complete: () => void; error: () => void }
