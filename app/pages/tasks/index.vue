@@ -6,6 +6,7 @@
         {{ t('buttons.clearBatchFilter') }}
       </NuxtLink>
     </div>
+    <StreamStatusIndicator :status="status" @reconnect="reconnect" />
     <DefineTreeRendering v-slot="{ value }">
       <div v-if="'object' === typeof value && null !== value" class="table">
         <div v-for="[_key, _value] of Object.entries(value)" class="table-row">
@@ -90,7 +91,7 @@
         </td>
       </template>
     </Table>
-    <InfiniteLoading @infinite="handleInfiniteLoading()" />
+    <InfiniteLoading @infinite="handleInfiniteLoading" />
   </div>
 </template>
 
@@ -104,7 +105,8 @@ import Badge from '~/components/layout/Badge.vue'
 import { type Task } from 'meilisearch'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
-import { createReusableTemplate, watchImmediate } from '@vueuse/core'
+import StreamStatusIndicator from '~/components/layout/StreamStatusIndicator.vue'
+import { createReusableTemplate } from '@vueuse/core'
 import InfiniteLoading from 'v3-infinite-loading'
 
 const { t } = useI18n()
@@ -134,7 +136,6 @@ const tasksQuery = computed(() => (batchUids.value ? { batchUids: batchUids.valu
 
 const self = reactive({
   tasks: await tryOrThrow(() => meili.tasks.getTasks(tasksQuery.value)),
-  lastTaskUid: null! as number,
   pendingTasks: computed((): Task[] =>
     self.tasks.results.filter((task: Task) => ['enqueued', 'processing'].includes(task.status)),
   ),
@@ -157,10 +158,25 @@ const stringifyTaskType = (type: string) =>
   ])
 
 const { tasks, pendingTasks } = toRefs(self)
-watchImmediate(tasks, (tasks) => (self.lastTaskUid = tasks.results[tasks.results.length - 1]?.uid!), { deep: true })
-const handleInfiniteLoading = async () => {
-  const nextTasks = await tryOrThrow(() => meili.tasks.getTasks({ ...tasksQuery.value, from: self.lastTaskUid }))
+
+// `v3-infinite-loading` does not re-export its `StateHandler` type from the package root.
+type InfiniteLoadingState = { loaded: () => void; complete: () => void; error: () => void }
+
+// `getTasks` returns the cursor of the next page in `next` (null once exhausted). Meilisearch's
+// `from` is inclusive, so deriving it from the last loaded uid re-fetches that same task —
+// visible as a duplicate row whenever the filtered/short list doesn't fill the viewport.
+const handleInfiniteLoading = async ($state: InfiniteLoadingState) => {
+  if (null === self.tasks.next) {
+    $state.complete()
+    return
+  }
+  const nextTasks = await tryOrThrow(() => meili.tasks.getTasks({ ...tasksQuery.value, from: self.tasks.next }))
   self.tasks.results.push(...nextTasks.results)
+  self.tasks.next = nextTasks.next
+  $state.loaded()
+  if (null === nextTasks.next) {
+    $state.complete()
+  }
 }
 const cancelTask = async (task: Task) => {
   if (!(await confirm({ text: t('confirmations.cancelTask') }))) {
@@ -179,7 +195,7 @@ const cancelTask = async (task: Task) => {
 // Live updates come from the SSE stream when the instance supports it (Meilisearch >= 1.52
 // with the `tasksStreamingRoute` experimental feature). The stream carries no backlog, so it
 // only patches the tasks fetched above and prepends the ones enqueued while we watch.
-const { streaming } = useTaskStream({
+const { status, reconnect: reconnectStream } = useTaskStream({
   query: batchUids.value ? { batchUids: batchUids.value } : {},
   onMessage: (task: Task) => {
     const known = self.tasks.results.find((candidate: Task) => candidate.uid === task.uid)
@@ -196,12 +212,22 @@ const { streaming } = useTaskStream({
   },
 })
 
+// Manual recovery once the stream gave up (`status === 'disconnected'`): the socket carries no
+// backlog, so re-opening it alone would miss anything that happened while we were down — the
+// list has to be re-fetched too.
+const reconnect = async () => {
+  reconnectStream()
+  self.tasks = await tryOrThrow(() => meili.tasks.getTasks(tasksQuery.value))
+}
+
 const watchers = new WeakMap()
 watch(
-  [pendingTasks, streaming],
-  ([tasks, streaming]) => {
-    // Polling fallback: only used when the stream is unavailable, so we never do both.
-    if (streaming) {
+  [pendingTasks, status],
+  ([tasks, status]) => {
+    // Polling fallback: only for instances that don't support streaming at all. Once the stream
+    // gave up (`disconnected`) we surface that instead of silently degrading to polling — see
+    // `StreamStatusIndicator`.
+    if ('streaming' === status || 'disconnected' === status) {
       return
     }
     tasks.forEach(async (task) => {
