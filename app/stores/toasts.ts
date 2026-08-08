@@ -46,18 +46,25 @@ export const useToasts = defineStore('toasts', () => {
   const nuxtToasts = useToast()
 
   // Adapt the historical toast options to Nuxt UI's toast props
-  const toToastProps = (options: CreateToastOptions) => ({
-    title: options.title,
-    description: options.text,
-    icon: options.icon,
-    duration: 0 === (options.ttl ?? TOAST_DEFAULT_TTL) ? Infinity : options.ttl ?? TOAST_DEFAULT_TTL,
-    close: options.dismissable ?? true,
-    ui: {
-      icon: ['size-6', ...(Array.isArray(options.iconClasses) ? options.iconClasses : [options.iconClasses ?? ''])]
-        .join(' ')
-        .trim(),
-    },
-  })
+  const toToastProps = (options: CreateToastOptions) => {
+    const indefinite = 0 === (options.ttl ?? TOAST_DEFAULT_TTL)
+    return {
+      title: options.title,
+      description: options.text,
+      icon: options.icon,
+      duration: indefinite ? Infinity : options.ttl ?? TOAST_DEFAULT_TTL,
+      // An indefinite toast has no "time remaining" to show. Nuxt UI's toast progress bar
+      // computes `remaining / duration`, which is `Infinity / Infinity` (NaN) once duration
+      // is Infinity — disable it here rather than let it feed NaN into reka-ui's ProgressRoot.
+      progress: !indefinite,
+      close: options.dismissable ?? true,
+      ui: {
+        icon: ['size-6', ...(Array.isArray(options.iconClasses) ? options.iconClasses : [options.iconClasses ?? ''])]
+          .join(' ')
+          .trim(),
+      },
+    }
+  }
 
   const createToast = (options: CreateToastOptions): Toast => {
     const id = ulid()
