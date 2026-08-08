@@ -34,11 +34,13 @@ const self = reactive({
 const { swapIndex: doSwapIndex } = useIndexOperations()
 const swapIndex = async () => {
   try {
-    const { targetIndexUid, rename } = await doSwapIndex(props.indexUid, {
+    await doSwapIndex(props.indexUid, {
       onStart: () => (self.isSwapping = true),
     })
     await promiseTimeout(1000)
-    await navigateTo(`/indexes/${rename ? targetIndexUid : props.indexUid}/documents`)
+    // A swap keeps both names, so the user stays on the index they started from -- with the
+    // other index's content in it now.
+    await navigateTo(`/indexes/${props.indexUid}/documents`)
   } catch (error) {
     if (error instanceof DismissedDialog) return
     emit('error', error as TaskError)
@@ -52,8 +54,8 @@ en:
   notices:
     swapIndex:
       text: >-
-        Exchange this index's documents, settings and primary key with another index, or rename it into an
-        existing one. This runs immediately.
+        Exchange this index's documents, settings and primary key with another index. Both indexes keep their
+        current name. This runs immediately.
   actions:
     swapIndex: Swap with another index
 </i18n>

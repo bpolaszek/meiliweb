@@ -58,7 +58,6 @@ en:
       duplicateIndex: Copying {indexUid} to {newIndexUid}
       renameIndex: Renaming {indexUid} to {newIndexUid}
       swapIndexes: Swapping {indexUid} with {targetIndexUid}
-      renameIndexViaSwap: Renaming {indexUid} to {targetIndexUid}
     texts:
       pleaseWait: Please wait...
       done: Done.

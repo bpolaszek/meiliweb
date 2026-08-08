@@ -17,13 +17,7 @@ const DEFAULT_DUPLICATE_INDEX_OPTIONS: DuplicateIndexOptions = {
 
 type SwapIndexOptions = {
   targetIndexUid?: string
-  rename?: boolean
-  onStart: (targetIndexUid: string, rename: boolean) => void
-}
-
-type SwapIndexResult = {
-  targetIndexUid: string
-  rename: boolean
+  onStart: (targetIndexUid: string) => void
 }
 
 const DEFAULT_SWAP_INDEX_OPTIONS: SwapIndexOptions = {
@@ -159,27 +153,24 @@ export const useIndexOperations = () => {
     return newIndexUid
   }
 
-  const swapIndex = async (indexUid: string, options: Partial<SwapIndexOptions> = {}): Promise<SwapIndexResult> => {
-    let { onStart, targetIndexUid, rename } = {
+  const swapIndex = async (indexUid: string, options: Partial<SwapIndexOptions> = {}): Promise<string> => {
+    let { onStart, targetIndexUid } = {
       ...DEFAULT_SWAP_INDEX_OPTIONS,
       ...options,
     }
 
-    if (undefined === targetIndexUid || undefined === rename) {
-      const picked: SwapIndexResult = await openDialog(IndexSwapPromptModal, { indexUid })
-      targetIndexUid = targetIndexUid ?? picked.targetIndexUid
-      rename = rename ?? picked.rename
+    if (undefined === targetIndexUid) {
+      targetIndexUid = await openDialog(IndexSwapPromptModal, { indexUid })
     }
 
-    onStart(targetIndexUid, rename)
+    onStart(targetIndexUid)
     const toast = createToast({
       ...TOAST_PLEASEWAIT(t),
-      title: rename
-        ? t('toasts.titles.renameIndexViaSwap', { indexUid, targetIndexUid })
-        : t('toasts.titles.swapIndexes', { indexUid, targetIndexUid }),
+      title: t('toasts.titles.swapIndexes', { indexUid, targetIndexUid }),
     })
 
-    const task = await processTask(() => meili.swapIndexes([{ indexes: [indexUid, targetIndexUid], rename }]), {
+    // `rename` is required by the client's `IndexSwap` type; Meiliweb only ever plain-swaps.
+    const task = await processTask(() => meili.swapIndexes([{ indexes: [indexUid, targetIndexUid], rename: false }]), {
       onCanceled: () =>
         toast.update({
           ...TOAST_FAILURE(t),
@@ -197,7 +188,7 @@ export const useIndexOperations = () => {
 
     toast.update({ ...TOAST_SUCCESS(t) })
 
-    return { targetIndexUid, rename }
+    return targetIndexUid
   }
 
   return { duplicateIndex, renameIndex, swapIndex }
