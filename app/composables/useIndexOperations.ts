@@ -1,4 +1,5 @@
 import IndexNamePromptModal from '~/components/settings/IndexNamePromptModal.vue'
+import IndexSwapPromptModal from '~/components/settings/IndexSwapPromptModal.vue'
 import { useMeiliClient } from '~/composables/useMeiliClient'
 import { useTask } from '~/composables/useTask'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS, usePromisifiedDialogs, useToasts } from '~/stores'
@@ -11,6 +12,15 @@ type RenameIndexOptions = {
 type DuplicateIndexOptions = RenameIndexOptions
 
 const DEFAULT_DUPLICATE_INDEX_OPTIONS: DuplicateIndexOptions = {
+  onStart: () => {},
+}
+
+type SwapIndexOptions = {
+  targetIndexUid?: string
+  onStart: (targetIndexUid: string) => void
+}
+
+const DEFAULT_SWAP_INDEX_OPTIONS: SwapIndexOptions = {
   onStart: () => {},
 }
 
@@ -143,5 +153,43 @@ export const useIndexOperations = () => {
     return newIndexUid
   }
 
-  return { duplicateIndex, renameIndex }
+  const swapIndex = async (indexUid: string, options: Partial<SwapIndexOptions> = {}): Promise<string> => {
+    let { onStart, targetIndexUid } = {
+      ...DEFAULT_SWAP_INDEX_OPTIONS,
+      ...options,
+    }
+
+    if (undefined === targetIndexUid) {
+      targetIndexUid = await openDialog(IndexSwapPromptModal, { indexUid })
+    }
+
+    onStart(targetIndexUid)
+    const toast = createToast({
+      ...TOAST_PLEASEWAIT(t),
+      title: t('toasts.titles.swapIndexes', { indexUid, targetIndexUid }),
+    })
+
+    // `rename` is required by the client's `IndexSwap` type; Meiliweb only ever plain-swaps.
+    const task = await processTask(() => meili.swapIndexes([{ indexes: [indexUid, targetIndexUid], rename: false }]), {
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        }),
+    })
+    if (task.status === 'failed') {
+      throw new Error('Failed to swap indexes')
+    }
+
+    toast.update({ ...TOAST_SUCCESS(t) })
+
+    return targetIndexUid
+  }
+
+  return { duplicateIndex, renameIndex, swapIndex }
 }

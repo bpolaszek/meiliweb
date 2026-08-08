@@ -40,6 +40,12 @@
     <DuplicateIndexEditor :index-uid="indexUid" @error="self.error = $event" />
 
     <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
+      {{ t('titles.swapIndex') }}
+    </h3>
+
+    <IndexSwapEditor :index-uid="indexUid" @error="self.error = $event" />
+
+    <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.dangerZone') }}
     </h3>
 
@@ -72,6 +78,7 @@ import DistinctAttributeEditor from '~/components/settings/DistinctAttributeEdit
 import ProximityPrecisionEditor from '~/components/settings/ProximityPrecisionEditor.vue'
 import IndexNameEditor from '~/components/settings/IndexNameEditor.vue'
 import DuplicateIndexEditor from '~/components/settings/DuplicateIndexEditor.vue'
+import IndexSwapEditor from '~/components/settings/IndexSwapEditor.vue'
 import PrefixSearchEditor from '~/components/settings/PrefixSearchEditor.vue'
 import FacetSearchEditor from '~/components/settings/FacetSearchEditor.vue'
 import MaxTotalHitsEditor from '~/components/settings/MaxTotalHitsEditor.vue'
@@ -177,6 +184,7 @@ en:
     general: General settings
     duplicateIndex: Duplicate index
     renameIndex: Rename index
+    swapIndex: Swap index
     dangerZone: Danger Zone
   confirmations:
     dropIndex:

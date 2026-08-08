@@ -57,6 +57,7 @@ en:
       error: An error occured.
       duplicateIndex: Copying {indexUid} to {newIndexUid}
       renameIndex: Renaming {indexUid} to {newIndexUid}
+      swapIndexes: Swapping {indexUid} with {targetIndexUid}
     texts:
       pleaseWait: Please wait...
       done: Done.
