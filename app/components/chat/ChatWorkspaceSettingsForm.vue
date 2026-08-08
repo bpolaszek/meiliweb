@@ -49,27 +49,27 @@
 
       <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
         <Label :for="id">{{ t('labels.prompts.system') }}</Label>
-        <Textarea :id v-model="form.prompts.system" class="w-full text-sm" rows="6" />
+        <Textarea :id v-model="form.prompts.system" class="w-full text-sm" :rows="6" />
       </UniqueId>
 
       <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
         <Label :for="id">{{ t('labels.prompts.searchDescription') }}</Label>
-        <Textarea :id v-model="form.prompts.searchDescription" class="w-full text-sm" rows="3" />
+        <Textarea :id v-model="form.prompts.searchDescription" class="w-full text-sm" :rows="3" />
       </UniqueId>
 
       <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
         <Label :for="id">{{ t('labels.prompts.searchQParam') }}</Label>
-        <Textarea :id v-model="form.prompts.searchQParam" class="w-full text-sm" rows="2" />
+        <Textarea :id v-model="form.prompts.searchQParam" class="w-full text-sm" :rows="2" />
       </UniqueId>
 
       <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
         <Label :for="id">{{ t('labels.prompts.searchFilterParam') }}</Label>
-        <Textarea :id v-model="form.prompts.searchFilterParam" class="w-full text-sm" rows="2" />
+        <Textarea :id v-model="form.prompts.searchFilterParam" class="w-full text-sm" :rows="2" />
       </UniqueId>
 
       <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
         <Label :for="id">{{ t('labels.prompts.searchIndexUidParam') }}</Label>
-        <Textarea :id v-model="form.prompts.searchIndexUidParam" class="w-full text-sm" rows="2" />
+        <Textarea :id v-model="form.prompts.searchIndexUidParam" class="w-full text-sm" :rows="2" />
       </UniqueId>
     </section>
 
