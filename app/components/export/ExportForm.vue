@@ -22,6 +22,18 @@
       <datalist id="export-destinations">
         <option v-for="destination of destinations" :key="destination" :value="destination" />
       </datalist>
+      <div v-if="destinations.length > 0" class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-light text-gray-500 italic">{{ t('hints.recentDestinations') }}</span>
+        <Button
+          v-for="destination of destinations"
+          :key="destination"
+          type="button"
+          theme="secondary"
+          size="small"
+          @click="form.url = destination">
+          {{ destination }}
+        </Button>
+      </div>
     </UniqueId>
 
     <UniqueId as="section" v-slot="{ id }" class="space-y-1">
@@ -169,19 +181,28 @@ const submit = () =>
       ...TOAST_PLEASEWAIT(t),
       title: t('toasts.exporting', { url: destination }),
     })
-    await processTask(() => exportToRemote(buildPayload()), {
-      onSuccess: () => toast.update({ ...TOAST_SUCCESS(t) }),
-      onCanceled: () =>
-        toast.update({
-          ...TOAST_FAILURE(t),
-          text: t('toasts.texts.canceledTask'),
-        }),
-      onFailure: () =>
-        toast.update({
-          ...TOAST_FAILURE(t),
-          text: t('toasts.texts.failedTask'),
-        }),
-    })
+    try {
+      await processTask(() => exportToRemote(buildPayload()), {
+        onSuccess: () => toast.update({ ...TOAST_SUCCESS(t) }),
+        onCanceled: () =>
+          toast.update({
+            ...TOAST_FAILURE(t),
+            text: t('toasts.texts.canceledTask'),
+          }),
+        onFailure: () =>
+          toast.update({
+            ...TOAST_FAILURE(t),
+            text: t('toasts.texts.failedTask'),
+          }),
+      })
+    } catch (e) {
+      // A synchronous rejection (e.g. a 400 from `POST /export` on a malformed `payloadSize`) happens
+      // before any task exists, so none of the `processTask` callbacks above ever fire. Without this,
+      // the "please wait" toast is left stuck forever while the inline error banner (via `handle`) shows
+      // the real failure.
+      toast.update({ ...TOAST_FAILURE(t), text: t('toasts.texts.failedTask') })
+      throw e
+    }
   })
 </script>
 
@@ -206,6 +227,7 @@ en:
                       re-entered every time.
     allIndexesByDefault: Leave empty to export every index.
     filter: Only documents matching this filter expression will be exported.
+    recentDestinations: 'Recently used:'
   actions:
     export: Export
   confirmations:
