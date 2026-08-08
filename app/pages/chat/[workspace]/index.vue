@@ -33,7 +33,7 @@
             <p class="whitespace-pre-wrap">{{ turn.content }}</p>
             <p v-if="turn.progress" class="flex items-center gap-2 text-xs text-gray-500 italic">
               <span class="size-2 animate-pulse rounded-full bg-primary-600" />
-              {{ turn.progress }}
+              {{ progressLabel(turn.progress) }}
             </p>
             <span v-else-if="'assistant' === turn.role && streaming && !turn.content" class="text-xs text-gray-500">
               {{ t('thinking') }}
@@ -76,7 +76,7 @@ import ChatUnavailableAlert from '~/components/chat/ChatUnavailableAlert.vue'
 import Alert from '~/components/layout/Alert.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import { useChatCompletion } from '~/composables'
+import { useChatCompletion, type ChatProgress } from '~/composables'
 import { useCredentials, useChatAvailability, type CredentialsRecord } from '~/stores'
 import { safeToRefs } from '~/utils'
 
@@ -106,6 +106,19 @@ const submit = async () => {
   await send(value, model.value || DEFAULT_MODEL)
 }
 
+const progressLabel = ({ indexUid: index, query, filter }: ChatProgress) => {
+  if (query && filter) {
+    return t('progress.queryAndFilter', { index, query, filter })
+  }
+  if (query) {
+    return t('progress.query', { index, query })
+  }
+  if (filter) {
+    return t('progress.filter', { index, filter })
+  }
+  return t('progress.index', { index })
+}
+
 await until(loading).toBe(false)
 </script>
 
@@ -115,6 +128,11 @@ en:
   subtitle: Ask questions about your indexes.
   empty: Ask anything about the indexes this workspace can search.
   thinking: Thinking...
+  progress:
+    index: 'Searching {index}...'
+    query: 'Searching {index} for "{query}"...'
+    filter: 'Searching {index} with filter {filter}...'
+    queryAndFilter: 'Searching {index} for "{query}" with filter {filter}...'
   labels:
     model: Model
   placeholders:

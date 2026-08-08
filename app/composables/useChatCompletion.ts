@@ -4,13 +4,24 @@ import { CHAT_TOOLS, useChatWorkspaces, type ChatMessage } from './useChatWorksp
 /** One entry of `_meiliSearchSources`; the document itself is arbitrary user data. */
 export type ChatSourceDocument = Record<string, any> & { indexUid?: string }
 
+/**
+ * Structured view of a `_meiliSearchProgress` call: Meilisearch reports which index it is
+ * currently searching, with which query and filter. Handed up structured rather than
+ * pre-formatted so the component can translate it via its own `<i18n>` block.
+ */
+export type ChatProgress = {
+  indexUid: string
+  query: string
+  filter: string
+}
+
 export type ChatTurn = {
   role: 'user' | 'assistant'
   content: string
   /** Documents Meilisearch used to ground this answer, streamed through `_meiliSearchSources`. */
   sources: ChatSourceDocument[]
-  /** Latest `_meiliSearchProgress` message, cleared once the answer starts coming in. */
-  progress: string | null
+  /** Latest `_meiliSearchProgress` call, cleared once the answer starts coming in. */
+  progress: ChatProgress | null
 }
 
 type OpenAiDelta = {
@@ -54,6 +65,23 @@ export const useChatCompletion = (workspace: string) => {
   // remounts the page), so a half-read stream never outlives the component.
   tryOnScopeDispose(stop)
 
+  /**
+   * `_meiliSearchProgress`'s own arguments wrap a second, independently-serialized JSON
+   * string in `function_arguments` (e.g. `_meiliSearchInIndex` with `{index_uid, q, filter}`).
+   * That inner parse must not tear down the stream if Meilisearch ever changes the shape.
+   */
+  const parseProgress = (call: { function_name?: string; function_arguments?: string }): ChatProgress | null => {
+    if ('_meiliSearchInIndex' !== call.function_name) {
+      return null
+    }
+    try {
+      const args = JSON.parse(call.function_arguments ?? '{}')
+      return { indexUid: args.index_uid ?? '', query: args.q ?? '', filter: args.filter ?? '' }
+    } catch {
+      return null
+    }
+  }
+
   const applyDelta = (turn: ChatTurn, delta: OpenAiDelta, toolArguments: Map<number, string>) => {
     if (delta.content) {
       turn.content += delta.content
@@ -76,9 +104,10 @@ export const useChatCompletion = (workspace: string) => {
       }
 
       if ('_meiliSearchSources' === name) {
-        turn.sources = Array.isArray(parsed) ? parsed : parsed?.sources ?? []
+        // Confirmed shape on Meilisearch 1.52: an object wrapping the array, never a bare array.
+        turn.sources = parsed?.sources ?? []
       } else if ('_meiliSearchProgress' === name) {
-        turn.progress = parsed?.message ?? parsed?.status ?? null
+        turn.progress = parseProgress(parsed ?? {})
       }
       toolArguments.delete(index)
     }
