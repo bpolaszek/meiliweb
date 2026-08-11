@@ -72,4 +72,7 @@ const text = computed(() =>
 <i18n>
 en:
   loadingText: Please wait...
+  buttons:
+    submit: Submit
+    cancel: Cancel
 </i18n>
