@@ -1,3 +1,4 @@
+import { useCredentials } from '~/stores'
 import { useMeiliClient } from './useMeiliClient'
 
 /**
@@ -72,8 +73,19 @@ export const CHAT_TOOLS: NonNullable<ChatCompletionBody['tools']> = [
   },
 ]
 
+/**
+ * `POST /chats/{uid}/chat/completions` unwraps the request's bearer token unconditionally
+ * (`extract_token_from_request(&req)?.unwrap()`), so an instance started without a master key
+ * panics and drops the connection — the browser only sees a failed request — whenever no
+ * `Authorization` header is sent. Such an instance accepts any token, hence this placeholder.
+ *
+ * @see https://github.com/meilisearch/meilisearch/blob/v1.53.1/crates/meilisearch/src/routes/chats/chat_completions.rs#L654
+ */
+const UNAUTHENTICATED_INSTANCE_TOKEN = 'meiliweb'
+
 export const useChatWorkspaces = () => {
   const meili = useMeiliClient()
+  const { credentials } = toRefs(useCredentials())
 
   const list = () => meili.getChatWorkspaces()
 
@@ -90,7 +102,12 @@ export const useChatWorkspaces = () => {
     meili.httpRequest.postStream({
       path: `chats/${uid}/chat/completions`,
       body,
-      extraRequestInit: { signal },
+      extraRequestInit: {
+        signal,
+        headers: credentials.value?.accessKey
+          ? undefined
+          : { Authorization: `Bearer ${UNAUTHENTICATED_INSTANCE_TOKEN}` },
+      },
     })
 
   return { list, getSettings, updateSettings, resetSettings, remove, streamCompletion }
