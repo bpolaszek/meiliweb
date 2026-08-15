@@ -226,7 +226,35 @@ Global app-wide strings live in `app.vue`'s `<i18n global>` block. There is no c
 - **Tailwind CSS 4** (CSS-first config) + **@nuxt/ui v4**. No `tailwind.config.js`: theme lives in `app/assets/css/main.css`.
 - The brand palette (pink) is declared as the custom `meili` color in `main.css` (`@theme static`) and mapped to the `primary` semantic color in `app/app.config.ts`. `--ui-primary` is anchored on shade 600.
 - UI building blocks are Nuxt UI components (`UButton`, `UModal`, `USlideover`, `UDropdownMenu`, `UInputMenu`, `USwitch`, `UAlert`, `UBadge`, `UPagination`, toasts via `useToast`), usually wrapped by the app's own components in `components/layout/` which keep their historical props API — prefer those wrappers.
-- Native `<input>`/`<select>` still use `@tailwindcss/forms` with the `class` strategy (`form-input`, `form-checkbox`, ...).
+
+### Forms: use Nuxt UI components
+
+**Reach for the Nuxt UI form component first**, not a native element with `form-input` classes:
+
+| Instead of                                      | Use                                           |
+| ----------------------------------------------- | --------------------------------------------- |
+| `<input class="form-input">`                    | `<UInput>`                                    |
+| `<select class="form-select">`                  | `<USelect>` (`:items` of `{ label, value }`)  |
+| `<textarea class="form-textarea">`              | `<UTextarea>` (or the `Textarea.vue` wrapper) |
+| `<input type="checkbox" class="form-checkbox">` | `<UCheckbox>`                                 |
+| `UniqueId` + `Label` + a hint `<p>`             | `<UFormField label help required>`            |
+
+`UFormField` wires the label to its control by itself, renders the required marker, and places
+`help` text below the field — so it replaces the whole `UniqueId` / `Label` / hint dance.
+`app/components/search-rules/SearchRuleEditor.vue` is the reference.
+
+Notes:
+
+- `USelect` is a Reka UI listbox rendered in a portal, **not** a native `<select>`: it has no
+  `.value` to set, and it rejects an item whose `value` is the empty string (that is reserved for
+  "no selection") — use a sentinel and map it back when building your payload.
+- Driving a `USelect` from a browser-automation tool is fiddly: synthetic clicks and key presses
+  move the highlight but don't commit the choice. Dispatching `new KeyboardEvent('keydown', { key:
+'Enter' })` on the focused `[role=option]` does.
+- Put width classes (`w-full`, `flex-1`) on the component itself; they land on its root wrapper.
+- Native `<input>`/`<select>` with `@tailwindcss/forms` (`form-input`, `form-select`, ...) are the
+  **legacy** styling, kept working for the screens that predate this rule. Don't add new ones; converting
+  a nearby one while you're in the file is welcome.
 - `prettier-plugin-tailwindcss` auto-sorts class lists (config: `tailwindStylesheet` in `.prettierrc`) — don't fight the order.
 - SCSS is allowed (`sass` is installed) but rare; prefer Tailwind.
 

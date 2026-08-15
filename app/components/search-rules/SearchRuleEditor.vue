@@ -16,10 +16,8 @@
         </Alert>
 
         <section class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <UniqueId as="div" v-slot="{ id }" class="space-y-1">
-            <Label :for="id">{{ t('labels.uid') }}</Label>
-            <input
-              :id
+          <UFormField :label="t('labels.uid')" :help="t('hints.uid')" required>
+            <UInput
               v-model="form.uid"
               required
               :disabled="!!rule"
@@ -28,68 +26,47 @@
               autocapitalize="off"
               autocomplete="off"
               spellcheck="false"
-              class="form-input w-full disabled:bg-gray-100 disabled:text-gray-500" />
-            <p class="text-xs font-light text-gray-500">{{ t('hints.uid') }}</p>
-          </UniqueId>
+              class="w-full" />
+          </UFormField>
 
-          <UniqueId as="div" v-slot="{ id }" class="space-y-1">
-            <Label :for="id">{{ t('labels.precedence') }}</Label>
-            <input :id v-model="form.precedence" type="number" min="0" step="1" class="form-input w-full" />
-            <p class="text-xs font-light text-gray-500">{{ t('hints.precedence') }}</p>
-          </UniqueId>
+          <UFormField :label="t('labels.precedence')" :help="t('hints.precedence')">
+            <UInput v-model="form.precedence" type="number" :min="0" :step="1" class="w-full" />
+          </UFormField>
         </section>
 
-        <UniqueId as="section" v-slot="{ id }" class="space-y-1">
-          <Label :for="id">{{ t('labels.description') }}</Label>
-          <input
-            :id
-            v-model="form.description"
-            :placeholder="t('placeholders.description')"
-            class="form-input w-full" />
-        </UniqueId>
+        <UFormField :label="t('labels.description')">
+          <UInput v-model="form.description" :placeholder="t('placeholders.description')" class="w-full" />
+        </UFormField>
 
-        <section class="flex items-center gap-3">
-          <USwitch v-model="form.active" size="lg" />
-          <span class="text-sm text-gray-700">{{ t('labels.active') }}</span>
-        </section>
+        <USwitch v-model="form.active" size="lg" :label="t('labels.active')" />
 
         <section class="space-y-4 rounded-lg border border-gray-200 p-4">
           <h4 class="font-semibold text-gray-900">{{ t('sections.conditions') }}</h4>
           <p class="text-sm font-light text-gray-600">{{ t('hints.conditions') }}</p>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <UniqueId as="div" v-slot="{ id }" class="space-y-1">
-              <Label :for="id">{{ t('labels.queryKind') }}</Label>
-              <select :id v-model="form.queryKind" class="w-full form-select">
-                <option value="any">{{ t('queryKinds.any') }}</option>
-                <option value="empty">{{ t('queryKinds.empty') }}</option>
-                <option value="notEmpty">{{ t('queryKinds.notEmpty') }}</option>
-              </select>
-            </UniqueId>
+            <UFormField :label="t('labels.queryKind')">
+              <USelect v-model="form.queryKind" :items="queryKindItems" class="w-full" />
+            </UFormField>
 
-            <UniqueId as="div" v-slot="{ id }" class="space-y-1">
-              <Label :for="id">{{ t('labels.words') }}</Label>
-              <input
-                :id
+            <UFormField :label="t('labels.words')" :help="t('hints.words')">
+              <UInput
                 v-model="form.words"
                 :disabled="'empty' === form.queryKind"
                 :placeholder="t('placeholders.words')"
                 autocapitalize="off"
                 autocomplete="off"
                 spellcheck="false"
-                class="form-input w-full disabled:bg-gray-100 disabled:text-gray-500" />
-              <p class="text-xs font-light text-gray-500">{{ t('hints.words') }}</p>
-            </UniqueId>
+                class="w-full" />
+            </UFormField>
 
-            <UniqueId as="div" v-slot="{ id }" class="space-y-1">
-              <Label :for="id">{{ t('labels.startsAt') }}</Label>
-              <input :id v-model="form.start" type="datetime-local" class="form-input w-full" />
-            </UniqueId>
+            <UFormField :label="t('labels.startsAt')">
+              <UInput v-model="form.start" type="datetime-local" class="w-full" />
+            </UFormField>
 
-            <UniqueId as="div" v-slot="{ id }" class="space-y-1">
-              <Label :for="id">{{ t('labels.endsAt') }}</Label>
-              <input :id v-model="form.end" type="datetime-local" class="form-input w-full" />
-            </UniqueId>
+            <UFormField :label="t('labels.endsAt')">
+              <UInput v-model="form.end" type="datetime-local" class="w-full" />
+            </UFormField>
           </div>
           <p class="text-xs font-light text-gray-500">{{ t('hints.timeWindow') }}</p>
 
@@ -102,34 +79,34 @@
           <h4 class="font-semibold text-gray-900">{{ t('sections.pins') }}</h4>
           <p class="text-sm font-light text-gray-600">{{ t('hints.pins') }}</p>
 
-          <div v-for="(pin, i) of form.pins" :key="pin.id" class="flex items-start gap-2">
-            <select v-model="pin.indexUid" class="w-1/3 form-select text-sm">
-              <option value="">{{ t('placeholders.anyIndex') }}</option>
-              <option v-for="uid of indexUids" :key="uid" :value="uid">{{ uid }}</option>
-            </select>
-            <input
+          <div v-for="(pin, i) of form.pins" :key="pin.id" class="flex items-center gap-2">
+            <USelect v-model="pin.indexUid" :items="indexUidItems" size="sm" class="w-1/3" />
+            <UInput
               v-model="pin.documentId"
               required
+              size="sm"
               :placeholder="t('placeholders.documentId')"
               autocapitalize="off"
               autocomplete="off"
               spellcheck="false"
-              class="form-input flex-1 text-sm" />
-            <input
+              class="flex-1" />
+            <UInput
               v-model="pin.position"
               type="number"
-              min="0"
-              step="1"
+              :min="0"
+              :step="1"
               required
+              size="sm"
               v-tippy="t('labels.position')"
-              class="form-input w-24 text-sm" />
-            <button
+              class="w-24" />
+            <UButton
               type="button"
+              variant="ghost"
+              color="neutral"
+              icon="heroicons:trash"
               v-tippy="t('actions.removePin')"
-              class="mt-2 shrink-0 text-gray-400 hover:text-red-600"
-              @click="form.pins.splice(i, 1)">
-              <Icon name="heroicons:trash" />
-            </button>
+              class="shrink-0 hover:text-red-600"
+              @click="form.pins.splice(i, 1)" />
           </div>
 
           <p v-if="!form.pins.length" class="text-sm font-light text-gray-400 italic">{{ t('emptyPins') }}</p>
@@ -152,8 +129,6 @@
 
 <script setup lang="ts">
 import { ulid } from 'ulid'
-import UniqueId from '~/components/UniqueId.vue'
-import Label from '~/components/layout/forms/Label.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
 import Alert from '~/components/layout/Alert.vue'
@@ -187,6 +162,24 @@ const { loading, error, handle } = useFormSubmit()
 
 /** Each pin row keeps a stable `id` for the `v-for` key; the rest maps 1:1 to a `pin` action. */
 type PinRow = { id: string; indexUid: string; documentId: string; position: number }
+
+const queryKindItems = computed(() => [
+  { label: t('queryKinds.any'), value: 'any' },
+  { label: t('queryKinds.empty'), value: 'empty' },
+  { label: t('queryKinds.notEmpty'), value: 'notEmpty' },
+])
+
+/**
+ * A pin without `indexUid` applies to whichever index is being searched. That "any index" choice
+ * needs a sentinel rather than an empty string: Reka's Select reserves `''` for "no selection" and
+ * throws on an item that uses it. `*` cannot collide with a real uid (they are `[a-zA-Z0-9_-]+`).
+ */
+const ANY_INDEX = '*'
+
+const indexUidItems = computed(() => [
+  { label: t('placeholders.anyIndex'), value: ANY_INDEX },
+  ...props.indexUids.map((uid) => ({ label: uid, value: uid })),
+])
 
 /**
  * `datetime-local` speaks local time in `YYYY-MM-DDTHH:mm`, the API speaks RFC 3339 in UTC.
@@ -222,7 +215,7 @@ const factory = () => {
     end: toDateTimeLocal(conditions?.time?.end),
     pins: (props.rule?.actions ?? []).map(({ selector, action }) => ({
       id: ulid(),
-      indexUid: selector.indexUid ?? '',
+      indexUid: selector.indexUid ?? ANY_INDEX,
       documentId: selector.id,
       position: action.position,
     })) as PinRow[],
@@ -237,7 +230,7 @@ watch(open, (isOpen) => isOpen && reset())
 /** Filter conditions are not editable here; we only warn that they exist and are preserved. */
 const hasFilterConditions = computed(() => !!props.rule?.conditions?.filter)
 
-const addPin = () => form.pins.push({ id: ulid(), indexUid: '', documentId: '', position: form.pins.length })
+const addPin = () => form.pins.push({ id: ulid(), indexUid: ANY_INDEX, documentId: '', position: form.pins.length })
 
 /**
  * Unlike top-level keys, `conditions` is replaced wholesale by the API, so we rebuild it
@@ -284,7 +277,7 @@ const buildPayload = (): SearchRulePayload => ({
   actions: form.pins
     .filter(({ documentId }) => documentId.trim())
     .map(({ indexUid, documentId, position }) => ({
-      selector: { indexUid: indexUid || null, id: documentId.trim() },
+      selector: { indexUid: ANY_INDEX === indexUid ? null : indexUid, id: documentId.trim() },
       action: { type: 'pin' as const, position: Number(position) },
     })),
 })

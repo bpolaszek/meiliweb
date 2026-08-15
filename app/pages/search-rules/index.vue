@@ -29,24 +29,16 @@
 
     <template v-else>
       <section class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="relative flex-1">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Icon name="heroicons:magnifying-glass-20-solid" class="size-5 text-gray-400" />
-          </div>
-          <input
-            v-model="query"
-            type="search"
-            :placeholder="t('placeholders.search')"
-            autocapitalize="off"
-            autocomplete="off"
-            spellcheck="false"
-            class="form-input w-full pl-10" />
-        </div>
-        <select v-model="activeFilter" class="form-select sm:w-56">
-          <option value="all">{{ t('filters.all') }}</option>
-          <option value="active">{{ t('filters.active') }}</option>
-          <option value="inactive">{{ t('filters.inactive') }}</option>
-        </select>
+        <UInput
+          v-model="query"
+          type="search"
+          icon="heroicons:magnifying-glass-20-solid"
+          :placeholder="t('placeholders.search')"
+          autocapitalize="off"
+          autocomplete="off"
+          spellcheck="false"
+          class="flex-1" />
+        <USelect v-model="activeFilter" :items="activeFilterItems" class="sm:w-56" />
       </section>
 
       <template v-if="rules.length">
@@ -192,6 +184,12 @@ if (versionSupported) {
   }
 }
 const available = versionSupported && featureEnabled
+
+const activeFilterItems = computed(() => [
+  { label: t('filters.all'), value: 'all' },
+  { label: t('filters.active'), value: 'active' },
+  { label: t('filters.inactive'), value: 'inactive' },
+])
 
 const self = reactive({
   rules: [] as SearchRule[],
