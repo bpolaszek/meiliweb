@@ -8,7 +8,7 @@
     <div class="grid grid-cols-12 gap-4">
       <menu class="col-span-3 mb-12 space-y-3">
         <li
-          v-for="{ href, text, current } of navigation"
+          v-for="{ href, text, current } of visibleNavigation"
           class="block w-full rounded-lg shadow-md"
           :class="current ? 'bg-primary-600 text-white' : 'bg-gray-50 hover:bg-gray-100'">
           <NuxtLink :to="href" class="block size-full px-2 py-2.5 text-sm">
@@ -27,19 +27,23 @@
 import { NuxtLink, NuxtPage } from '#components'
 import { onMounted } from 'vue'
 import { useMeiliClient } from '~/composables'
-import { tryOrThrow } from '~/utils'
+import { useChatAvailability } from '~/stores'
+import { safeToRefs, tryOrThrow } from '~/utils'
 import humanizeString from 'humanize-string'
 
 const { t } = useI18n()
 const route = useRoute()
 const indexUid = route.params.indexUid
 const meili = useMeiliClient()
+const { available: chatAvailable } = safeToRefs(useChatAvailability())
 const index = await tryOrThrow(() => meili.getIndex(indexUid as string))
 
 type NavigationItem = {
   href: string
   text: string
   current: boolean
+  /** Left out when the setting the entry edits is unavailable on this instance. */
+  visible?: boolean
 }
 
 const navigation: Array<NavigationItem> = reactive([
@@ -114,6 +118,12 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.embedders'),
   },
   {
+    href: `/indexes/${index.uid}/settings/chat`,
+    current: computed(() => 'indexes-indexUid-settings-chat' === route.name),
+    visible: computed(() => chatAvailable.value),
+    text: t('menu.chat'),
+  },
+  {
     href: `/indexes/${index.uid}/settings/foreign-keys`,
     current: computed(() => 'indexes-indexUid-settings-foreign-keys' === route.name),
     text: t('menu.foreignKeys'),
@@ -124,6 +134,8 @@ const navigation: Array<NavigationItem> = reactive([
     text: t('menu.localSettings'),
   },
 ])
+
+const visibleNavigation = computed(() => navigation.filter(({ visible }) => visible ?? true))
 
 onMounted(() => {
   if ('indexes-indexUid-settings' === route.name) {
@@ -152,6 +164,7 @@ en:
     separatorTokens: Separator Tokens
     nonSeparatorTokens: Non-Separator Tokens
     embedders: Embedders
+    chat: Chat
     foreignKeys: Foreign Keys
     localSettings: Local settings
   actions:
