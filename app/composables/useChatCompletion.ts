@@ -166,7 +166,14 @@ export const useChatCompletion = (workspace: string) => {
             continue
           }
           try {
-            applyDelta(turn, JSON.parse(data)?.choices?.[0]?.delta ?? {}, toolArguments)
+            const frame = JSON.parse(data)
+            // The provider's own failures (invalid key, quota, unknown model) reach us as an
+            // SSE frame on an otherwise 200 response, so they have to be surfaced explicitly.
+            if ('error' === frame?.type) {
+              self.error = frame.error?.message ?? data
+              continue
+            }
+            applyDelta(turn, frame?.choices?.[0]?.delta ?? {}, toolArguments)
           } catch {
             // A malformed frame must not tear down an otherwise healthy answer.
           }
@@ -181,6 +188,11 @@ export const useChatCompletion = (workspace: string) => {
       self.streaming = false
       controller = null
       turn.progress = null
+      // A turn that never received anything (provider error, stopped straight away) would
+      // otherwise linger as an empty bubble.
+      if (!turn.content && !turn.sources.length) {
+        self.turns.splice(self.turns.indexOf(turn), 1)
+      }
     }
   }
 
