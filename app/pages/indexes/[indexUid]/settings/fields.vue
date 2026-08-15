@@ -18,24 +18,13 @@
       </Alert>
 
       <div class="flex flex-wrap items-end gap-3">
-        <UniqueId v-slot="{ id }" as="div" class="min-w-56 flex-1 space-y-1 *:block">
-          <Label :for="id">{{ t('filters.pattern') }}</Label>
-          <input
-            :id
-            v-model="self.pattern"
-            type="text"
-            class="form-input w-full text-sm"
-            :placeholder="t('filters.patternPlaceholder')" />
-        </UniqueId>
+        <UFormField :label="t('filters.pattern')" class="min-w-56 flex-1">
+          <UInput v-model="self.pattern" :placeholder="t('filters.patternPlaceholder')" class="w-full" />
+        </UFormField>
 
-        <UniqueId v-for="key in booleanFilterKeys" :key="key" v-slot="{ id }" as="div" class="space-y-1 *:block">
-          <Label :for="id">{{ t(`filters.labels.${key}`) }}</Label>
-          <select :id v-model="self.filters[key]" class="form-input text-sm">
-            <option value="">{{ t('filters.any') }}</option>
-            <option value="true">{{ t('filters.yes') }}</option>
-            <option value="false">{{ t('filters.no') }}</option>
-          </select>
-        </UniqueId>
+        <UFormField v-for="key in booleanFilterKeys" :key="key" :label="t(`filters.labels.${key}`)">
+          <USelect v-model="self.filters[key]" :items="triStateItems" class="w-32" />
+        </UFormField>
       </div>
 
       <Table
@@ -134,8 +123,6 @@ import Alert from '~/components/layout/Alert.vue'
 import Badge from '~/components/layout/Badge.vue'
 import Table from '~/components/layout/tables/Table.vue'
 import PageSize from '~/components/layout/pagination/PageSize.vue'
-import UniqueId from '~/components/UniqueId.vue'
-import Label from '~/components/layout/forms/Label.vue'
 import { tryOrThrow } from '~/utils'
 
 type Props = {
@@ -154,8 +141,17 @@ const available = computed(() => satisfiesVersion(FIELDS_MIN_VERSION))
 
 const booleanFilterKeys = ['displayed', 'searchable', 'sortable', 'distinct', 'rankingRule', 'filterable'] as const
 type BooleanFilterKey = (typeof booleanFilterKeys)[number]
-type TriState = '' | 'true' | 'false'
-const toBool = (value: TriState): boolean | undefined => ('' === value ? undefined : 'true' === value)
+
+/** `USelect` reserves the empty string for "no selection", so "any" needs its own sentinel. */
+const ANY = 'any'
+type TriState = typeof ANY | 'true' | 'false'
+const toBool = (value: TriState): boolean | undefined => (ANY === value ? undefined : 'true' === value)
+
+const triStateItems = computed(() => [
+  { label: t('filters.any'), value: ANY },
+  { label: t('filters.yes'), value: 'true' },
+  { label: t('filters.no'), value: 'false' },
+])
 
 const itemsPerPage = ref(20)
 const { offset, totalItems, currentPage, lastPage } = usePagination(itemsPerPage)
@@ -163,7 +159,7 @@ const { offset, totalItems, currentPage, lastPage } = usePagination(itemsPerPage
 const self = reactive({
   error: null as string | null,
   pattern: '',
-  filters: Object.fromEntries(booleanFilterKeys.map((key) => [key, '' as TriState])) as Record<
+  filters: Object.fromEntries(booleanFilterKeys.map((key) => [key, ANY as TriState])) as Record<
     BooleanFilterKey,
     TriState
   >,
