@@ -17,14 +17,67 @@
         {{ self.error }}
       </Alert>
 
-      <div class="flex flex-wrap items-end gap-3">
-        <UFormField :label="t('filters.pattern')" class="min-w-56 flex-1">
-          <UInput v-model="self.pattern" :placeholder="t('filters.patternPlaceholder')" class="w-full" />
-        </UFormField>
+      <div class="flex flex-wrap items-center gap-3">
+        <UInput
+          v-model="self.pattern"
+          icon="i-lucide-search"
+          :placeholder="t('filters.patternPlaceholder')"
+          class="min-w-56 flex-1" />
 
-        <UFormField v-for="key in booleanFilterKeys" :key="key" :label="t(`filters.labels.${key}`)">
-          <USelect v-model="self.filters[key]" :items="triStateItems" class="w-32" />
-        </UFormField>
+        <UPopover>
+          <UChip v-if="activeBooleanFilterKeys.length > 0" :text="activeBooleanFilterKeys.length" size="sm">
+            <UButton
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-sliders-horizontal"
+              :label="t('filters.button')" />
+          </UChip>
+          <UButton
+            v-else
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-sliders-horizontal"
+            :label="t('filters.button')" />
+
+          <template #content>
+            <div class="w-72 space-y-3 p-4">
+              <div v-for="key in booleanFilterKeys" :key="key" class="flex items-center justify-between gap-3">
+                <span class="text-sm">{{ t(`filters.labels.${key}`) }}</span>
+                <UFieldGroup size="xs">
+                  <UButton
+                    v-for="option in triStateItems"
+                    :key="option.value"
+                    :label="option.label"
+                    :color="option.value === self.filters[key] ? 'primary' : 'neutral'"
+                    :variant="option.value === self.filters[key] ? 'solid' : 'outline'"
+                    @click="self.filters[key] = option.value" />
+                </UFieldGroup>
+              </div>
+
+              <UButton
+                v-if="activeBooleanFilterKeys.length > 0"
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                :label="t('filters.reset')"
+                class="w-full justify-center"
+                @click="resetBooleanFilters" />
+            </div>
+          </template>
+        </UPopover>
+      </div>
+
+      <div v-if="activeBooleanFilterKeys.length > 0" class="flex flex-wrap items-center gap-2">
+        <UBadge
+          v-for="key in activeBooleanFilterKeys"
+          :key="key"
+          color="neutral"
+          variant="subtle"
+          class="cursor-pointer gap-1"
+          @click="self.filters[key] = ANY">
+          {{ t(`filters.labels.${key}`) }}: {{ 'true' === self.filters[key] ? t('filters.yes') : t('filters.no') }}
+          <Icon name="mdi:close" class="size-3" />
+        </UBadge>
       </div>
 
       <Table
@@ -171,6 +224,11 @@ const self = reactive({
   lastPage,
 })
 
+const activeBooleanFilterKeys = computed(() => booleanFilterKeys.filter((key) => ANY !== self.filters[key]))
+const resetBooleanFilters = () => {
+  for (const key of booleanFilterKeys) self.filters[key] = ANY
+}
+
 const buildFilter = (): FieldsFilter | undefined => {
   const booleanFilters: Partial<Record<BooleanFilterKey, boolean>> = {}
   for (const key of booleanFilterKeys) {
@@ -230,8 +288,9 @@ en:
     title: Field details are not available
     text: 'Listing field details requires Meilisearch {version}. This instance runs an older version.'
   filters:
-    pattern: Attribute / Pattern
     patternPlaceholder: "e.g. genre or price.*"
+    button: Filters
+    reset: Reset filters
     any: Any
     yes: 'Yes'
     no: 'No'
