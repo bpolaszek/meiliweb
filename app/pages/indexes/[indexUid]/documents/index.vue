@@ -55,6 +55,11 @@
         v-model:show-ranking-score-details="showRankingScoreDetails"
         v-model:show-performance-details="showPerformanceDetails" />
 
+      <PersonalizeSearchControl
+        v-if="personalizeAvailable"
+        v-model:enabled="personalizeEnabled"
+        v-model:user-context="personalizeUserContext" />
+
       <button v-tippy="t('actions.documentView')" @click="viewMode = 'documents'">
         <Icon
           name="fa-solid:id-card"
@@ -132,8 +137,9 @@ import Button from '~/components/layout/forms/Button.vue'
 import DocumentsAsMap from '~/components/documents/DocumentsAsMap.vue'
 import HybridSearchControl from '~/components/documents/HybridSearchControl.vue'
 import DebugSearchControl from '~/components/documents/DebugSearchControl.vue'
+import PersonalizeSearchControl from '~/components/documents/PersonalizeSearchControl.vue'
 import { reactiveComputed } from '@vueuse/core'
-import { useVersion } from '~/stores'
+import { TOAST_FAILURE, useToasts, useVersion } from '~/stores'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -141,6 +147,11 @@ const indexUid = route.params.indexUid
 const meili = useMeiliClient()
 const tenant = useMultiTenancy()
 const { satisfiesVersion } = useVersion()
+const { createToast } = useToasts()
+// Search personalization requires Meilisearch >= 1.25. Unlike hybrid search's embedders,
+// there's no capability endpoint to probe whether the instance's Cohere key is actually
+// configured — that can only be discovered by a failing search, handled below.
+const personalizeAvailable = computed(() => satisfiesVersion('>=1.25.0'))
 const searchClient = reactiveComputed(() => (tenant.tenantToken ? useMeiliClient(tenant.tenantToken as string) : meili))
 const { formatDate } = useDateFormatter()
 const index = await tryOrThrow(() => meili.getIndex(indexUid as string))
@@ -167,6 +178,9 @@ const {
   showRankingScore,
   showRankingScoreDetails,
   showPerformanceDetails,
+  personalizeEnabled,
+  personalizeUserContext,
+  resetPersonalize,
 } = useIndexLocalSettings(index.uid)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
 const searchTerms = ref('')
@@ -214,6 +228,11 @@ const searchParams = reactive({
   // Guarded here too (not just hidden in DebugSearchControl's UI) so a value persisted while
   // connected to a newer instance can't leak into a request against an older one.
   showPerformanceDetails: computed(() => showPerformanceDetails.value && satisfiesVersion('>=1.35.0')),
+  personalize: computed(() =>
+    personalizeAvailable.value && personalizeEnabled.value && personalizeUserContext.value.trim()
+      ? { userContext: personalizeUserContext.value }
+      : undefined,
+  ),
 })
 const resultset = ref(await tryOrThrow(() => searchClient.index(index.uid).search(null, searchParams)))
 
@@ -243,9 +262,23 @@ watch(searchTerms, () => (searchParams.offset = 0))
 watch(hybridEnabled, () => (searchParams.offset = 0))
 watch(hybridEmbedder, () => (searchParams.offset = 0))
 watch(hybridSemanticRatio, () => (searchParams.offset = 0))
+watch(personalizeEnabled, () => (searchParams.offset = 0))
+watch(personalizeUserContext, () => (searchParams.offset = 0))
 watch(
   searchParams,
-  async (searchParams) => (self.resultset = await searchClient.index(index.uid).search(null, searchParams)),
+  async (searchParams) => {
+    try {
+      self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+    } catch (error) {
+      // There's no way to know ahead of time whether the instance's Cohere key is configured
+      // (see personalizeAvailable above) — a rejected personalized search is the only signal.
+      // Fall back to a plain search rather than leaving the page stuck on stale results.
+      if (!personalizeEnabled.value) throw error
+      resetPersonalize()
+      createToast({ ...TOAST_FAILURE(t), title: t('errors.personalizeFailed') })
+      self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+    }
+  },
   { deep: true },
 )
 watch(resultset, () => (self.totalItems = self.resultset.estimatedTotalHits), {
@@ -274,4 +307,6 @@ en:
     filters: Sort & Filter
     multitenancyEnabled: Tenant preview
     search: Search...
+  errors:
+    personalizeFailed: Search personalization isn't configured on this instance. It has been turned off.
 </i18n>

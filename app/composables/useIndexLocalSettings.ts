@@ -17,6 +17,8 @@ type UseIndexLocalSettings = {
   showRankingScore: boolean
   showRankingScoreDetails: boolean
   showPerformanceDetails: boolean
+  personalizeEnabled: boolean
+  personalizeUserContext: string
 }
 
 const DEFAULT_ITEMS_PER_PAGE = 20
@@ -31,6 +33,10 @@ const DEFAULT_HYBRID_SEMANTIC_RATIO = 0.5
 const DEFAULT_SHOW_RANKING_SCORE = false
 const DEFAULT_SHOW_RANKING_SCORE_DETAILS = false
 const DEFAULT_SHOW_PERFORMANCE_DETAILS = false
+// Personalization is opt-in for the same reason hybrid search is: it must never silently
+// change results for users who haven't asked for it.
+const DEFAULT_PERSONALIZE_ENABLED = false
+const DEFAULT_PERSONALIZE_USER_CONTEXT = ''
 
 export const useIndexLocalSettings = (indexUid: string) => {
   const { credentials } = useCredentials()
@@ -49,6 +55,8 @@ export const useIndexLocalSettings = (indexUid: string) => {
     showRankingScore: DEFAULT_SHOW_RANKING_SCORE,
     showRankingScoreDetails: DEFAULT_SHOW_RANKING_SCORE_DETAILS,
     showPerformanceDetails: DEFAULT_SHOW_PERFORMANCE_DETAILS,
+    personalizeEnabled: DEFAULT_PERSONALIZE_ENABLED,
+    personalizeUserContext: DEFAULT_PERSONALIZE_USER_CONTEXT,
   })
 
   const self = reactive({ storage })
@@ -114,6 +122,20 @@ export const useIndexLocalSettings = (indexUid: string) => {
       self.storage.hybridEnabled = DEFAULT_HYBRID_ENABLED
       self.storage.hybridEmbedder = DEFAULT_HYBRID_EMBEDDER
       self.storage.hybridSemanticRatio = DEFAULT_HYBRID_SEMANTIC_RATIO
+    },
+    personalizeEnabled: computed({
+      get: () => self.storage.personalizeEnabled ?? DEFAULT_PERSONALIZE_ENABLED,
+      set: (value: boolean) => (self.storage.personalizeEnabled = value),
+    }),
+    personalizeUserContext: computed({
+      get: () => self.storage.personalizeUserContext ?? DEFAULT_PERSONALIZE_USER_CONTEXT,
+      set: (value: string) => (self.storage.personalizeUserContext = value),
+    }),
+    // Call this when the server rejects a personalized search (e.g. the instance has no
+    // Cohere key configured) — resets both fields so the broken state can't be retried as-is.
+    resetPersonalize: () => {
+      self.storage.personalizeEnabled = DEFAULT_PERSONALIZE_ENABLED
+      self.storage.personalizeUserContext = DEFAULT_PERSONALIZE_USER_CONTEXT
     },
   }
 }
