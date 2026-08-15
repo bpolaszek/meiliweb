@@ -18,7 +18,7 @@
         class="flex cursor-move items-center justify-between gap-2 rounded-md border border-gray-100 px-2 py-1.5 text-sm text-gray-800 shadow-xs">
         <dl class="flex-1 overflow-hidden">
           <template v-if="isBuiltIn(rule)">
-            <dt class="font-medium capitalize">{{ rule }}</dt>
+            <dt class="font-medium capitalize">{{ formatRuleLabel(rule) }}</dt>
             <dd class="text-xs text-gray-600 italic">{{ t(`descriptions.${rule}`) }}</dd>
           </template>
           <template v-else>
@@ -107,10 +107,14 @@ type Props = {
 }
 const props = defineProps<Props>()
 
-const BUILT_IN_RULES = ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness']
+const BUILT_IN_RULES = ['words', 'typo', 'proximity', 'attribute', 'attributeRank', 'wordPosition', 'sort', 'exactness']
 
 function isBuiltIn(rule: string): boolean {
   return BUILT_IN_RULES.includes(rule)
+}
+
+function formatRuleLabel(rule: string): string {
+  return rule.replace(/([a-z])([A-Z])/g, '$1 $2')
 }
 
 function parseCustomRule(rule: string): { direction: 'asc' | 'desc'; field: string } | null {
@@ -252,6 +256,8 @@ en:
     typo: Sorts results by increasing number of typos.
     proximity: Sorts results by increasing distance between matched query terms.
     attribute: Sorts results based on the attribute ranking order.
+    attributeRank: Sorts results based on which searchable attribute the query terms matched in.
+    wordPosition: Sorts results based on the position of the matched query terms within the attribute.
     sort: Sorts results based on parameters decided at query time.
     exactness: Sorts results based on the similarity of the matched words with the query words.
     custom: Custom ranking rule — sorts results by the value of this attribute.
