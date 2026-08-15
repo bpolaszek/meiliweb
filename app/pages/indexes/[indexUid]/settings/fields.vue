@@ -93,55 +93,40 @@
           t('columns.localized'),
         ]">
         <template #default="{ item }">
-          <td class="font-mono text-xs font-medium">{{ item.name }}</td>
-          <td class="text-center">
+          <td class="align-top font-mono text-xs font-medium">{{ item.name }}</td>
+          <td class="text-center align-top">
             <Icon v-if="item.displayed?.enabled" name="mdi:check" class="text-green-600" />
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
-          <td class="text-center">
+          <td class="text-center align-top">
             <Icon v-if="item.searchable?.enabled" name="mdi:check" class="text-green-600" />
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
-          <td class="text-center">
+          <td class="text-center align-top">
             <Icon v-if="item.sortable?.enabled" name="mdi:check" class="text-green-600" />
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
-          <td class="text-center">
+          <td class="text-center align-top">
             <Icon v-if="item.distinct?.enabled" name="mdi:check" class="text-green-600" />
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
-          <td class="text-center">
-            <span v-if="item.rankingRule?.enabled" class="inline-flex items-center gap-1">
-              <Icon name="mdi:check" class="text-green-600" />
-              <Badge v-if="item.rankingRule.order" theme="neutral" class="text-xs">
-                {{ item.rankingRule.order }}
-              </Badge>
+          <td class="align-top">
+            <span v-if="item.rankingRule?.enabled" class="inline-flex items-center gap-1.5">
+              <Icon name="mdi:check" class="shrink-0 text-green-600" />
+              <span v-if="item.rankingRule.order" class="text-xs text-gray-500">{{ item.rankingRule.order }}</span>
             </span>
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
-          <td>
-            <span v-if="item.filterable?.enabled" class="inline-flex flex-wrap items-center gap-1">
-              <Icon name="mdi:check" class="text-green-600" />
-              <Badge v-if="item.filterable.sortBy" theme="neutral" class="text-xs">
-                {{ t('badges.sortBy', { value: item.filterable.sortBy }) }}
-              </Badge>
-              <Badge v-if="item.filterable.facetSearch" theme="neutral" class="text-xs">
-                {{ t('badges.facetSearch') }}
-              </Badge>
-              <Badge v-if="item.filterable.equality" theme="neutral" class="text-xs">
-                {{ t('badges.equality') }}
-              </Badge>
-              <Badge v-if="item.filterable.comparison" theme="neutral" class="text-xs">
-                {{ t('badges.comparison') }}
-              </Badge>
+          <td class="align-top">
+            <span v-if="item.filterable?.enabled" class="inline-flex items-start gap-1.5">
+              <Icon name="mdi:check" class="mt-0.5 shrink-0 text-green-600" />
+              <span class="text-xs text-gray-500">{{ filterableDetails(item.filterable) }}</span>
             </span>
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
-          <td>
-            <span v-if="item.localized?.locales?.length" class="inline-flex flex-wrap gap-1">
-              <Badge v-for="locale in item.localized.locales" :key="locale" theme="neutral" class="text-xs">
-                {{ locale }}
-              </Badge>
+          <td class="align-top">
+            <span v-if="item.localized?.locales?.length" class="text-xs text-gray-500">
+              {{ item.localized.locales.join(', ') }}
             </span>
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
@@ -169,11 +154,10 @@
 
 <script setup lang="ts">
 import { watchDebounced } from '@vueuse/core'
-import type { FieldsFilter, FieldsResults } from 'meilisearch'
+import type { FieldsFilter, FieldsResults, IndexField } from 'meilisearch'
 import { usePagination } from '~/composables'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Alert from '~/components/layout/Alert.vue'
-import Badge from '~/components/layout/Badge.vue'
 import Table from '~/components/layout/tables/Table.vue'
 import PageSize from '~/components/layout/pagination/PageSize.vue'
 import { tryOrThrow } from '~/utils'
@@ -228,6 +212,16 @@ const activeBooleanFilterKeys = computed(() => booleanFilterKeys.filter((key) =>
 const resetBooleanFilters = () => {
   for (const key of booleanFilterKeys) self.filters[key] = ANY
 }
+
+const filterableDetails = (filterable: NonNullable<IndexField['filterable']>) =>
+  [
+    filterable.sortBy ? t('badges.sortBy', { value: filterable.sortBy }) : null,
+    filterable.facetSearch ? t('badges.facetSearch') : null,
+    filterable.equality ? t('badges.equality') : null,
+    filterable.comparison ? t('badges.comparison') : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
 const buildFilter = (): FieldsFilter | undefined => {
   const booleanFilters: Partial<Record<BooleanFilterKey, boolean>> = {}
