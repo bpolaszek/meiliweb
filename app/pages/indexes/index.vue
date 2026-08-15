@@ -163,6 +163,10 @@ const swapIndex = async (indexUid: string) => {
   }
 }
 
+const { compactIndex } = useIndexOperations()
+
+const { satisfiesVersion } = useVersion()
+
 const indexMenuItems = (item: Index): DropdownMenuItem[] => [
   {
     label: t('actions.settings'),
@@ -184,6 +188,15 @@ const indexMenuItems = (item: Index): DropdownMenuItem[] => [
     icon: 'heroicons:arrows-right-left',
     onSelect: () => swapIndex(item.uid),
   },
+  ...(satisfiesVersion('>=1.23.0')
+    ? [
+        {
+          label: t('actions.compact'),
+          icon: 'heroicons:sparkles',
+          onSelect: () => compactIndex(item.uid),
+        },
+      ]
+    : []),
 ]
 
 const { indexes } = toRefs(self)
@@ -218,5 +231,6 @@ en:
     duplicate: Duplicate
     rename: Rename
     swap: Swap with…
+    compact: Compact
     openMenu: Open menu
 </i18n>

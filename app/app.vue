@@ -58,11 +58,16 @@ en:
       duplicateIndex: Copying {indexUid} to {newIndexUid}
       renameIndex: Renaming {indexUid} to {newIndexUid}
       swapIndexes: Swapping {indexUid} with {targetIndexUid}
+      compactIndex: Compacting {indexUid}
     texts:
       pleaseWait: Please wait...
       done: Done.
       canceledTask: Task was canceled.
       failedTask: Task failed.
+
+  confirmations:
+    compactIndex:
+      text: Compact this index? It may take a while depending on its size, and search/indexing operations on it will be slower during compaction.
 
   buttons:
     reset: Reset
