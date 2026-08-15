@@ -27,54 +27,43 @@
         <p class="text-lg font-light">{{ t('empty') }}</p>
       </div>
 
-      <ul v-else class="grow space-y-4 overflow-y-auto">
-        <li v-for="(turn, index) of turns" :key="index" class="flex flex-col gap-2">
-          <div :class="['user' === turn.role ? 'self-end bg-primary-600 text-white' : 'bg-gray-100', BUBBLE_CLASSES]">
-            <p class="whitespace-pre-wrap">{{ turn.content }}</p>
-            <p v-if="turn.progress" class="flex items-center gap-2 text-xs text-gray-500 italic">
-              <span class="size-2 animate-pulse rounded-full bg-primary-600" />
-              {{ progressLabel(turn.progress) }}
-            </p>
-            <span v-else-if="'assistant' === turn.role && streaming && !turn.content" class="text-xs text-gray-500">
-              {{ t('thinking') }}
-            </span>
-          </div>
-          <ChatSources v-if="turn.sources.length" :documents="turn.sources" class="max-w-2xl" />
-        </li>
-      </ul>
+      <UChatMessages
+        v-else
+        :messages="messages"
+        :status="status"
+        should-auto-scroll
+        class="min-h-0 grow"
+        :assistant="{ side: 'left', variant: 'soft' }"
+        :user="{ side: 'right', variant: 'solid', color: 'primary' }">
+        <template #content="{ message }">
+          <p class="whitespace-pre-wrap">{{ contentOf(message) }}</p>
+          <p v-if="progressOf(message)" class="flex items-center gap-2 text-xs text-gray-500 italic">
+            <span class="size-2 animate-pulse rounded-full bg-primary-600" />
+            {{ progressLabel(progressOf(message)!) }}
+          </p>
+          <span v-else-if="isThinking(message)" class="text-xs text-gray-500">{{ t('thinking') }}</span>
+          <ChatSources v-if="sourcesOf(message).length" :documents="sourcesOf(message)" class="mt-2 max-w-2xl" />
+        </template>
+      </UChatMessages>
 
-      <form class="flex flex-col gap-2 border-t border-gray-200 pt-4" @submit.prevent="submit()">
-        <div class="flex items-end gap-2">
-          <textarea
-            v-model="prompt"
-            v-focus
-            rows="2"
-            :placeholder="t('placeholders.prompt')"
-            class="form-input grow resize-none text-sm"
-            @keydown.enter.exact.prevent="submit()" />
-          <Button v-if="streaming" type="button" theme="danger" icon="mdi:stop" @click="stop()">
-            {{ t('actions.stop') }}
-          </Button>
-          <Button v-else type="submit" theme="primary" icon="heroicons:paper-airplane" :disabled="!prompt.trim()">
-            {{ t('actions.send') }}
-          </Button>
-        </div>
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
-          <label class="flex items-center gap-2 text-xs text-gray-500">
-            {{ t('labels.model') }}
-            <input v-model="model" class="form-input w-56 text-xs" :placeholder="DEFAULT_MODEL" />
-          </label>
-          <label v-tippy="t('hints.accessKey')" class="flex items-center gap-2 text-xs text-gray-500">
-            {{ t('labels.accessKey') }}
-            <input
-              v-model="accessKey"
-              type="password"
-              autocomplete="off"
-              class="form-input w-56 text-xs"
-              :placeholder="t('placeholders.accessKey')" />
-          </label>
-        </div>
-      </form>
+      <UChatPrompt v-model="prompt" v-focus :status :maxrows="4" @submit="submit()">
+        <UChatPromptSubmit @stop="stop()" />
+      </UChatPrompt>
+
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+        <UFormField :label="t('labels.model')">
+          <UInput v-model="model" size="xs" class="w-56" :placeholder="DEFAULT_MODEL" />
+        </UFormField>
+        <UFormField v-tippy="t('hints.accessKey')" :label="t('labels.accessKey')">
+          <UInput
+            v-model="accessKey"
+            type="password"
+            autocomplete="off"
+            size="xs"
+            class="w-56"
+            :placeholder="t('placeholders.accessKey')" />
+        </UFormField>
+      </div>
     </div>
   </Layout>
 </template>
@@ -87,11 +76,9 @@ import ChatUnavailableAlert from '~/components/chat/ChatUnavailableAlert.vue'
 import Alert from '~/components/layout/Alert.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import { useChatCompletion, type ChatProgress } from '~/composables'
+import { useChatCompletion, type ChatProgress, type ChatTurn } from '~/composables'
 import { useCredentials, useChatAvailability, type CredentialsRecord } from '~/stores'
 import { safeToRefs } from '~/utils'
-
-const BUBBLE_CLASSES = 'flex max-w-2xl flex-col gap-2 rounded-lg px-4 py-3 text-sm'
 
 /** Meilisearch forwards `model` to the provider as-is, so it has to come from the user. */
 const DEFAULT_MODEL = 'gpt-4o-mini'
@@ -114,6 +101,24 @@ const accessKey = useLocalStorage(`${preference}-access-key`, '')
 
 const { turns, streaming, error, send, stop, clear } = useChatCompletion(workspace, accessKey)
 const prompt = ref('')
+
+// `UChatMessages`/`UChatPrompt` speak the AI SDK message shape; the index doubles as the id
+// since turns are never reordered, only appended to or replaced wholesale by `clear()`.
+const messages = computed(() =>
+  turns.value.map((turn, index) => ({
+    id: String(index),
+    role: turn.role,
+    parts: [{ type: 'text' as const, text: turn.content }],
+  })),
+)
+const status = computed(() => (streaming.value ? 'streaming' : 'ready'))
+
+const turnOf = (message: { id: string }): ChatTurn => turns.value[Number(message.id)]
+const contentOf = (message: { id: string }) => turnOf(message).content
+const sourcesOf = (message: { id: string }) => turnOf(message).sources
+const progressOf = (message: { id: string }) => turnOf(message).progress
+const isThinking = (message: { id: string }) =>
+  streaming.value && 'assistant' === message.role && !turnOf(message).content && !turnOf(message).progress
 
 const submit = async () => {
   const value = prompt.value
@@ -154,7 +159,6 @@ en:
   hints:
     accessKey: Meilisearch key the conversation runs under. A scoped key or a tenant token restricts the indexes and documents the LLM can search.
   placeholders:
-    prompt: Ask a question... (Enter to send, Shift+Enter for a new line)
     accessKey: Defaults to your instance key
   actions:
     backToList: Back to workspaces

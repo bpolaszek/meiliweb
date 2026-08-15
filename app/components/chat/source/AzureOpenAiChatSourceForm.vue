@@ -1,23 +1,18 @@
 <template>
-  <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-    <Label :for="id">{{ t('labels.deploymentId') }}</Label>
-    <input :id v-model="settings!.deploymentId" autocomplete="off" type="text" class="form-input w-full text-sm" />
-  </UniqueId>
+  <UFormField :label="t('labels.deploymentId')">
+    <UInput v-model="settings!.deploymentId" autocomplete="off" class="w-full" />
+  </UFormField>
 
-  <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-    <Label :for="id">{{ t('labels.apiVersion') }}</Label>
-    <input
-      :id
+  <UFormField :label="t('labels.apiVersion')">
+    <UInput
       v-model="settings!.apiVersion"
       autocomplete="off"
-      type="text"
       :placeholder="t('placeholders.apiVersion')"
-      class="form-input w-full text-sm" />
-  </UniqueId>
+      class="w-full" />
+  </UFormField>
 </template>
 
 <script setup lang="ts">
-import Label from '~/components/layout/forms/Label.vue'
 import type { ChatWorkspaceSettings } from '~/composables'
 
 const settings = defineModel<ChatWorkspaceSettings>()

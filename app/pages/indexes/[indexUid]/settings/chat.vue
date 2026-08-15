@@ -17,29 +17,21 @@
         {{ error }}
       </Alert>
 
-      <UniqueId v-slot="{ id }" as="div" class="space-y-1 *:block">
-        <Label :for="id">{{ t('labels.description') }}</Label>
-        <Textarea :id v-model="self.settings.description" class="w-full" :rows="3" />
-        <span class="text-sm font-light text-gray-500">{{ t('hints.description') }}</span>
-      </UniqueId>
+      <UFormField :label="t('labels.description')" :help="t('hints.description')">
+        <UTextarea v-model="self.settings.description" class="w-full" :rows="3" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="div" class="space-y-1 *:block">
-        <Label :for="id">{{ t('labels.documentTemplate') }}</Label>
-        <Textarea :id v-model="self.settings.documentTemplate" class="w-full font-mono text-xs" :rows="6" />
-        <span class="text-sm font-light text-gray-500">{{ t('hints.documentTemplate') }}</span>
-      </UniqueId>
+      <UFormField :label="t('labels.documentTemplate')" :help="t('hints.documentTemplate')">
+        <UTextarea v-model="self.settings.documentTemplate" class="w-full font-mono text-xs" :rows="6" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="div" class="space-y-1 *:block">
-        <Label :for="id">{{ t('labels.documentTemplateMaxBytes') }}</Label>
-        <input :id v-model="self.settings.documentTemplateMaxBytes" type="number" min="1" class="form-input w-40" />
-        <span class="text-sm font-light text-gray-500">{{ t('hints.documentTemplateMaxBytes') }}</span>
-      </UniqueId>
+      <UFormField :label="t('labels.documentTemplateMaxBytes')" :help="t('hints.documentTemplateMaxBytes')">
+        <UInput v-model="self.settings.documentTemplateMaxBytes" type="number" :min="1" class="w-40" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="div" class="space-y-1 *:block">
-        <Label :for="id">{{ t('labels.searchParameters') }}</Label>
-        <Textarea :id v-model="self.settings.searchParameters" class="w-full font-mono text-xs" :rows="8" />
-        <span class="text-sm font-light text-gray-500">{{ t('hints.searchParameters') }}</span>
-      </UniqueId>
+      <UFormField :label="t('labels.searchParameters')" :help="t('hints.searchParameters')">
+        <UTextarea v-model="self.settings.searchParameters" class="w-full font-mono text-xs" :rows="8" />
+      </UFormField>
 
       <footer class="flex justify-end">
         <Buttons>
@@ -55,13 +47,10 @@
 import { until } from '@vueuse/core'
 import type { ChatSettings } from 'meilisearch'
 import ChatUnavailableAlert from '~/components/chat/ChatUnavailableAlert.vue'
-import UniqueId from '~/components/UniqueId.vue'
 import Alert from '~/components/layout/Alert.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
-import Label from '~/components/layout/forms/Label.vue'
-import Textarea from '~/components/layout/forms/Textarea.vue'
 import { useFormSubmit, useTask } from '~/composables'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS, useChatAvailability, useToasts } from '~/stores'
 import { resettableRef, safeToRefs } from '~/utils'

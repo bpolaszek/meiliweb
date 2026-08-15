@@ -5,37 +5,28 @@
     </Alert>
 
     <section class="space-y-4">
-      <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label required :for="id">{{ t('labels.source') }}</Label>
-        <Select :id v-model="form.source" required class="w-full">
-          <option v-for="source of CHAT_SOURCES" :key="source" :value="source">{{ sourceLabels[source] }}</option>
-        </Select>
-      </UniqueId>
+      <UFormField :label="t('labels.source')" required>
+        <USelect v-model="form.source" :items="sourceItems" required class="w-full" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label :required="'vLlm' === form.source" :for="id">{{ t('labels.baseUrl') }}</Label>
-        <input
-          :id
+      <UFormField :label="t('labels.baseUrl')" :help="t('hints.baseUrl')" :required="'vLlm' === form.source">
+        <UInput
           v-model="form.baseUrl"
           :required="'vLlm' === form.source"
           autocomplete="off"
           type="url"
           :placeholder="t('placeholders.baseUrl')"
-          class="form-input w-full text-sm" />
-        <p class="text-sm font-light text-gray-500">{{ t('hints.baseUrl') }}</p>
-      </UniqueId>
+          class="w-full" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label :for="id">{{ t('labels.apiKey') }}</Label>
-        <input
-          :id
+      <UFormField :label="t('labels.apiKey')" :help="t('hints.apiKey')">
+        <UInput
           v-model="form.apiKey"
           autocomplete="off"
           type="password"
           :placeholder="t('placeholders.apiKey')"
-          class="form-input w-full text-sm" />
-        <p class="text-sm font-light text-gray-500">{{ t('hints.apiKey') }}</p>
-      </UniqueId>
+          class="w-full" />
+      </UFormField>
 
       <OpenAiChatSourceForm v-if="'openAi' === form.source" v-model="form" />
       <AzureOpenAiChatSourceForm v-if="'azureOpenAi' === form.source" v-model="form" />
@@ -47,30 +38,25 @@
         <p class="text-sm font-light text-gray-500">{{ t('hints.prompts') }}</p>
       </div>
 
-      <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label :for="id">{{ t('labels.prompts.system') }}</Label>
-        <Textarea :id v-model="form.prompts.system" class="w-full text-sm" :rows="6" />
-      </UniqueId>
+      <UFormField :label="t('labels.prompts.system')">
+        <UTextarea v-model="form.prompts.system" class="w-full" :rows="6" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label :for="id">{{ t('labels.prompts.searchDescription') }}</Label>
-        <Textarea :id v-model="form.prompts.searchDescription" class="w-full text-sm" :rows="3" />
-      </UniqueId>
+      <UFormField :label="t('labels.prompts.searchDescription')">
+        <UTextarea v-model="form.prompts.searchDescription" class="w-full" :rows="3" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label :for="id">{{ t('labels.prompts.searchQParam') }}</Label>
-        <Textarea :id v-model="form.prompts.searchQParam" class="w-full text-sm" :rows="2" />
-      </UniqueId>
+      <UFormField :label="t('labels.prompts.searchQParam')">
+        <UTextarea v-model="form.prompts.searchQParam" class="w-full" :rows="2" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label :for="id">{{ t('labels.prompts.searchFilterParam') }}</Label>
-        <Textarea :id v-model="form.prompts.searchFilterParam" class="w-full text-sm" :rows="2" />
-      </UniqueId>
+      <UFormField :label="t('labels.prompts.searchFilterParam')">
+        <UTextarea v-model="form.prompts.searchFilterParam" class="w-full" :rows="2" />
+      </UFormField>
 
-      <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label :for="id">{{ t('labels.prompts.searchIndexUidParam') }}</Label>
-        <Textarea :id v-model="form.prompts.searchIndexUidParam" class="w-full text-sm" :rows="2" />
-      </UniqueId>
+      <UFormField :label="t('labels.prompts.searchIndexUidParam')">
+        <UTextarea v-model="form.prompts.searchIndexUidParam" class="w-full" :rows="2" />
+      </UFormField>
     </section>
 
     <footer class="flex flex-col items-center justify-between gap-2 sm:flex-row">
@@ -86,15 +72,11 @@
 </template>
 
 <script setup lang="ts">
-import UniqueId from '~/components/UniqueId.vue'
 import AzureOpenAiChatSourceForm from '~/components/chat/source/AzureOpenAiChatSourceForm.vue'
 import OpenAiChatSourceForm from '~/components/chat/source/OpenAiChatSourceForm.vue'
 import Alert from '~/components/layout/Alert.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
-import Label from '~/components/layout/forms/Label.vue'
-import Select from '~/components/layout/forms/Select.vue'
-import Textarea from '~/components/layout/forms/Textarea.vue'
 import { CHAT_SOURCES, useChatWorkspaces, useFormSubmit, type ChatWorkspaceSettings } from '~/composables'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS, useConfirmationDialog, useToasts } from '~/stores'
 
@@ -118,6 +100,7 @@ const sourceLabels: Record<string, string> = {
   gemini: 'Gemini',
   vLlm: 'vLLM',
 }
+const sourceItems = CHAT_SOURCES.map((source) => ({ label: sourceLabels[source], value: source }))
 
 /**
  * The API key is never prefilled: Meilisearch redacts it when reading the settings back, so

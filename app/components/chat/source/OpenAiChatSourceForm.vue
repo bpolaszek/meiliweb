@@ -1,17 +1,14 @@
 <template>
-  <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-    <Label :for="id">{{ t('labels.orgId') }}</Label>
-    <input :id v-model="settings!.orgId" autocomplete="off" type="text" class="form-input w-full text-sm" />
-  </UniqueId>
+  <UFormField :label="t('labels.orgId')">
+    <UInput v-model="settings!.orgId" autocomplete="off" class="w-full" />
+  </UFormField>
 
-  <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-    <Label :for="id">{{ t('labels.projectId') }}</Label>
-    <input :id v-model="settings!.projectId" autocomplete="off" type="text" class="form-input w-full text-sm" />
-  </UniqueId>
+  <UFormField :label="t('labels.projectId')">
+    <UInput v-model="settings!.projectId" autocomplete="off" class="w-full" />
+  </UFormField>
 </template>
 
 <script setup lang="ts">
-import Label from '~/components/layout/forms/Label.vue'
 import type { ChatWorkspaceSettings } from '~/composables'
 
 const settings = defineModel<ChatWorkspaceSettings>()
