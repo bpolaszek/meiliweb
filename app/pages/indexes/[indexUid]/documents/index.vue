@@ -50,6 +50,11 @@
         v-model:semantic-ratio="hybridSemanticRatio"
         :embedders="embedderNames" />
 
+      <DebugSearchControl
+        v-model:show-ranking-score="showRankingScore"
+        v-model:show-ranking-score-details="showRankingScoreDetails"
+        v-model:show-performance-details="showPerformanceDetails" />
+
       <button v-tippy="t('actions.documentView')" @click="viewMode = 'documents'">
         <Icon
           name="fa-solid:id-card"
@@ -95,7 +100,7 @@
       :primary-key="primaryKey"
       :applied-filters="appliedFilters"
       :can-filter-geo-documents="canFilterGeoDocuments"
-      :fields="fields" />
+      :fields="displayFields" />
 
     <template #footer>
       <DocumentsFooter
@@ -106,7 +111,9 @@
         :previous-page="previousPage"
         :next-page="nextPage"
         :nb-total-items="resultset.estimatedTotalHits"
-        :processing-time-ms="resultset.processingTimeMs" />
+        :processing-time-ms="resultset.processingTimeMs"
+        :index-uid="index.uid"
+        :performance-details="resultset.performanceDetails" />
     </template>
   </Layout>
 </template>
@@ -124,13 +131,16 @@ import DocumentsAsTable from '~/components/documents/DocumentsAsTable.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentsAsMap from '~/components/documents/DocumentsAsMap.vue'
 import HybridSearchControl from '~/components/documents/HybridSearchControl.vue'
+import DebugSearchControl from '~/components/documents/DebugSearchControl.vue'
 import { reactiveComputed } from '@vueuse/core'
+import { useVersion } from '~/stores'
 
 const { t } = useI18n()
 const route = useRoute()
 const indexUid = route.params.indexUid
 const meili = useMeiliClient()
 const tenant = useMultiTenancy()
+const { satisfiesVersion } = useVersion()
 const searchClient = reactiveComputed(() => (tenant.tenantToken ? useMeiliClient(tenant.tenantToken as string) : meili))
 const { formatDate } = useDateFormatter()
 const index = await tryOrThrow(() => meili.getIndex(indexUid as string))
@@ -154,6 +164,9 @@ const {
   hybridEmbedder,
   hybridSemanticRatio,
   resetHybridSearch,
+  showRankingScore,
+  showRankingScoreDetails,
+  showPerformanceDetails,
 } = useIndexLocalSettings(index.uid)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
 const searchTerms = ref('')
@@ -196,9 +209,19 @@ const searchParams = reactive({
       ? { embedder: hybridEmbedder.value, semanticRatio: hybridSemanticRatio.value }
       : undefined,
   ),
+  showRankingScore,
+  showRankingScoreDetails,
+  // Guarded here too (not just hidden in DebugSearchControl's UI) so a value persisted while
+  // connected to a newer instance can't leak into a request against an older one.
+  showPerformanceDetails: computed(() => showPerformanceDetails.value && satisfiesVersion('>=1.35.0')),
 })
 const resultset = ref(await tryOrThrow(() => searchClient.index(index.uid).search(null, searchParams)))
 
+const displayFields = computed(() => [
+  ...fields.value,
+  ...(showRankingScore.value ? ['_rankingScore'] : []),
+  ...(showRankingScoreDetails.value ? ['_rankingScoreDetails'] : []),
+])
 const hasGeoDocuments = computed(() => Object.keys(stats.fieldDistribution).includes('_geo'))
 const canFilterGeoDocuments = computed(() => filterableAttributes.includes('_geo'))
 const self = reactive({
