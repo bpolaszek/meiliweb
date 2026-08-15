@@ -18,6 +18,15 @@
       </template>
     </USlideover>
 
+    <DocumentSlideOver
+      v-if="null !== openedDocumentId"
+      v-model:open="documentSlideOverOpen"
+      :index-uid="index.uid"
+      :primary-key="primaryKey"
+      :document-id="openedDocumentId"
+      @saved="refreshDocuments()"
+      @deleted="refreshDocuments()" />
+
     <template #actions>
       <div
         v-if="tenant.tenantToken"
@@ -124,7 +133,15 @@
 </template>
 
 <script setup lang="ts">
-import { useFields, useIndexLocalSettings, useMeiliClient, useMultiTenancy, usePagination } from '~/composables'
+import {
+  provideDocumentViewer,
+  useFields,
+  useIndexLocalSettings,
+  useMeiliClient,
+  useMultiTenancy,
+  usePagination,
+  type DocumentId,
+} from '~/composables'
 import { getFacetSearchableAttributePatterns, getFilterableAttributePatterns, tryOrThrow } from '~/utils'
 import { NuxtLink } from '#components'
 import FilterPanel from '~/components/documents/FilterPanel.vue'
@@ -255,6 +272,20 @@ const MainComponent = computed(() =>
     ['map', DocumentsAsMap],
   ]),
 )
+
+// Clicking a document id anywhere in the results (table cells, cards) opens the CRUD slideover.
+// It is loaded on demand: it pulls in vanilla-jsoneditor, which weighs more than this page does.
+const DocumentSlideOver = defineAsyncComponent(() => import('~/components/documents/DocumentSlideOver.vue'))
+const openedDocumentId = ref<DocumentId | null>(null)
+const documentSlideOverOpen = ref(false)
+provideDocumentViewer((documentId: DocumentId) => {
+  openedDocumentId.value = documentId
+  documentSlideOverOpen.value = true
+})
+const refreshDocuments = async () => {
+  self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+}
+
 watch(appliedSort, () => (searchParams.offset = 0))
 watch(appliedFilters, () => (searchParams.offset = 0))
 watch(itemsPerPage, () => (searchParams.offset = 0))

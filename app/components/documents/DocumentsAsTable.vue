@@ -6,6 +6,9 @@
           <a v-if="looksLikeAPictureUrl(documents[rowIndex][field])" :href="documents[rowIndex][field]" target="_blank">
             <img :src="documents[rowIndex][field]" :alt="documents[rowIndex][field]" class="max-h-48 rounded-lg" />
           </a>
+          <DocumentIdLink v-else-if="field === primaryKey" :document-id="documents[rowIndex][field]">
+            <ValueRenderer :index-uid="indexUid" :field="field" :value="documents[rowIndex][field]" :level="0" />
+          </DocumentIdLink>
           <ValueRenderer v-else :index-uid="indexUid" :field="field" :value="documents[rowIndex][field]" :level="0" />
         </td>
       </template>
@@ -17,11 +20,13 @@
 import { looksLikeAPictureUrl } from '~/utils'
 import Table from '~/components/layout/tables/Table.vue'
 import ValueRenderer from '~/components/documents/ValueRenderer.vue'
+import DocumentIdLink from '~/components/documents/DocumentIdLink.vue'
 
 type Props = {
   documents: Array<any>
   fields: Array<string>
   indexUid: string
+  primaryKey: string
 }
 
 defineProps<Props>()

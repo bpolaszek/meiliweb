@@ -1,6 +1,7 @@
 export * from './useChatCompletion'
 export * from './useChatWorkspaces'
 export * from './useDateFormatter'
+export * from './useDocumentViewer'
 export * from './useExport'
 export * from './useFields'
 export * from './useFormSubmit'

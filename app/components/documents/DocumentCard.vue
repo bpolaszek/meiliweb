@@ -19,11 +19,13 @@
               {{ primaryKey }}
             </dt>
             <dd class="table-cell text-justify text-sm font-semibold text-gray-800 @xl:p-1">
-              <ValueRenderer
-                :index-uid="indexUid"
-                :field="primaryKey as string"
-                :value="document[primaryKey]"
-                :level="0" />
+              <DocumentIdLink :document-id="document[primaryKey]">
+                <ValueRenderer
+                  :index-uid="indexUid"
+                  :field="primaryKey as string"
+                  :value="document[primaryKey]"
+                  :level="0" />
+              </DocumentIdLink>
             </dd>
           </div>
           <template v-for="key of fieldsWithoutPrimaryKey">
@@ -49,6 +51,7 @@
 
 <script setup lang="ts">
 import ValueRenderer from './ValueRenderer.vue'
+import DocumentIdLink from './DocumentIdLink.vue'
 import { useFields } from '~/composables'
 import { looksLikeAPictureUrl } from '~/utils'
 
