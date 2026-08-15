@@ -45,6 +45,27 @@
 
     <IndexSwapEditor :index-uid="indexUid" @error="self.error = $event" />
 
+    <template v-if="satisfiesVersion('>=1.23.0')">
+      <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
+        {{ t('titles.compaction') }}
+      </h3>
+
+      <div class="space-y-2">
+        <p class="text-xs text-gray-600 italic">
+          {{ t('notices.compaction.text') }}
+        </p>
+        <Button
+          type="button"
+          :loading="self.isCompacting"
+          icon-on-right
+          theme="primary"
+          icon="heroicons:sparkles"
+          @click="compactIndex()">
+          {{ t('actions.compactIndex') }}
+        </Button>
+      </div>
+    </template>
+
     <h3 class="inline-flex w-full items-center justify-between text-xl font-semibold">
       {{ t('titles.dangerZone') }}
     </h3>
@@ -65,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { TaskError, useFormSubmit, useMeiliClient, useTask } from '~/composables'
+import { TaskError, useFormSubmit, useIndexOperations, useMeiliClient, useTask } from '~/composables'
 import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores/toasts'
 import Alert from '~/components/layout/Alert.vue'
 import Button from '~/components/layout/forms/Button.vue'
@@ -111,7 +132,20 @@ const processTask = useTask()
 const { createToast } = useToasts()
 const self = reactive({
   error: null as Error | null,
+  isCompacting: false,
 })
+
+const { compactIndex: doCompactIndex } = useIndexOperations()
+const compactIndex = async () => {
+  self.isCompacting = true
+  try {
+    await doCompactIndex(index.uid)
+  } catch (error) {
+    self.error = error as TaskError
+  } finally {
+    self.isCompacting = false
+  }
+}
 
 const dropIndex = async () => {
   const toast = createToast({
@@ -185,7 +219,11 @@ en:
     duplicateIndex: Duplicate index
     renameIndex: Rename index
     swapIndex: Swap index
+    compaction: Compaction
     dangerZone: Danger Zone
+  notices:
+    compaction:
+      text: Defragments the index's storage, reducing fragmentation that accumulates over time. This can significantly improve search and indexing performance, but may take a while depending on the index size.
   confirmations:
     dropIndex:
       title: "Drop `{index}`?"
@@ -203,4 +241,5 @@ en:
   actions:
     dropIndex: Delete index
     deleteAllDocuments: Delete all documents
+    compactIndex: Compact index
 </i18n>
