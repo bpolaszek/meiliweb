@@ -32,7 +32,7 @@
         :messages="messages"
         :status="status"
         should-auto-scroll
-        class="min-h-0 grow"
+        :spacing-offset="160"
         :assistant="{ side: 'left', variant: 'soft' }"
         :user="{ side: 'right', variant: 'solid', color: 'primary' }">
         <template #content="{ message }">
@@ -46,23 +46,27 @@
         </template>
       </UChatMessages>
 
-      <UChatPrompt v-model="prompt" v-focus :status :maxrows="4" @submit="submit()">
-        <UChatPromptSubmit @stop="stop()" />
-      </UChatPrompt>
+      <!-- Sticky to the page's own scroll container (see Layout.vue), so the translucent
+      prompt floats over the tail of the conversation instead of fighting it for height. -->
+      <div class="sticky bottom-0 z-10 flex flex-col gap-2 bg-white/75 pt-2 backdrop-blur">
+        <UChatPrompt v-model="prompt" v-focus :status :maxrows="4" @submit="submit()">
+          <UChatPromptSubmit @stop="stop()" />
+        </UChatPrompt>
 
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
-        <UFormField :label="t('labels.model')">
-          <UInput v-model="model" size="xs" class="w-56" :placeholder="DEFAULT_MODEL" />
-        </UFormField>
-        <UFormField v-tippy="t('hints.accessKey')" :label="t('labels.accessKey')">
-          <UInput
-            v-model="accessKey"
-            type="password"
-            autocomplete="off"
-            size="xs"
-            class="w-56"
-            :placeholder="t('placeholders.accessKey')" />
-        </UFormField>
+        <div class="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:gap-6">
+          <UFormField :label="t('labels.model')">
+            <UInput v-model="model" size="xs" class="w-56" :placeholder="DEFAULT_MODEL" />
+          </UFormField>
+          <UFormField v-tippy="t('hints.accessKey')" :label="t('labels.accessKey')">
+            <UInput
+              v-model="accessKey"
+              type="password"
+              autocomplete="off"
+              size="xs"
+              class="w-56"
+              :placeholder="t('placeholders.accessKey')" />
+          </UFormField>
+        </div>
       </div>
     </div>
   </Layout>
