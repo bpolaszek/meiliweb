@@ -173,6 +173,11 @@ const navigation = reactive([
     current: computed(() => route.name?.startsWith('webhooks')),
   },
   {
+    name: 'Search rules',
+    href: '/search-rules',
+    current: computed(() => route.name?.startsWith('search-rules')),
+  },
+  {
     name: 'Experimental',
     href: '/experimental-features',
     current: computed(() => route.name?.startsWith('experimental-features')),

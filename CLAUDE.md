@@ -23,7 +23,7 @@ yarn build      # production build
 yarn preview    # serve the built app
 yarn lint       # prettier --check
 yarn format     # prettier --write
-yarn check      # eslint
+yarn run check  # eslint — `yarn check` alone runs yarn's own dependency check instead
 ```
 
 Docker:
@@ -97,6 +97,26 @@ if (task.status === 'failed') throw new Error('…')
 ```
 
 See `composables/useIndexOperations.ts` for the canonical pattern (duplicate / rename index = chained `processTask` calls + toast updates).
+
+### When the client doesn't expose an endpoint yet
+
+**Upgrade `meilisearch` first** — don't reach for `meili.httpRequest` as the default escape hatch. The
+official client ships new routes quickly, and a bump gives us its types, its route paths and its task
+handling for free instead of hand-maintaining them.
+
+```bash
+yarn add meilisearch@^<latest>
+```
+
+When the upgraded client is _almost_ right — a field the API returns but the client doesn't type yet —
+widen its types locally rather than abandoning it. `composables/useSearchRules.ts` is the reference:
+it re-exports the client's types, extends the two the client lags on, and casts at the call site with a
+comment saying when the cast can go.
+
+Raw `meili.httpRequest` is a last resort, only when the latest published client genuinely has no method
+for the route. Say so in a comment with the client version checked, so the next person knows when to
+revisit. `composables/useWebhooks.ts` and `settings/foreign-keys.vue` predate this rule and still use
+it, even though 0.60.0 now covers both — they're worth migrating.
 
 ## Patterns & idioms
 
@@ -206,7 +226,35 @@ Global app-wide strings live in `app.vue`'s `<i18n global>` block. There is no c
 - **Tailwind CSS 4** (CSS-first config) + **@nuxt/ui v4**. No `tailwind.config.js`: theme lives in `app/assets/css/main.css`.
 - The brand palette (pink) is declared as the custom `meili` color in `main.css` (`@theme static`) and mapped to the `primary` semantic color in `app/app.config.ts`. `--ui-primary` is anchored on shade 600.
 - UI building blocks are Nuxt UI components (`UButton`, `UModal`, `USlideover`, `UDropdownMenu`, `UInputMenu`, `USwitch`, `UAlert`, `UBadge`, `UPagination`, toasts via `useToast`), usually wrapped by the app's own components in `components/layout/` which keep their historical props API — prefer those wrappers.
-- Native `<input>`/`<select>` still use `@tailwindcss/forms` with the `class` strategy (`form-input`, `form-checkbox`, ...).
+
+### Forms: use Nuxt UI components
+
+**Reach for the Nuxt UI form component first**, not a native element with `form-input` classes:
+
+| Instead of                                      | Use                                           |
+| ----------------------------------------------- | --------------------------------------------- |
+| `<input class="form-input">`                    | `<UInput>`                                    |
+| `<select class="form-select">`                  | `<USelect>` (`:items` of `{ label, value }`)  |
+| `<textarea class="form-textarea">`              | `<UTextarea>` (or the `Textarea.vue` wrapper) |
+| `<input type="checkbox" class="form-checkbox">` | `<UCheckbox>`                                 |
+| `UniqueId` + `Label` + a hint `<p>`             | `<UFormField label help required>`            |
+
+`UFormField` wires the label to its control by itself, renders the required marker, and places
+`help` text below the field — so it replaces the whole `UniqueId` / `Label` / hint dance.
+`app/components/search-rules/SearchRuleEditor.vue` is the reference.
+
+Notes:
+
+- `USelect` is a Reka UI listbox rendered in a portal, **not** a native `<select>`: it has no
+  `.value` to set, and it rejects an item whose `value` is the empty string (that is reserved for
+  "no selection") — use a sentinel and map it back when building your payload.
+- Driving a `USelect` from a browser-automation tool is fiddly: synthetic clicks and key presses
+  move the highlight but don't commit the choice. Dispatching `new KeyboardEvent('keydown', { key:
+'Enter' })` on the focused `[role=option]` does.
+- Put width classes (`w-full`, `flex-1`) on the component itself; they land on its root wrapper.
+- Native `<input>`/`<select>` with `@tailwindcss/forms` (`form-input`, `form-select`, ...) are the
+  **legacy** styling, kept working for the screens that predate this rule. Don't add new ones; converting
+  a nearby one while you're in the file is welcome.
 - `prettier-plugin-tailwindcss` auto-sorts class lists (config: `tailwindStylesheet` in `.prettierrc`) — don't fight the order.
 - SCSS is allowed (`sass` is installed) but rare; prefer Tailwind.
 
