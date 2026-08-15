@@ -131,7 +131,11 @@ export const useChatCompletion = (workspace: string, accessKey?: MaybeRef<string
 
     self.error = null
     self.turns.push({ role: 'user', content: prompt.trim(), sources: [], progress: null })
-    const turn: ChatTurn = { role: 'assistant', content: '', sources: [], progress: null }
+    // A reactive object, because `self.turns` stores what it is handed as-is: mutating a plain
+    // one through this local reference would never notify Vue. The answer would then only show
+    // up when `streaming` flips at the very end — in one block, never streamed — and `progress`
+    // would never paint at all, being nulled again before anything else triggers a render.
+    const turn = reactive<ChatTurn>({ role: 'assistant', content: '', sources: [], progress: null })
     self.turns.push(turn)
 
     // History is sent verbatim, minus our own display-only fields.
