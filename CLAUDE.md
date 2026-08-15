@@ -23,7 +23,7 @@ yarn build      # production build
 yarn preview    # serve the built app
 yarn lint       # prettier --check
 yarn format     # prettier --write
-yarn check      # eslint
+yarn run check  # eslint — `yarn check` alone runs yarn's own dependency check instead
 ```
 
 Docker:
@@ -97,6 +97,26 @@ if (task.status === 'failed') throw new Error('…')
 ```
 
 See `composables/useIndexOperations.ts` for the canonical pattern (duplicate / rename index = chained `processTask` calls + toast updates).
+
+### When the client doesn't expose an endpoint yet
+
+**Upgrade `meilisearch` first** — don't reach for `meili.httpRequest` as the default escape hatch. The
+official client ships new routes quickly, and a bump gives us its types, its route paths and its task
+handling for free instead of hand-maintaining them.
+
+```bash
+yarn add meilisearch@^<latest>
+```
+
+When the upgraded client is _almost_ right — a field the API returns but the client doesn't type yet —
+widen its types locally rather than abandoning it. `composables/useSearchRules.ts` is the reference:
+it re-exports the client's types, extends the two the client lags on, and casts at the call site with a
+comment saying when the cast can go.
+
+Raw `meili.httpRequest` is a last resort, only when the latest published client genuinely has no method
+for the route. Say so in a comment with the client version checked, so the next person knows when to
+revisit. `composables/useWebhooks.ts` and `settings/foreign-keys.vue` predate this rule and still use
+it, even though 0.60.0 now covers both — they're worth migrating.
 
 ## Patterns & idioms
 

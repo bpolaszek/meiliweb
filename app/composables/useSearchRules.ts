@@ -1,14 +1,16 @@
-import type { EnqueuedTask } from 'meilisearch'
+import type {
+  SearchRule as ClientSearchRule,
+  SearchRuleConditions as ClientSearchRuleConditions,
+  ResourceResults,
+  SearchRuleListPayload,
+  SearchRuleUpdatePayload,
+} from 'meilisearch'
 import semver from 'semver/preload'
 import { useMeiliClient } from './useMeiliClient'
 
 /**
  * Dynamic Search Rules (DSR) are global to a Meilisearch instance (not per-index).
  * They pin documents at fixed positions whenever a search matches their conditions.
- *
- * The official JS client (meilisearch@0.59.0) does not expose them yet, so we talk to the REST
- * API directly through the client's `httpRequest` — same approach as useWebhooks. Going through
- * `useMeiliClient()` keeps reactive credential switching working.
  *
  * @see https://www.meilisearch.com/docs/reference/api/search-rules/list-search-rules
  */
@@ -22,85 +24,38 @@ export const SEARCH_RULES_MIN_VERSION = '1.50.0'
 /** Key of the experimental feature flag that must be on for the DSR routes to answer. */
 export const SEARCH_RULES_FEATURE = 'dynamicSearchRules'
 
-/** Meilisearch validates rule uids exactly like index uids. */
-export const SEARCH_RULE_UID_PATTERN = '[a-zA-Z0-9_-]+'
+/**
+ * Meilisearch validates rule uids exactly like index uids. The hyphen must be escaped: browsers
+ * compile the `pattern` attribute with the `v` flag, which rejects an unescaped one here and would
+ * silently drop the validation altogether.
+ */
+export const SEARCH_RULE_UID_PATTERN = '[a-zA-Z0-9_\\-]+'
 
-export type SearchRuleQueryCondition = {
-  isEmpty?: boolean | null
-  words?: string | null
-}
-
-export type SearchRuleTimeCondition = {
-  /** RFC 3339 datetimes. Meilisearch rejects bounds that are in the past. */
-  start?: string | null
-  end?: string | null
-}
+export type { SearchRuleAction, SearchRuleListPayload, SearchRulePinAction, SearchRuleSelector } from 'meilisearch'
 
 /**
- * Matches searches whose own filter carries these attribute/value pairs. It is not covered by the
- * documented how-tos and we don't expose an editor for it, but `conditions` is replaced wholesale
- * on update, so callers must round-trip it or it would be silently lost.
+ * Matches searches whose own filter carries these attribute/value pairs. Meilisearch 1.53 accepts
+ * it but meilisearch@0.60.0 does not type it yet, and it is not covered by the documented how-tos
+ * either — so we don't expose an editor for it. `conditions` being replaced wholesale on update,
+ * callers must still round-trip it or it would be silently lost.
  */
 export type SearchRuleFilterCondition = {
   values?: Record<string, unknown> | null
 }
 
-export type SearchRuleConditions = {
-  query?: SearchRuleQueryCondition | null
-  time?: SearchRuleTimeCondition | null
+export type SearchRuleConditions = ClientSearchRuleConditions & {
   filter?: SearchRuleFilterCondition | null
 }
 
-export type SearchRuleSelector = {
-  indexUid?: string | null
-  id: string
-}
-
-/** `pin` is the only action type Meilisearch accepts as of 1.53. `position` is zero-based. */
-export type SearchRulePinAction = {
-  type: 'pin'
-  position: number
-}
-
-export type SearchRuleAction = {
-  selector: SearchRuleSelector
-  action: SearchRulePinAction
-}
-
-export type SearchRule = {
-  uid: string
-  description?: string | null
+/** The client also misses `lastUpdatedAt`, which the API returns on every rule. */
+export type SearchRule = Omit<ClientSearchRule, 'conditions'> & {
   lastUpdatedAt?: string | null
-  precedence?: number | null
-  active?: boolean
   conditions?: SearchRuleConditions | null
-  actions: SearchRuleAction[]
 }
 
 /** Partial update payload. Top-level keys are merged, but `conditions` is replaced as a whole. */
-export type SearchRulePayload = {
-  description?: string | null
-  precedence?: number | null
-  active?: boolean | null
+export type SearchRulePayload = Omit<SearchRuleUpdatePayload, 'conditions'> & {
   conditions?: SearchRuleConditions | null
-  actions?: SearchRuleAction[] | null
-}
-
-export type SearchRuleListPayload = {
-  offset?: number
-  limit?: number
-  filter?: {
-    /** Matches rule uids and descriptions. */
-    query?: string | null
-    active?: boolean | null
-  } | null
-}
-
-export type SearchRuleListResponse = {
-  results: SearchRule[]
-  offset: number
-  limit: number
-  total: number
 }
 
 /** `1.50.0-rc.1` and friends must count as 1.50, hence the coercion. */
@@ -112,19 +67,20 @@ export const supportsSearchRules = (pkgVersion?: string | null) => {
 export const useSearchRules = () => {
   const meili = useMeiliClient()
 
-  /** Listing is a POST: the filters travel in the body, not in the query string. */
-  const list = (body: SearchRuleListPayload = {}) =>
-    meili.httpRequest.post<SearchRuleListResponse>({ path: 'dynamic-search-rules', body })
+  // The casts below only widen the client's types with the two fields it hasn't caught up with
+  // (`conditions.filter`, `lastUpdatedAt`); drop them once meilisearch-js declares them.
+  const list = (parameters?: SearchRuleListPayload) =>
+    meili.getDynamicSearchRules(parameters) as Promise<ResourceResults<SearchRule[]>>
 
-  const get = (uid: string) => meili.httpRequest.get<SearchRule>({ path: `dynamic-search-rules/${uid}` })
+  const get = (uid: string) => meili.getDynamicSearchRule(uid) as Promise<SearchRule>
 
   /** Creates the rule when `uid` is unknown, patches it otherwise. */
-  const save = (uid: string, body: SearchRulePayload) =>
-    meili.httpRequest.patch<EnqueuedTask>({ path: `dynamic-search-rules/${uid}`, body })
+  const save = (uid: string, rule: SearchRulePayload) =>
+    meili.updateDynamicSearchRule(uid, rule as SearchRuleUpdatePayload)
 
-  const remove = (uid: string) => meili.httpRequest.delete<EnqueuedTask>({ path: `dynamic-search-rules/${uid}` })
+  const remove = (uid: string) => meili.deleteDynamicSearchRule(uid)
 
-  const removeAll = () => meili.httpRequest.delete<EnqueuedTask>({ path: 'dynamic-search-rules' })
+  const removeAll = () => meili.deleteAllDynamicSearchRules()
 
   return { list, get, save, remove, removeAll }
 }
