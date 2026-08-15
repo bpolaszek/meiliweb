@@ -9,6 +9,20 @@
       <dt>{{ t('labels.processingTime') }}:</dt>
       <dd>{{ processingTimeMs }}ms</dd>
     </dl>
+    <UPopover v-if="performanceDetails">
+      <button v-tippy="t('actions.showPerformanceDetails')" type="button">
+        <Icon name="mdi:speedometer" class="size-4 text-gray-600 hover:text-gray-800" />
+      </button>
+      <template #content>
+        <div class="max-w-sm p-4 text-xs">
+          <ObjectValueRenderer
+            :index-uid="indexUid"
+            field="performanceDetails"
+            :value="performanceDetails"
+            :level="0" />
+        </div>
+      </template>
+    </UPopover>
     <UniqueId as="div" v-slot="{ id }" class="inline-flex items-center gap-1">
       <select :id="id" v-model="itemsPerPage">
         <option :value="1">1</option>
@@ -45,6 +59,7 @@
 
 <script setup lang="ts">
 import { usePagination } from '~/composables'
+import ObjectValueRenderer from '~/components/documents/ObjectValueRenderer.vue'
 import type { Ref } from 'vue'
 
 type Props = {
@@ -54,6 +69,8 @@ type Props = {
   lastPage: number
   previousPage: number
   nextPage: number
+  indexUid?: string
+  performanceDetails?: Record<string, unknown>
 }
 
 defineProps<Props>()
@@ -65,6 +82,8 @@ const { getPageOffset } = usePagination(itemsPerPage)
 
 <i18n>
 en:
+  actions:
+    showPerformanceDetails: Show performance details
   labels:
     nbEstimatedHits: Nb. estimated hits
     processingTime: Processing time

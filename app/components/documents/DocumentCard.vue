@@ -62,7 +62,10 @@ const props = defineProps<Props>()
 
 const picture = computed(() => Object.values(props.document).find(looksLikeAPictureUrl) as string | null)
 
-const { fieldsWithoutPrimaryKey, nameField } = useFields(props.primaryKey, Object.keys(props.document))
+const { fieldsWithoutPrimaryKey, nameField } = useFields(
+  props.primaryKey,
+  computed(() => Object.keys(props.document)),
+)
 const self: any = reactive({
   nameField,
   name: computed(() => props.document[self.nameField]),

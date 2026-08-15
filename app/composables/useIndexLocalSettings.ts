@@ -14,6 +14,9 @@ type UseIndexLocalSettings = {
   hybridEnabled: boolean
   hybridEmbedder: string | null
   hybridSemanticRatio: number
+  showRankingScore: boolean
+  showRankingScoreDetails: boolean
+  showPerformanceDetails: boolean
 }
 
 const DEFAULT_ITEMS_PER_PAGE = 20
@@ -25,6 +28,9 @@ const DEFAULT_UPDATE_MODE = 'replace'
 const DEFAULT_HYBRID_ENABLED = false
 const DEFAULT_HYBRID_EMBEDDER = null
 const DEFAULT_HYBRID_SEMANTIC_RATIO = 0.5
+const DEFAULT_SHOW_RANKING_SCORE = false
+const DEFAULT_SHOW_RANKING_SCORE_DETAILS = false
+const DEFAULT_SHOW_PERFORMANCE_DETAILS = false
 
 export const useIndexLocalSettings = (indexUid: string) => {
   const { credentials } = useCredentials()
@@ -40,6 +46,9 @@ export const useIndexLocalSettings = (indexUid: string) => {
     hybridEnabled: DEFAULT_HYBRID_ENABLED,
     hybridEmbedder: DEFAULT_HYBRID_EMBEDDER,
     hybridSemanticRatio: DEFAULT_HYBRID_SEMANTIC_RATIO,
+    showRankingScore: DEFAULT_SHOW_RANKING_SCORE,
+    showRankingScoreDetails: DEFAULT_SHOW_RANKING_SCORE_DETAILS,
+    showPerformanceDetails: DEFAULT_SHOW_PERFORMANCE_DETAILS,
   })
 
   const self = reactive({ storage })
@@ -84,6 +93,18 @@ export const useIndexLocalSettings = (indexUid: string) => {
     hybridSemanticRatio: computed({
       get: () => self.storage.hybridSemanticRatio ?? DEFAULT_HYBRID_SEMANTIC_RATIO,
       set: (value: number) => (self.storage.hybridSemanticRatio = value),
+    }),
+    showRankingScore: computed({
+      get: () => self.storage.showRankingScore ?? DEFAULT_SHOW_RANKING_SCORE,
+      set: (value: boolean) => (self.storage.showRankingScore = value),
+    }),
+    showRankingScoreDetails: computed({
+      get: () => self.storage.showRankingScoreDetails ?? DEFAULT_SHOW_RANKING_SCORE_DETAILS,
+      set: (value: boolean) => (self.storage.showRankingScoreDetails = value),
+    }),
+    showPerformanceDetails: computed({
+      get: () => self.storage.showPerformanceDetails ?? DEFAULT_SHOW_PERFORMANCE_DETAILS,
+      set: (value: boolean) => (self.storage.showPerformanceDetails = value),
     }),
     // Call this whenever the stored embedder no longer matches the index's live embedder
     // list (renamed/deleted) — resets everything hybrid-related to its default in one go,
