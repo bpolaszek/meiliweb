@@ -59,10 +59,21 @@
             {{ t('actions.send') }}
           </Button>
         </div>
-        <label class="flex items-center gap-2 text-xs text-gray-500">
-          {{ t('labels.model') }}
-          <input v-model="model" class="form-input w-56 text-xs" :placeholder="DEFAULT_MODEL" />
-        </label>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+          <label class="flex items-center gap-2 text-xs text-gray-500">
+            {{ t('labels.model') }}
+            <input v-model="model" class="form-input w-56 text-xs" :placeholder="DEFAULT_MODEL" />
+          </label>
+          <label v-tippy="t('hints.accessKey')" class="flex items-center gap-2 text-xs text-gray-500">
+            {{ t('labels.accessKey') }}
+            <input
+              v-model="accessKey"
+              type="password"
+              autocomplete="off"
+              class="form-input w-56 text-xs"
+              :placeholder="t('placeholders.accessKey')" />
+          </label>
+        </div>
       </form>
     </div>
   </Layout>
@@ -93,11 +104,15 @@ const workspace = route.params.workspace as string
 useHead({ title: `${workspace} - ${t('title')}` })
 
 const { available, loading } = safeToRefs(useChatAvailability())
-const { turns, streaming, error, send, stop, clear } = useChatCompletion(workspace)
 
-// The model is a per-instance, per-workspace preference, not a workspace setting.
+// The model and the access key are per-instance, per-workspace preferences, not workspace
+// settings: Meilisearch stores neither, so they live in localStorage next to the credentials.
 const { credentials } = useCredentials()
-const model = useLocalStorage(`${(credentials as CredentialsRecord).baseUri}-chat-${workspace}-model`, DEFAULT_MODEL)
+const preference = `${(credentials as CredentialsRecord).baseUri}-chat-${workspace}`
+const model = useLocalStorage(`${preference}-model`, DEFAULT_MODEL)
+const accessKey = useLocalStorage(`${preference}-access-key`, '')
+
+const { turns, streaming, error, send, stop, clear } = useChatCompletion(workspace, accessKey)
 const prompt = ref('')
 
 const submit = async () => {
@@ -135,8 +150,12 @@ en:
     queryAndFilter: 'Searching {index} for "{query}" with filter {filter}...'
   labels:
     model: Model
+    accessKey: API key
+  hints:
+    accessKey: Meilisearch key the conversation runs under. A scoped key or a tenant token restricts the indexes and documents the LLM can search.
   placeholders:
     prompt: Ask a question... (Enter to send, Shift+Enter for a new line)
+    accessKey: Defaults to your instance key
   actions:
     backToList: Back to workspaces
     settings: Settings

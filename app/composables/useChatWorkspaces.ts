@@ -1,3 +1,4 @@
+import type { MaybeRef } from 'vue'
 import { useCredentials } from '~/stores'
 import { useMeiliClient } from './useMeiliClient'
 
@@ -83,9 +84,19 @@ export const CHAT_TOOLS: NonNullable<ChatCompletionBody['tools']> = [
  */
 const UNAUTHENTICATED_INSTANCE_TOKEN = 'meiliweb'
 
-export const useChatWorkspaces = () => {
+/**
+ * @param completionKey Access key the completions run under. Meilisearch derives the LLM's
+ *   reach from the request's bearer token — a scoped key or a tenant token narrows which
+ *   indexes and documents it gets to search. Empty falls back to the connection key.
+ */
+export const useChatWorkspaces = (completionKey?: MaybeRef<string>) => {
   const meili = useMeiliClient()
   const { credentials } = toRefs(useCredentials())
+
+  // Read at call time, not at setup time, so switching key takes effect on the next question.
+  const completionHeaders = () => ({
+    Authorization: `Bearer ${unref(completionKey)?.trim() || credentials.value?.accessKey || UNAUTHENTICATED_INSTANCE_TOKEN}`,
+  })
 
   const list = () => meili.getChatWorkspaces()
 
@@ -102,12 +113,7 @@ export const useChatWorkspaces = () => {
     meili.httpRequest.postStream({
       path: `chats/${uid}/chat/completions`,
       body,
-      extraRequestInit: {
-        signal,
-        headers: credentials.value?.accessKey
-          ? undefined
-          : { Authorization: `Bearer ${UNAUTHENTICATED_INSTANCE_TOKEN}` },
-      },
+      extraRequestInit: { signal, headers: completionHeaders() },
     })
 
   return { list, getSettings, updateSettings, resetSettings, remove, streamCompletion }

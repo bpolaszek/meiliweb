@@ -1,4 +1,5 @@
 import { tryOnScopeDispose } from '@vueuse/core'
+import type { MaybeRef } from 'vue'
 import { CHAT_TOOLS, useChatWorkspaces, type ChatMessage } from './useChatWorkspaces'
 
 /** One entry of `_meiliSearchSources`; the document itself is arbitrary user data. */
@@ -43,9 +44,11 @@ type OpenAiDelta = {
  *
  * Tool call `arguments` arrive in fragments that have to be concatenated per tool call
  * before they parse as JSON.
+ *
+ * @param accessKey Optional key the completions run under, see {@link useChatWorkspaces}.
  */
-export const useChatCompletion = (workspace: string) => {
-  const { streamCompletion } = useChatWorkspaces()
+export const useChatCompletion = (workspace: string, accessKey?: MaybeRef<string>) => {
+  const { streamCompletion } = useChatWorkspaces(accessKey)
 
   const self = reactive({
     turns: [] as ChatTurn[],
