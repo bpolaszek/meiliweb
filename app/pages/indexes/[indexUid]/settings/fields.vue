@@ -118,10 +118,14 @@
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
           <td class="align-top">
-            <span v-if="item.filterable?.enabled" class="inline-flex items-start gap-1.5">
+            <div v-if="item.filterable?.enabled" class="inline-flex items-start gap-1.5">
               <Icon name="mdi:check" class="mt-0.5 shrink-0 text-green-600" />
-              <span class="text-xs text-gray-500">{{ filterableDetails(item.filterable) }}</span>
-            </span>
+              <ul class="space-y-1 text-xs text-gray-500">
+                <li v-for="feature of filterableDetails(item.filterable)">
+                  <UBadge color="neutral" variant="outline">{{ feature }}</UBadge>
+                </li>
+              </ul>
+            </div>
             <Icon v-else name="mdi:minus" class="text-gray-300" />
           </td>
           <td class="align-top">
@@ -184,7 +188,7 @@ const ANY = 'any'
 type TriState = typeof ANY | 'true' | 'false'
 const toBool = (value: TriState): boolean | undefined => (ANY === value ? undefined : 'true' === value)
 
-const triStateItems = computed(() => [
+const triStateItems = computed<Array<{ label: string; value: TriState }>>(() => [
   { label: t('filters.any'), value: ANY },
   { label: t('filters.yes'), value: 'true' },
   { label: t('filters.no'), value: 'false' },
@@ -219,9 +223,7 @@ const filterableDetails = (filterable: NonNullable<IndexField['filterable']>) =>
     filterable.facetSearch ? t('badges.facetSearch') : null,
     filterable.equality ? t('badges.equality') : null,
     filterable.comparison ? t('badges.comparison') : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+  ].filter(Boolean)
 
 const buildFilter = (): FieldsFilter | undefined => {
   const booleanFilters: Partial<Record<BooleanFilterKey, boolean>> = {}
