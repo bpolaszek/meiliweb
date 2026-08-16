@@ -17,9 +17,11 @@
     </Card>
 
     <Card :title="t('titles.dbSize')" icon="gravity-ui:database-fill">
-      <div>{{ filesize(stats.databaseSize).human() }}</div>
-      <div v-if="stats.usedDatabaseSize != null" class="text-xs font-normal text-gray-400">
-        {{ t('labels.used', { size: filesize(stats.usedDatabaseSize).human() }) }}
+      <div class="flex items-center gap-2">
+        <div>{{ filesize(stats.databaseSize).human() }}</div>
+        <div v-if="stats.usedDatabaseSize != null" class="text-xs font-normal text-gray-400">
+          {{ t('labels.used', { size: filesize(stats.usedDatabaseSize).human() }) }}
+        </div>
       </div>
     </Card>
 
