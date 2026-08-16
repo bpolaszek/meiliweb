@@ -8,21 +8,19 @@
       {{ error }}
     </Alert>
 
-    <UniqueId as="section" v-slot="{ id }" class="space-y-1">
-      <Label :for="id" required>{{ t('labels.url') }}</Label>
-      <input
-        :id
+    <UFormField :label="t('labels.url')" required>
+      <UInput
         v-model="form.url"
         type="url"
         required
         autofocus
         list="export-destinations"
         :placeholder="t('placeholders.url')"
-        class="form-input w-full" />
+        class="w-full" />
       <datalist id="export-destinations">
         <option v-for="destination of destinations" :key="destination" :value="destination" />
       </datalist>
-      <div v-if="destinations.length > 0" class="flex flex-wrap items-center gap-2">
+      <div v-if="destinations.length > 0" class="mt-2 flex flex-wrap items-center gap-2">
         <span class="text-xs font-light text-gray-500 italic">{{ t('hints.recentDestinations') }}</span>
         <Button
           v-for="destination of destinations"
@@ -34,32 +32,22 @@
           {{ destination }}
         </Button>
       </div>
-    </UniqueId>
+    </UFormField>
 
-    <UniqueId as="section" v-slot="{ id }" class="space-y-1">
-      <Label :for="id">{{ t('labels.apiKey') }}</Label>
-      <input
-        :id
+    <UFormField :label="t('labels.apiKey')" :help="t('hints.apiKeyNotStored')">
+      <UInput
         v-model="form.apiKey"
         type="password"
         autocomplete="off"
         :placeholder="t('placeholders.apiKey')"
-        class="form-input w-full" />
-      <p class="text-xs font-light text-gray-500 italic">{{ t('hints.apiKeyNotStored') }}</p>
-    </UniqueId>
+        class="w-full" />
+    </UFormField>
 
-    <UniqueId as="section" v-slot="{ id }" class="space-y-1">
-      <Label :for="id">{{ t('labels.payloadSize') }}</Label>
-      <input
-        :id
-        v-model="form.payloadSize"
-        type="text"
-        :placeholder="t('placeholders.payloadSize')"
-        class="form-input w-full" />
-    </UniqueId>
+    <UFormField :label="t('labels.payloadSize')">
+      <UInput v-model="form.payloadSize" :placeholder="t('placeholders.payloadSize')" class="w-full" />
+    </UFormField>
 
-    <section v-if="!indexUid" class="space-y-1">
-      <Label>{{ t('labels.indexes') }}</Label>
+    <UFormField v-if="!indexUid" :label="t('labels.indexes')" :help="t('hints.allIndexesByDefault')">
       <UInputMenu
         v-model="form.selectedIndexes"
         multiple
@@ -67,25 +55,15 @@
         open-on-focus
         :items="availableIndexes"
         :placeholder="t('placeholders.indexes')"
-        class="block w-full" />
-      <p class="text-xs font-light text-gray-500 italic">{{ t('hints.allIndexesByDefault') }}</p>
-    </section>
+        class="w-full" />
+    </UFormField>
 
-    <UniqueId v-else as="section" v-slot="{ id }" class="space-y-1">
-      <Label :for="id">{{ t('labels.filter') }}</Label>
-      <input :id v-model="form.filter" type="text" :placeholder="t('placeholders.filter')" class="form-input w-full" />
-      <p class="text-xs font-light text-gray-500 italic">{{ t('hints.filter') }}</p>
-    </UniqueId>
+    <UFormField v-else :label="t('labels.filter')" :help="t('hints.filter')">
+      <UInput v-model="form.filter" :placeholder="t('placeholders.filter')" class="w-full" />
+    </UFormField>
 
-    <div class="flex items-center justify-between">
-      <Label>{{ t('labels.overrideSettings') }}</Label>
-      <USwitch v-model="form.overrideSettings" />
-    </div>
-
-    <div class="flex items-center justify-between">
-      <Label>{{ t('labels.rememberDestination') }}</Label>
-      <USwitch v-model="form.rememberDestination" />
-    </div>
+    <USwitch v-model="form.overrideSettings" :label="t('labels.overrideSettings')" />
+    <USwitch v-model="form.rememberDestination" :label="t('labels.rememberDestination')" />
 
     <footer class="flex justify-end">
       <Button type="submit" theme="primary" icon="heroicons:arrow-up-tray" :loading>
@@ -99,8 +77,6 @@
 import Alert from '~/components/layout/Alert.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
-import Label from '~/components/layout/forms/Label.vue'
-import UniqueId from '~/components/UniqueId.vue'
 import {
   useExport,
   useExportDestinations,
