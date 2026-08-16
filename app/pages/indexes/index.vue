@@ -81,10 +81,13 @@
             <span v-else class="text-gray-300">—</span>
           </td>
           <td class="text-right" v-tippy="sizeTooltip(item)">
-            <div class="font-medium">{{ filesize(item.indexSize ?? 0).human() }}</div>
-            <div class="text-xs text-gray-400">
-              {{ t('labels.used', { size: filesize(item.usedIndexSize ?? 0).human() }) }}
-            </div>
+            <template v-if="item.indexSize != null">
+              <div class="font-medium">{{ filesize(item.indexSize).human() }}</div>
+              <div class="text-xs text-gray-400">
+                {{ t('labels.used', { size: filesize(item.usedIndexSize ?? 0).human() }) }}
+              </div>
+            </template>
+            <div v-else class="font-medium">{{ filesize(item.rawDocumentDbSize ?? 0).human() }}</div>
           </td>
           <td class="text-right">
             <UDropdownMenu :items="indexMenuItems(item)" :content="{ align: 'end' }" :ui="{ content: 'w-48' }">
@@ -184,11 +187,15 @@ whenever(
 
 const { satisfiesVersion } = useVersion()
 
-const sizeTooltip = (item: Index & { rawDocumentDbSize?: number; avgDocumentSize?: number }) =>
-  t('labels.sizeTooltip', {
-    rawDocumentDbSize: filesize(item.rawDocumentDbSize ?? 0).human(),
-    avgDocumentSize: filesize(item.avgDocumentSize ?? 0).human(),
-  })
+const sizeTooltip = (item: Index & { indexSize?: number; rawDocumentDbSize?: number; avgDocumentSize?: number }) =>
+  item.indexSize != null
+    ? t('labels.sizeTooltip', {
+        rawDocumentDbSize: filesize(item.rawDocumentDbSize ?? 0).human(),
+        avgDocumentSize: filesize(item.avgDocumentSize ?? 0).human(),
+      })
+    : t('labels.sizeTooltipFallback', {
+        avgDocumentSize: filesize(item.avgDocumentSize ?? 0).human(),
+      })
 
 const embeddingsTooltip = (item: Index & { numberOfEmbeddedDocuments?: number }) =>
   t('labels.embeddingsTooltip', { numberOfEmbeddedDocuments: item.numberOfEmbeddedDocuments ?? 0 })
@@ -290,6 +297,7 @@ en:
     embeddingsTooltip: 'Across {numberOfEmbeddedDocuments} embedded documents'
     used: '{size} used'
     sizeTooltip: 'Raw document DB size: {rawDocumentDbSize} · Avg. document size: {avgDocumentSize}'
+    sizeTooltipFallback: 'Avg. document size: {avgDocumentSize}'
   actions:
     create: Create
     createExpanded: Create an index
