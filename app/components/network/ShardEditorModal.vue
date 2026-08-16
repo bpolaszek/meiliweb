@@ -20,11 +20,13 @@
       <section class="flex flex-col gap-1">
         <Label>{{ t('labels.remotes') }}</Label>
         <p class="text-sm font-light text-gray-600">{{ t('hints.remotes') }}</p>
-        <MultiCombobox v-model="form.remotes" :items="remoteNames" auto-hide>
-          <template #empty-state>
-            <span class="text-gray-400">{{ t('placeholders.remotes') }}</span>
-          </template>
-        </MultiCombobox>
+        <UInputMenu
+          v-model="form.remotes"
+          multiple
+          open-on-click
+          open-on-focus
+          :items="remoteNames"
+          :placeholder="t('placeholders.remotes')" />
       </section>
 
       <Buttons>
@@ -40,7 +42,6 @@ import PromisifiedDialog from '~/components/layout/dialogs/PromisifiedDialog.vue
 import Label from '~/components/layout/forms/Label.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
 import Button from '~/components/layout/forms/Button.vue'
-import MultiCombobox from '~/components/layout/forms/MultiCombobox.vue'
 
 type Props = {
   /** Existing shard name to edit (read-only), or `null`/`undefined` to create a new one. */

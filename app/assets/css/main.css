@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@plugin '@tailwindcss/forms' {
+  strategy: 'class';
+}
+
+/* Meiliweb brand palette — mapped to the `primary` semantic color in app.config.ts */
+@theme static {
+  --color-meili-50: #fef1f7;
+  --color-meili-100: #fee5f2;
+  --color-meili-200: #ffcbe7;
+  --color-meili-300: #ffa1d1;
+  --color-meili-400: #ff5caa;
+  --color-meili-500: #fa3a90;
+  --color-meili-600: #ea186c;
+  --color-meili-700: #cc0a52;
+  --color-meili-800: #a80c44;
+  --color-meili-900: #8c0f3b;
+  --color-meili-950: #56011f;
+}
+
+:root {
+  /* Historical UI accent is shade 600 (buttons, links) */
+  --ui-primary: var(--ui-color-primary-600);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* Tailwind v3 preflight compatibility: pointer cursor on buttons,
+     gray placeholders (v4 defaults to currentcolor at 50% opacity) */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+    opacity: 1;
+  }
+}
+
+@utility form-input {
+  /* @tailwindcss/forms enhancement */
+  @apply rounded-md border-gray-300 shadow-xs focus:border-primary-300 focus:ring-2 focus:ring-primary-600 focus:outline-hidden;
+}
+
+@utility form-checkbox {
+  @apply rounded-md border-gray-300 shadow-xs focus:border-primary-300 focus:ring-2 focus:ring-primary-600 focus:outline-hidden;
+  @apply rounded-xs text-primary-600;
+}
+
+@layer components {
+  /* Ensure main container has full height */
+  #__nuxt {
+    @apply h-full;
+  }
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* @vueform/slider default theme, tinted with the primary palette */
+:root {
+  --slider-connect-bg: #fa3a90;
+  --slider-tooltip-bg: #fa3a90;
+  --slider-handle-ring-color: #fa3a9030;
+}

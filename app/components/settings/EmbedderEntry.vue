@@ -3,7 +3,7 @@
     <UniqueId v-slot="{ id }" as="div" class="col-span-4 space-y-2">
       <div class="flex flex-col gap-1">
         <Label required :for="id">{{ t('labels.name') }}</Label>
-        <input v-model="embedder[0]" required autocomplete="off" type="text" class="form-input w-full text-sm" />
+        <input v-model="embedder[0]" required autocomplete="off" type="text" class="w-full text-sm" />
       </div>
       <Button
         type="button"
@@ -36,7 +36,7 @@
 
       <UniqueId v-if="'userProvided' !== embedder[1]!.source" v-slot="{ id }" as="section" class="flex flex-col gap-1">
         <Label :for="id">{{ t('labels.documentTemplate') }}</Label>
-        <Textarea v-model="embedder[1]!.documentTemplate" class="form-input w-full text-sm" rows="5" />
+        <Textarea v-model="embedder[1]!.documentTemplate" class="w-full text-sm" rows="5" />
       </UniqueId>
     </div>
   </div>

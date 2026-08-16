@@ -2,7 +2,13 @@
   <div class="space-y-4 pb-4">
     <header class="flex items-center justify-between gap-2 bg-gray-100 px-4 py-4 sm:px-6">
       <h3 class="text-md">{{ humanizeString(facet) }}</h3>
-      <SearchInput v-model="self.facetQuery" :input-attrs="{ placeholder: t('placeholder') }" class="grow" />
+      <UInput
+        v-model="self.facetQuery"
+        type="search"
+        icon="heroicons:magnifying-glass-20-solid"
+        :placeholder="t('placeholder')"
+        :ui="{ base: 'rounded-lg' }"
+        class="grow" />
       <button
         type="button"
         v-tippy="{
@@ -60,7 +66,7 @@
           </li>
         </template>
       </ul>
-      <p v-else class="block text-center text-sm italic text-gray-500">
+      <p v-else class="block text-center text-sm text-gray-500 italic">
         {{ t('emptyState') }}
       </p>
     </div>
@@ -70,7 +76,6 @@
 <script setup lang="ts">
 import { type FacetHit, Meilisearch } from 'meilisearch'
 import type { AppliedFilters } from '~/utils'
-import SearchInput from '~/components/layout/forms/SearchInput.vue'
 import Badge from '~/components/layout/Badge.vue'
 import humanizeString from 'humanize-string'
 import { promiseTimeout, reactiveComputed, watchDeep } from '@vueuse/core'

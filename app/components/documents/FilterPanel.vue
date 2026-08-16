@@ -1,13 +1,13 @@
 <template>
   <div class="divide-y divide-gray-200">
-    <section class="space-y-2 px-4 pb-6 sm:px-6">
+    <section class="space-y-2 px-4 pt-6 pb-6 sm:px-6">
       <h3 class="text-md font-medium">{{ t('titles.sort') }}</h3>
       <UniqueId v-if="sortableAttributes.length > 0" v-slot="{ id }">
         <div class="flex items-center justify-between gap-1 text-sm">
           <Label :for="id" class="text-gray-400">
             {{ t('labels.sortBy') }}
           </Label>
-          <Select :id="id" v-model="appliedSort">
+          <Select :id="id" v-model="appliedSort" class="w-56">
             <option :value="[]">Default</option>
             <template v-for="attribute of sortableAttributes">
               <option :value="[`${attribute}:asc`]">{{ humanizeString(attribute) }} ⬆</option>
@@ -16,7 +16,7 @@
           </Select>
         </div>
       </UniqueId>
-      <i18n-t v-else keypath="emptyStates.sort.text" tag="p" class="text-sm font-light italic text-gray-600">
+      <i18n-t v-else keypath="emptyStates.sort.text" tag="p" class="text-sm font-light text-gray-600 italic">
         <template v-slot:link>
           <NuxtLink :to="`/indexes/${indexUid}/settings/sortable-attributes`" class="text-primary-600">
             {{ t('emptyStates.sort.link') }}
@@ -25,21 +25,22 @@
       </i18n-t>
     </section>
 
-    <section class="space-y-2 px-4 pb-6 pt-6 sm:px-6">
+    <section class="space-y-2 px-4 pt-6 pb-6 sm:px-6">
       <h3 class="text-md font-medium">{{ t('titles.facets') }}</h3>
       <UniqueId v-if="filterableAttributes.length > 0" v-slot="{ id }">
         <div class="space-y-1 text-sm">
-          <MultiCombobox
+          <UInputMenu
             v-model="facets"
+            multiple
+            open-on-click
+            open-on-focus
             :items="filterableAttributes.filter((a) => '_geo' !== a)"
+            :placeholder="t('placeholders.enableFacets')"
             class="block w-full"
-            :input-attrs="{
-              class: 'text-xs',
-              placeholder: t('placeholders.enableFacets'),
-            }" />
+            :ui="{ base: 'text-xs' }" />
         </div>
       </UniqueId>
-      <i18n-t v-else keypath="emptyStates.facets.text" tag="p" class="text-sm font-light italic text-gray-600">
+      <i18n-t v-else keypath="emptyStates.facets.text" tag="p" class="text-sm font-light text-gray-600 italic">
         <template v-slot:link>
           <NuxtLink :to="`/indexes/${indexUid}/settings/filterable-attributes`" class="text-primary-600">
             {{ t('emptyStates.facets.link') }}
@@ -48,7 +49,7 @@
       </i18n-t>
     </section>
 
-    <section v-if="(facets as NonNullable<string[]>).length > 0" class="space-y-6 pb-6 pt-6">
+    <section v-if="(facets as NonNullable<string[]>).length > 0" class="space-y-6 pt-6 pb-6">
       <h3 class="text-md px-4 font-medium sm:px-6">
         {{ t('titles.filters') }}
       </h3>
@@ -73,7 +74,6 @@
 
 <script setup lang="ts">
 import { useMeiliClient } from '~/composables'
-import MultiCombobox from '~/components/layout/forms/MultiCombobox.vue'
 import StringFacet from '~/components/documents/StringFacet.vue'
 import type { AppliedFilters } from '~/utils/applied-filters'
 import { type FacetDistribution, type FacetStats, Meilisearch } from 'meilisearch'
@@ -105,6 +105,12 @@ const self = reactive({
 })
 
 const hydrateFacetsTypes = async (facets: string[]) => {
+  if (0 === facets.length) {
+    self.facetsTypeMap = new Map()
+    self.facetStats = {} as FacetStats
+    return
+  }
+
   const search = await meili.index(props.indexUid).search(
     null,
     reactive({

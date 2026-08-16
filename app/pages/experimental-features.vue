@@ -8,15 +8,16 @@
       {{ t('errors.unavailable.text') }}
     </Alert>
 
-    <ul v-else class="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow-sm">
+    <ul v-else class="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow-xs">
       <li v-for="feature in sortedFeatures" :key="feature" class="flex items-center justify-between gap-6 px-4 py-4">
         <div class="flex flex-col gap-1">
           <span class="font-medium text-gray-900">{{ labelFor(feature) }}</span>
           <span v-if="descriptionFor(feature)" class="text-sm text-gray-500">{{ descriptionFor(feature) }}</span>
         </div>
-        <Toggle
+        <USwitch
           :model-value="!!features[feature]"
           :disabled="pending.has(feature)"
+          size="lg"
           @update:model-value="toggle(feature, $event)" />
       </li>
     </ul>
@@ -28,7 +29,6 @@ import { useMeiliClient, useToasts } from '#imports'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from '~/stores/toasts'
 import Alert from '~/components/layout/Alert.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
-import Toggle from '~/components/layout/forms/Toggle.vue'
 import { humanize } from '~/utils'
 import type { RuntimeTogglableFeatures } from 'meilisearch'
 

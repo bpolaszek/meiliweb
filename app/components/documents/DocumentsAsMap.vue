@@ -1,6 +1,6 @@
 <template>
   <main class="grid h-full grid-cols-12 overflow-hidden">
-    <div class="col-span-3 h-full space-y-6 overflow-y-auto overflow-x-hidden px-4 pb-4">
+    <div class="col-span-3 h-full space-y-6 overflow-x-hidden overflow-y-auto px-4 pb-4">
       <DocumentCard
         v-for="document of documents"
         :indexUid="indexUid"

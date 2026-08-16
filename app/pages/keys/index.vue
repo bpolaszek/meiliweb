@@ -60,7 +60,7 @@
           <span v-if="formatDate(keys.results[i].expiresAt)">
             {{ formatDate(keys.results[i].expiresAt) }}
           </span>
-          <span v-else class="font-light italic text-gray-500">
+          <span v-else class="font-light text-gray-500 italic">
             {{ t('placeholders.never') }}
           </span>
         </td>

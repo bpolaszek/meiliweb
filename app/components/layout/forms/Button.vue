@@ -1,28 +1,24 @@
 <template>
-  <Component
-    :is="as"
-    :type
+  <UButton
+    :as="as"
+    :type="type"
     :disabled="disabled || loading"
-    class="flex items-center justify-center gap-2"
-    :class="themeClasses">
-    <template v-if="!iconOnRight">
-      <Icon v-if="loading" name="fluent:spinner-ios-16-filled" class="animate-spin" />
-      <Icon v-else-if="icon" :name="icon" />
-    </template>
-
+    :loading="loading"
+    :icon="icon"
+    :trailing="iconOnRight"
+    :color="color"
+    :variant="variant"
+    :size="'small' === size ? 'sm' : 'md'"
+    :class="themeClasses"
+    :ui="{ base: 'justify-center gap-2' }">
     <span v-if="loading">{{ loadingText ?? t('loadingText') }}</span>
     <slot v-else>{{ text }}</slot>
-
-    <template v-if="iconOnRight">
-      <Icon v-if="loading" name="fluent:spinner-ios-16-filled" class="animate-spin" />
-      <Icon v-else-if="icon" :name="icon" />
-    </template>
-  </Component>
+  </UButton>
 </template>
 
 <script setup lang="ts">
-import type { ComponentPublicInstance } from 'vue'
 import match from 'match-operator'
+import type { ComponentPublicInstance } from 'vue'
 
 type Props = {
   as?: string | ComponentPublicInstance
@@ -49,41 +45,17 @@ const props = withDefaults(defineProps<Props>(), {
 })
 const { t } = useI18n()
 const type = computed(() => props.type ?? ('button' === props.as ? 'button' : undefined))
+const isPrimary = computed(() => 'submit' === props.type || 'primary' === props.theme)
+const isSecondary = computed(() => 'reset' === props.type || 'secondary' === props.theme)
+const color = computed(() => (isPrimary.value ? 'primary' : 'neutral'))
+const variant = computed(() => (isPrimary.value || isSecondary.value ? 'solid' : 'outline'))
 const themeClasses = computed(() => {
   const classes = []
 
-  props.noBorder || classes.push('border')
-  props.noPadding || classes.push(...('small' === props.size ? ['py-1', 'px-2'] : ['py-1.5', 'px-4']))
-  props.noRounded || classes.push('rounded-lg')
-  'small' === props.size && classes.push('text-sm')
-
-  if ('submit' === props.type || 'primary' === props.theme) {
-    classes.push(
-      'text-white',
-      'bg-primary-600',
-      'focus-visible:outline',
-      'focus-visible:outline-2',
-      'focus-visible:outline-offset-2',
-      'focus-visible:outline-primary-600',
-      'hover:bg-primary-700',
-      'disabled:opacity-80',
-      'disabled:cursor-not-allowed',
-      'disabled:hover:bg-primary-600',
-    )
-  }
-  if ('reset' === props.type || 'secondary' === props.theme) {
-    classes.push(
-      'text-white',
-      'bg-gray-700',
-      'focus-visible:outline',
-      'focus-visible:outline-2',
-      'focus-visible:outline-offset-2',
-      'focus-visible:outline-gray-600',
-      'enabled:hover:bg-gray-600',
-      'disabled:opacity-80',
-      'disabled:cursor-not-allowed',
-    )
-  }
+  props.noBorder && classes.push('ring-0')
+  props.noPadding && classes.push('p-0')
+  props.noRounded ? classes.push('rounded-none') : classes.push('rounded-lg')
+  isSecondary.value && classes.push('bg-gray-700 enabled:hover:bg-gray-600')
 
   return classes
 })
@@ -100,4 +72,7 @@ const text = computed(() =>
 <i18n>
 en:
   loadingText: Please wait...
+  buttons:
+    submit: Submit
+    cancel: Cancel
 </i18n>

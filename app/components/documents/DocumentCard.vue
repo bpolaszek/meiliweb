@@ -14,21 +14,23 @@
         <dl class="space-y-2 @xl:space-y-0">
           <div class="@xl:table-row">
             <dt
-              class="text-sm font-medium uppercase text-gray-800 @xl:table-cell @xl:p-1"
+              class="text-sm font-medium text-gray-800 uppercase @xl:table-cell @xl:p-1"
               :title="primaryKey as string">
               {{ primaryKey }}
             </dt>
             <dd class="table-cell text-justify text-sm font-semibold text-gray-800 @xl:p-1">
-              <ValueRenderer
-                :index-uid="indexUid"
-                :field="primaryKey as string"
-                :value="document[primaryKey]"
-                :level="0" />
+              <DocumentIdLink :document-id="document[primaryKey]">
+                <ValueRenderer
+                  :index-uid="indexUid"
+                  :field="primaryKey as string"
+                  :value="document[primaryKey]"
+                  :level="0" />
+              </DocumentIdLink>
             </dd>
           </div>
           <template v-for="key of fieldsWithoutPrimaryKey">
             <div class="@xl:table-row">
-              <dt class="table-cell text-sm font-light uppercase text-gray-400 @xl:p-1" :title="key">
+              <dt class="table-cell text-sm font-light text-gray-400 uppercase @xl:p-1" :title="key">
                 {{ key }}
               </dt>
               <dd class="text-justify text-sm @xl:table-cell @xl:p-1">
@@ -49,6 +51,7 @@
 
 <script setup lang="ts">
 import ValueRenderer from './ValueRenderer.vue'
+import DocumentIdLink from './DocumentIdLink.vue'
 import { useFields } from '~/composables'
 import { looksLikeAPictureUrl } from '~/utils'
 
@@ -62,7 +65,10 @@ const props = defineProps<Props>()
 
 const picture = computed(() => Object.values(props.document).find(looksLikeAPictureUrl) as string | null)
 
-const { fieldsWithoutPrimaryKey, nameField } = useFields(props.primaryKey, Object.keys(props.document))
+const { fieldsWithoutPrimaryKey, nameField } = useFields(
+  props.primaryKey,
+  computed(() => Object.keys(props.document)),
+)
 const self: any = reactive({
   nameField,
   name: computed(() => props.document[self.nameField]),

@@ -1,7 +1,16 @@
+import type { EnqueuedTask } from 'meilisearch'
 import IndexNamePromptModal from '~/components/settings/IndexNamePromptModal.vue'
+import IndexSwapPromptModal from '~/components/settings/IndexSwapPromptModal.vue'
 import { useMeiliClient } from '~/composables/useMeiliClient'
 import { useTask } from '~/composables/useTask'
-import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS, usePromisifiedDialogs, useToasts } from '~/stores'
+import {
+  TOAST_FAILURE,
+  TOAST_PLEASEWAIT,
+  TOAST_SUCCESS,
+  useConfirmationDialog,
+  usePromisifiedDialogs,
+  useToasts,
+} from '~/stores'
 
 type RenameIndexOptions = {
   newIndexUid?: string
@@ -14,10 +23,20 @@ const DEFAULT_DUPLICATE_INDEX_OPTIONS: DuplicateIndexOptions = {
   onStart: () => {},
 }
 
+type SwapIndexOptions = {
+  targetIndexUid?: string
+  onStart: (targetIndexUid: string) => void
+}
+
+const DEFAULT_SWAP_INDEX_OPTIONS: SwapIndexOptions = {
+  onStart: () => {},
+}
+
 export const useIndexOperations = () => {
   const { t } = useI18n()
   const meili = useMeiliClient()
   const { openDialog } = usePromisifiedDialogs()
+  const { confirm } = useConfirmationDialog()
   const { createToast } = useToasts()
   const processTask = useTask()
 
@@ -143,5 +162,78 @@ export const useIndexOperations = () => {
     return newIndexUid
   }
 
-  return { duplicateIndex, renameIndex }
+  const swapIndex = async (indexUid: string, options: Partial<SwapIndexOptions> = {}): Promise<string> => {
+    let { onStart, targetIndexUid } = {
+      ...DEFAULT_SWAP_INDEX_OPTIONS,
+      ...options,
+    }
+
+    if (undefined === targetIndexUid) {
+      targetIndexUid = await openDialog(IndexSwapPromptModal, { indexUid })
+    }
+
+    onStart(targetIndexUid)
+    const toast = createToast({
+      ...TOAST_PLEASEWAIT(t),
+      title: t('toasts.titles.swapIndexes', { indexUid, targetIndexUid }),
+    })
+
+    // `rename` is required by the client's `IndexSwap` type; Meiliweb only ever plain-swaps.
+    const task = await processTask(() => meili.swapIndexes([{ indexes: [indexUid, targetIndexUid], rename: false }]), {
+      onCanceled: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.canceledTask'),
+        }),
+      onFailure: () =>
+        toast.update({
+          ...TOAST_FAILURE(t),
+          text: t('toasts.texts.failedTask'),
+        }),
+    })
+    if (task.status === 'failed') {
+      throw new Error('Failed to swap indexes')
+    }
+
+    toast.update({ ...TOAST_SUCCESS(t) })
+
+    return targetIndexUid
+  }
+
+  const compactIndex = async (indexUid: string): Promise<void> => {
+    if (!(await confirm({ text: t('confirmations.compactIndex.text') }))) {
+      return
+    }
+
+    const toast = createToast({
+      ...TOAST_PLEASEWAIT(t),
+      title: t('toasts.titles.compactIndex', { indexUid }),
+    })
+
+    // The JS client (meilisearch@0.60.0) does not expose `compact()` yet, so we talk to the
+    // REST API directly through the client's `httpRequest` (same approach as useWebhooks).
+    // @see https://www.meilisearch.com/docs/reference/api/indexes/compact-index
+    const task = await processTask(
+      () => meili.httpRequest.post({ path: `indexes/${indexUid}/compact` }) as Promise<EnqueuedTask>,
+      {
+        onCanceled: () =>
+          toast.update({
+            ...TOAST_FAILURE(t),
+            text: t('toasts.texts.canceledTask'),
+          }),
+        onFailure: () =>
+          toast.update({
+            ...TOAST_FAILURE(t),
+            text: t('toasts.texts.failedTask'),
+          }),
+      },
+    )
+    if (task.status === 'failed') {
+      throw new Error('Failed to compact index')
+    }
+
+    toast.update({ ...TOAST_SUCCESS(t) })
+  }
+
+  return { duplicateIndex, renameIndex, swapIndex, compactIndex }
 }

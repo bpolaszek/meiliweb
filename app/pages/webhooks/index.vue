@@ -25,7 +25,7 @@
           </span>
         </td>
         <td>
-          <span class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-sm">
+          <span class="inline-flex items-center gap-1 font-mono text-sm whitespace-nowrap">
             {{ webhooks[i].uuid }}
             <ClipboardButton :source="webhooks[i].uuid" class="shrink-0 grow-0" />
           </span>
@@ -34,7 +34,7 @@
           <span v-if="headerCount(webhooks[i])" class="text-sm">
             {{ t('headerCount', headerCount(webhooks[i])) }}
           </span>
-          <span v-else class="text-sm font-light italic text-gray-500">{{ t('placeholders.noHeaders') }}</span>
+          <span v-else class="text-sm font-light text-gray-500 italic">{{ t('placeholders.noHeaders') }}</span>
         </td>
         <td>
           <div v-if="webhooks[i].isEditable" class="flex items-center gap-2">
@@ -53,7 +53,7 @@
               <Icon name="heroicons:trash" />
             </button>
           </div>
-          <span v-else class="text-sm font-light italic text-gray-500">{{ t('placeholders.cliManaged') }}</span>
+          <span v-else class="text-sm font-light text-gray-500 italic">{{ t('placeholders.cliManaged') }}</span>
         </td>
       </template>
     </Table>

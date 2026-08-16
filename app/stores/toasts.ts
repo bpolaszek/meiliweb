@@ -1,6 +1,6 @@
+import { useToast } from '#imports'
 import { defineStore } from 'pinia'
 import { ulid } from 'ulid'
-import { toRef } from 'vue'
 import { type I18nT } from '../utils'
 
 type CreateToastOptions = {
@@ -13,10 +13,8 @@ type CreateToastOptions = {
   ttl?: number
 }
 
-export type Toast = CreateToastOptions & {
+export type Toast = {
   id: string
-  dismissable: boolean
-  show: boolean
   spawn: () => void
   destroy: () => void
   update: (options: Partial<CreateToastOptions>) => void
@@ -45,42 +43,50 @@ export const TOAST_FAILURE = (t: I18nT) => ({
 })
 
 export const useToasts = defineStore('toasts', () => {
-  const toasts: Map<string, Toast> = reactive(new Map())
+  const nuxtToasts = useToast()
+
+  // Adapt the historical toast options to Nuxt UI's toast props
+  const toToastProps = (options: CreateToastOptions) => ({
+    title: options.title,
+    description: options.text,
+    icon: options.icon,
+    // A `ttl` of 0 means "indefinite", and reka-ui's ToastRoot starts no auto-close timer for a
+    // duration of 0 — just like Infinity. Prefer 0: ToastRoot only refreshes its `remaining` time
+    // from a requestAnimationFrame loop, so it lags one render behind a duration change. Coming
+    // from Infinity, the toast progress bar was fed `Infinity / newDuration * 100` and ProgressRoot
+    // rejected it; coming from 0, the stale value fails the `remaining > 0` guard it sits behind.
+    duration: options.ttl ?? TOAST_DEFAULT_TTL,
+    close: options.dismissable ?? true,
+    ui: {
+      icon: ['size-6', ...(Array.isArray(options.iconClasses) ? options.iconClasses : [options.iconClasses ?? ''])]
+        .join(' ')
+        .trim(),
+    },
+  })
 
   const createToast = (options: CreateToastOptions): Toast => {
     const id = ulid()
-    const toast = reactive(
-      Object.assign(options, {
-        id,
-        dismissable: options.dismissable ?? true,
-        immediate: options.immediate ?? true,
-        ttl: options.ttl ?? TOAST_DEFAULT_TTL,
-        show: false,
-        spawn() {
-          this.show = true
-        },
-        destroy() {
-          toasts.delete(id)
-        },
-        update(options: Partial<CreateToastOptions>) {
-          Object.assign(this, options)
-        },
-      }),
-    )
-    toasts.set(id, toast)
-    if (toast.immediate) {
+    const current: CreateToastOptions = { ...options }
+    const toast: Toast = {
+      id,
+      spawn() {
+        nuxtToasts.add({ id, ...toToastProps(current) })
+      },
+      destroy() {
+        nuxtToasts.remove(id)
+      },
+      update(options: Partial<CreateToastOptions>) {
+        Object.assign(current, options)
+        nuxtToasts.update(id, toToastProps(current))
+      },
+    }
+    if (options.immediate ?? true) {
       toast.spawn()
     }
     return toast
   }
 
-  const self: any = reactive({
-    toasts: computed(() => [...toasts].map(([id, toast]) => toast)),
-    visibleToasts: computed(() => self.toasts.filter((toast: Toast) => toast.show)),
-  })
-
   return {
     createToast,
-    toasts: toRef(self, 'visibleToasts'),
   }
 })

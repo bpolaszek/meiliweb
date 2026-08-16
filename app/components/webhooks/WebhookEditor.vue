@@ -1,76 +1,82 @@
 <template>
-  <SlideOver v-model:open="open" :title="webhook ? t('title.edit') : t('title.create')">
-    <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
-      <p class="inline-flex w-full items-center justify-end">
-        <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/webhooks" />
-      </p>
+  <USlideover
+    v-model:open="open"
+    :title="webhook ? t('title.edit') : t('title.create')"
+    side="right"
+    :overlay="false"
+    :ui="{ content: 'max-w-lg', title: 'text-2xl font-semibold' }">
+    <template #body>
+      <form class="space-y-4" @reset.prevent="reset()" @submit.prevent="submit()">
+        <p class="inline-flex w-full items-center justify-end">
+          <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/webhooks" />
+        </p>
 
-      <Alert v-if="error" dismissable theme="danger" @close="error = null">
-        {{ error }}
-      </Alert>
+        <Alert v-if="error" dismissable theme="danger" @close="error = null">
+          {{ error }}
+        </Alert>
 
-      <UniqueId as="section" v-slot="{ id }" class="space-y-1">
-        <Label :for="id">{{ t('labels.url') }}</Label>
-        <input
-          :id
-          v-model="form.url"
-          type="url"
-          required
-          autofocus
-          :placeholder="t('placeholders.url')"
-          class="form-input w-full" />
-      </UniqueId>
-
-      <section class="space-y-2">
-        <Label>{{ t('labels.headers') }}</Label>
-        <p class="text-sm font-light text-gray-600">{{ t('hints.headers') }}</p>
-        <div v-for="(header, i) of form.headers" :key="header.id" class="flex items-start gap-2">
+        <UniqueId as="section" v-slot="{ id }" class="space-y-1">
+          <Label :for="id">{{ t('labels.url') }}</Label>
           <input
-            v-model="header.key"
-            :placeholder="t('placeholders.headerKey')"
-            class="form-input w-1/3"
-            autocapitalize="off"
-            autocomplete="off"
-            spellcheck="false" />
-          <div class="flex-1">
+            :id
+            v-model="form.url"
+            type="url"
+            required
+            autofocus
+            :placeholder="t('placeholders.url')"
+            class="form-input w-full" />
+        </UniqueId>
+
+        <section class="space-y-2">
+          <Label>{{ t('labels.headers') }}</Label>
+          <p class="text-sm font-light text-gray-600">{{ t('hints.headers') }}</p>
+          <div v-for="(header, i) of form.headers" :key="header.id" class="flex items-start gap-2">
             <input
-              v-model="header.value"
-              :placeholder="t('placeholders.headerValue')"
-              class="form-input w-full"
+              v-model="header.key"
+              :placeholder="t('placeholders.headerKey')"
+              class="form-input w-1/3"
               autocapitalize="off"
               autocomplete="off"
-              spellcheck="false"
-              @input="header.redacted = false" />
-            <p v-if="header.redacted" class="mt-1 text-xs font-light italic text-gray-500">
-              {{ t('hints.redacted') }}
-            </p>
+              spellcheck="false" />
+            <div class="flex-1">
+              <input
+                v-model="header.value"
+                :placeholder="t('placeholders.headerValue')"
+                class="form-input w-full"
+                autocapitalize="off"
+                autocomplete="off"
+                spellcheck="false"
+                @input="header.redacted = false" />
+              <p v-if="header.redacted" class="mt-1 text-xs font-light text-gray-500 italic">
+                {{ t('hints.redacted') }}
+              </p>
+            </div>
+            <button
+              type="button"
+              v-tippy="t('actions.removeHeader')"
+              class="mt-2 shrink-0 text-gray-400 hover:text-red-600"
+              @click="form.headers.splice(i, 1)">
+              <Icon name="heroicons:trash" />
+            </button>
           </div>
-          <button
-            type="button"
-            v-tippy="t('actions.removeHeader')"
-            class="mt-2 shrink-0 text-gray-400 hover:text-red-600"
-            @click="form.headers.splice(i, 1)">
-            <Icon name="heroicons:trash" />
-          </button>
-        </div>
-        <Button type="button" size="small" icon="heroicons:plus" @click="addHeader()">
-          {{ t('actions.addHeader') }}
-        </Button>
-      </section>
+          <Button type="button" size="small" icon="heroicons:plus" @click="addHeader()">
+            {{ t('actions.addHeader') }}
+          </Button>
+        </section>
 
-      <footer class="flex flex-col items-center justify-end sm:flex-row">
-        <Buttons>
-          <Button type="reset" :disabled="loading" />
-          <Button type="submit" :disabled="loading" :loading />
-        </Buttons>
-      </footer>
-    </form>
-  </SlideOver>
+        <footer class="flex flex-col items-center justify-end sm:flex-row">
+          <Buttons>
+            <Button type="reset" :disabled="loading" />
+            <Button type="submit" :disabled="loading" :loading />
+          </Buttons>
+        </footer>
+      </form>
+    </template>
+  </USlideover>
 </template>
 
 <script setup lang="ts">
 import { ulid } from 'ulid'
-import SlideOver from '~/components/layout/SlideOver.vue'
 import UniqueId from '~/components/UniqueId.vue'
 import Label from '~/components/layout/forms/Label.vue'
 import Button from '~/components/layout/forms/Button.vue'

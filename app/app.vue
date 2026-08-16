@@ -1,18 +1,17 @@
 <template>
-  <!--  <Login v-if="!credentials" />-->
-  <div class="relative h-dvh">
-    <NuxtPage :page-key="pageKey" />
-    <DebugMemory
-      v-if="IS_DEV_MODE && config.public.debugMemoryUsage"
-      class="absolute bottom-0 flex w-full items-center justify-center gap-4 pb-6 text-xs text-gray-600" />
-  </div>
-  <Toaster />
-  <ConfirmationDialog v-if="confirmationDialog" v-bind="confirmationDialog" />
-  <PromisifiedDialogs />
+  <UApp>
+    <div class="relative h-dvh">
+      <NuxtPage :page-key="pageKey" />
+      <DebugMemory
+        v-if="IS_DEV_MODE && config.public.debugMemoryUsage"
+        class="absolute bottom-0 flex w-full items-center justify-center gap-4 pb-6 text-xs text-gray-600" />
+    </div>
+    <ConfirmationDialog v-if="confirmationDialog" v-bind="confirmationDialog" />
+    <PromisifiedDialogs />
+  </UApp>
 </template>
 
 <script setup lang="ts">
-import Toaster from '~/components/layout/toasts/Toaster.vue'
 import ConfirmationDialog from '~/components/layout/ConfirmationDialog.vue'
 import PromisifiedDialogs from '~/components/layout/dialogs/PromisifiedDialogs.vue'
 import { safeToRefs } from '~/utils'
@@ -58,11 +57,17 @@ en:
       error: An error occured.
       duplicateIndex: Copying {indexUid} to {newIndexUid}
       renameIndex: Renaming {indexUid} to {newIndexUid}
+      swapIndexes: Swapping {indexUid} with {targetIndexUid}
+      compactIndex: Compacting {indexUid}
     texts:
       pleaseWait: Please wait...
       done: Done.
       canceledTask: Task was canceled.
       failedTask: Task failed.
+
+  confirmations:
+    compactIndex:
+      text: Compact this index? It may take a while depending on its size, and search/indexing operations on it will be slower during compaction.
 
   buttons:
     reset: Reset
@@ -70,29 +75,3 @@ en:
     submit: Submit
 
 </i18n>
-
-<style lang="scss">
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-@layer components {
-  /* @tailwindcss/forms enhancement */
-  .form-input,
-  .form-checkbox {
-    @apply rounded-md border-gray-300 shadow-sm focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-600;
-  }
-  .form-checkbox {
-    @apply rounded-sm text-primary-600;
-  }
-  /* Ensure main container has full height */
-  #__nuxt {
-    @apply h-full;
-  }
-}
-@layer components {
-  @import '../node_modules/@vueform/slider/themes/tailwind';
-}
-body {
-  font-family: 'DM Sans', sans-serif;
-}
-</style>

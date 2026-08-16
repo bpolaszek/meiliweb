@@ -3,7 +3,7 @@
     <h3 class="inline-flex w-full items-start justify-between">
       <span class="inline-flex flex-col gap-1">
         <span class="text-xl font-semibold">{{ t('title') }}</span>
-        <span class="text-sm italic text-gray-600">
+        <span class="text-sm text-gray-600 italic">
           {{ t('description') }}
         </span>
       </span>
@@ -15,16 +15,16 @@
         v-for="rule in displayList"
         :key="rule"
         role="treeitem"
-        class="flex cursor-move items-center justify-between gap-2 rounded-md border border-gray-100 px-2 py-1.5 text-sm text-gray-800 shadow-sm">
+        class="flex cursor-move items-center justify-between gap-2 rounded-md border border-gray-100 px-2 py-1.5 text-sm text-gray-800 shadow-xs">
         <dl class="flex-1 overflow-hidden">
           <template v-if="isBuiltIn(rule)">
-            <dt class="font-medium capitalize">{{ rule }}</dt>
-            <dd class="text-xs italic text-gray-600">{{ t(`descriptions.${rule}`) }}</dd>
+            <dt class="font-medium capitalize">{{ formatRuleLabel(rule) }}</dt>
+            <dd class="text-xs text-gray-600 italic">{{ t(`descriptions.${rule}`) }}</dd>
           </template>
           <template v-else>
             <dt class="flex items-center gap-1.5 font-medium">
               <span
-                class="inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-xs font-semibold"
+                class="inline-flex shrink-0 items-center rounded-sm px-1.5 py-0.5 text-xs font-semibold"
                 :class="
                   parseCustomRule(rule)?.direction === 'asc'
                     ? 'bg-blue-100 text-blue-700'
@@ -34,7 +34,7 @@
               </span>
               <span class="truncate">{{ parseCustomRule(rule)?.field }}</span>
             </dt>
-            <dd class="text-xs italic text-gray-600">{{ t('descriptions.custom') }}</dd>
+            <dd class="text-xs text-gray-600 italic">{{ t('descriptions.custom') }}</dd>
           </template>
         </dl>
         <div class="flex shrink-0 items-center gap-1">
@@ -107,10 +107,14 @@ type Props = {
 }
 const props = defineProps<Props>()
 
-const BUILT_IN_RULES = ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness']
+const BUILT_IN_RULES = ['words', 'typo', 'proximity', 'attribute', 'attributeRank', 'wordPosition', 'sort', 'exactness']
 
 function isBuiltIn(rule: string): boolean {
   return BUILT_IN_RULES.includes(rule)
+}
+
+function formatRuleLabel(rule: string): string {
+  return rule.replace(/([a-z])([A-Z])/g, '$1 $2')
 }
 
 function parseCustomRule(rule: string): { direction: 'asc' | 'desc'; field: string } | null {
@@ -252,6 +256,8 @@ en:
     typo: Sorts results by increasing number of typos.
     proximity: Sorts results by increasing distance between matched query terms.
     attribute: Sorts results based on the attribute ranking order.
+    attributeRank: Sorts results based on which searchable attribute the query terms matched in.
+    wordPosition: Sorts results based on the position of the matched query terms within the attribute.
     sort: Sorts results based on parameters decided at query time.
     exactness: Sorts results based on the similarity of the matched words with the query words.
     custom: Custom ranking rule — sorts results by the value of this attribute.

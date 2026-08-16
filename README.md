@@ -53,11 +53,13 @@ yarn build && yarn preview
 ```
 
 ### Docker build
+
 ```bash
 docker build -t meiliweb .
 ```
 
 ### Docker run
+
 ```bash
 docker run -p 3000:3000 -d meiliweb
 ```

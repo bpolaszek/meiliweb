@@ -1,5 +1,5 @@
 <template>
-  <main class="space-y-6 @container">
+  <main class="@container space-y-6">
     <DocumentCard
       v-for="document of documents"
       :indexUid="indexUid"

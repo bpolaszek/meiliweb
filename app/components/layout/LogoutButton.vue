@@ -2,7 +2,7 @@
   <button
     type="button"
     v-tippy="t('label')"
-    class="relative ml-5 flex-shrink-0 rounded-full bg-white p-1 text-gray-800 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+    class="relative ml-5 shrink-0 rounded-full bg-white p-1 text-gray-800 hover:text-gray-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-hidden"
     @click="confirmLogout()">
     <span class="absolute -inset-1.5" />
     <span class="sr-only">{{ t('label') }}</span>

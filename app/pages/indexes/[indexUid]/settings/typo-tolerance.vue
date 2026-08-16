@@ -3,7 +3,7 @@
     <h3 class="inline-flex w-full items-start justify-between">
       <span class="inline-flex flex-col gap-1">
         <span class="text-xl font-semibold">{{ t('title') }}</span>
-        <span class="text-sm italic text-gray-600">
+        <span class="text-sm text-gray-600 italic">
           {{ t('description') }}
         </span>
       </span>

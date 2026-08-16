@@ -3,7 +3,7 @@
     <UniqueId as="section" v-slot="{ id }" class="flex flex-col gap-2">
       <Label required :for="id">{{ t('labels.primaryKey') }}</Label>
       <input v-model="primaryKey" required autofocus autocomplete="off" type="text" class="form-input" />
-      <p class="text-xs italic text-gray-600">
+      <p class="text-xs text-gray-600 italic">
         {{ t('notices.primaryKey.text') }}
       </p>
     </UniqueId>

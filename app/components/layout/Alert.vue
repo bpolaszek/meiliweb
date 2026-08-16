@@ -1,13 +1,15 @@
 <template>
-  <div class="space-y-1 rounded-md border px-4 py-2 text-sm shadow-md" :class="themeClasses">
-    <header class="flex items-center justify-between">
-      <span class="text-lg font-semibold">{{ title ?? t('errorTitle') }}</span>
-      <button v-if="dismissable" type="button" class="h-full shrink-0 grow-0" @click="emit('close')">
-        <Icon name="mingcute:close-fill" />
-      </button>
-    </header>
-    <slot />
-  </div>
+  <UAlert
+    :color="color"
+    variant="subtle"
+    :title="title ?? defaultTitle"
+    :close="dismissable"
+    :ui="{ title: 'text-lg font-semibold', description: 'text-sm' }"
+    @update:open="emit('close')">
+    <template #description>
+      <slot />
+    </template>
+  </UAlert>
 </template>
 
 <script setup lang="ts">
@@ -26,14 +28,20 @@ const props = withDefaults(defineProps<Props>(), {
 })
 const { t } = useI18n()
 
-const themeClasses = computed(() =>
-  match(props.theme, [
-    ['warning', 'border-orange-300 bg-orange-200 text-black'],
-    ['danger', 'border-red-300 bg-red-200 text-black'],
-    ['success', 'border-green-300 bg-green-200 text-black'],
-    [match.default, 'border-gray-300 bg-gray-50 text-black'],
-  ]),
+const color = computed(
+  () =>
+    match(props.theme, [
+      ['warning', 'warning'],
+      ['danger', 'error'],
+      ['success', 'success'],
+      [match.default, 'neutral'],
+    ]) as 'warning' | 'error' | 'success' | 'neutral',
 )
+
+// Only the `danger` theme has a sensible fallback title ("An error occured.").
+// Other themes render no title when none is given, rather than misleadingly
+// borrowing the error copy.
+const defaultTitle = computed(() => ('danger' === props.theme ? t('errorTitle') : undefined))
 </script>
 
 <i18n>

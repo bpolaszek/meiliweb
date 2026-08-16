@@ -1,5 +1,3 @@
-import TailwindConfig from './tailwind.config'
-
 export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
@@ -11,17 +9,21 @@ export default defineNuxtConfig({
       debugMemoryUsage: false,
     },
   },
+  css: ['@vueform/slider/themes/default.css', '~/assets/css/main.css'],
+  ui: {
+    // The app is light-only and loads its font via @nuxtjs/google-fonts
+    colorMode: false,
+    fonts: false,
+  },
+  icon: {
+    // Keep icon base styles in a cascade layer so Tailwind utilities
+    // (e.g. size-14) can override them (Tailwind v4 uses real @layer rules).
+    cssLayer: 'base',
+  },
   modules: [
     '@pinia/nuxt',
-    '@nuxt/icon',
+    '@nuxt/ui',
     '@nuxtjs/i18n',
-    [
-      '@nuxtjs/tailwindcss',
-      {
-        editorSupport: true,
-        config: TailwindConfig,
-      },
-    ],
     [
       '@nuxtjs/google-fonts',
       {
@@ -46,15 +48,13 @@ export default defineNuxtConfig({
     },
     optimizeDeps: {
       include: [
-        '@headlessui/vue',
-        '@heroicons/vue/20/solid',
-        '@heroicons/vue/24/outline',
         '@vue/devtools-core',
         '@vue/devtools-kit',
         '@vueform/slider',
         '@vueuse/core',
         'file-size', // CJS
         'humanize-string',
+        'json-editor-vue',
         'json-oneline-stringify',
         'jwt-encode', // CJS
         'match-operator',
