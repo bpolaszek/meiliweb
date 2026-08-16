@@ -27,7 +27,7 @@
 import { NuxtLink, NuxtPage } from '#components'
 import { onMounted } from 'vue'
 import { useMeiliClient } from '~/composables'
-import { useChatAvailability } from '~/stores'
+import { useChatAvailability, useVersion } from '~/stores'
 import { safeToRefs, tryOrThrow } from '~/utils'
 import humanizeString from 'humanize-string'
 
@@ -36,6 +36,7 @@ const route = useRoute()
 const indexUid = route.params.indexUid
 const meili = useMeiliClient()
 const { available: chatAvailable } = safeToRefs(useChatAvailability())
+const { satisfiesVersion } = useVersion()
 const index = await tryOrThrow(() => meili.getIndex(indexUid as string))
 
 type NavigationItem = {
@@ -51,6 +52,12 @@ const navigation: Array<NavigationItem> = reactive([
     href: `/indexes/${index.uid}/settings/general-settings`,
     current: computed(() => 'indexes-indexUid-settings-general-settings' === route.name),
     text: t('menu.generalSettings'),
+  },
+  {
+    href: `/indexes/${index.uid}/settings/fields`,
+    current: computed(() => 'indexes-indexUid-settings-fields' === route.name),
+    visible: computed(() => satisfiesVersion('>=1.33.0')),
+    text: t('menu.fields'),
   },
   {
     href: `/indexes/${index.uid}/settings/import-documents`,
@@ -166,6 +173,7 @@ en:
     embedders: Embedders
     chat: Chat
     foreignKeys: Foreign Keys
+    fields: Fields
     localSettings: Local settings
   actions:
     documents: Go to Documents
