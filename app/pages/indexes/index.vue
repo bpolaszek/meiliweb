@@ -6,7 +6,9 @@
       </Button>
     </template>
     <template v-if="indexes.length > 0">
-      <Table :items="indexes" :keys="['uid', 'numberOfDocuments', 'primaryKey', 'createdAt', 'updatedAt']">
+      <Table
+        :items="indexes"
+        :keys="['uid', 'primaryKey', 'createdAt', 'updatedAt', 'fieldsCount', 'indexSize', 'numberOfDocuments']">
         <template #columns>
           <th scope="col" class="relative isolate">
             {{ t('columns.index') }}
@@ -18,6 +20,16 @@
           </th>
           <th scope="col">{{ t('columns.createdAt') }}</th>
           <th scope="col">{{ t('columns.updatedAt') }}</th>
+          <th scope="col">
+            <div class="text-right">
+              {{ t('columns.fieldsCount') }}
+            </div>
+          </th>
+          <th scope="col">
+            <div class="text-right">
+              {{ t('columns.indexSize') }}
+            </div>
+          </th>
           <th scope="col">
             <div class="text-right">
               {{ t('columns.numberOfDocuments') }}
@@ -36,6 +48,13 @@
               <Badge v-if="item.isIndexing" class="text-xs uppercase">
                 {{ t('labels.isIndexing') }}
               </Badge>
+              <Badge
+                v-if="item.numberOfEmbeddings > 0"
+                theme="neutral"
+                class="text-xs uppercase"
+                v-tippy="t('labels.embeddingsTooltip', item)">
+                {{ t('labels.embeddings', item) }}
+              </Badge>
             </span>
             <div class="absolute right-full bottom-0 h-px w-screen bg-gray-100" />
             <div class="absolute bottom-0 left-0 h-px w-screen bg-gray-100" />
@@ -45,6 +64,15 @@
           </td>
           <td>{{ formatDate(item.createdAt) }}</td>
           <td>{{ formatDate(item.updatedAt) }}</td>
+          <td class="text-right">
+            {{ Object.keys(item.fieldDistribution ?? {}).length }}
+          </td>
+          <td class="text-right" v-tippy="sizeTooltip(item)">
+            <div class="font-medium">{{ filesize(item.indexSize ?? 0).human() }}</div>
+            <div class="text-xs text-gray-400">
+              {{ t('labels.used', { size: filesize(item.usedIndexSize ?? 0).human() }) }}
+            </div>
+          </td>
           <td class="text-right">
             {{ item.numberOfDocuments }}
           </td>
@@ -100,6 +128,7 @@ import { Index } from 'meilisearch'
 import { promiseTimeout, whenever } from '@vueuse/core'
 import { navigateTo } from '#imports'
 import PageSize from '~/components/layout/pagination/PageSize.vue'
+import filesize from 'file-size'
 
 const { t } = useI18n()
 useHead({
@@ -131,15 +160,26 @@ const fetchIndexes = async (offset = self.offset, limit = self.itemsPerPage) =>
 whenever(
   toRef(self, 'indexes'),
   async (indexes) => {
-    for (const index of indexes) {
-      let indexInfo = await meili.getIndex(index.uid)
-      Object.assign(index, await indexInfo.getStats())
-    }
+    // `indexSize` and `usedIndexSize` are returned by the API but not yet typed by
+    // meilisearch@0.60.0's IndexStats — checked against a live 1.53.1 instance.
+    await Promise.all(
+      indexes.map(async (index) => {
+        const indexInfo = await meili.getIndex(index.uid)
+        Object.assign(index, await indexInfo.getStats())
+      }),
+    )
   },
   { immediate: true },
 )
 
 const { satisfiesVersion } = useVersion()
+
+const sizeTooltip = (item: Index & { rawDocumentDbSize?: number; avgDocumentSize?: number }) =>
+  t('labels.sizeTooltip', {
+    rawDocumentDbSize: filesize(item.rawDocumentDbSize ?? 0).human(),
+    avgDocumentSize: filesize(item.avgDocumentSize ?? 0).human(),
+  })
+
 const { duplicateIndex: doDuplicateIndex } = useIndexOperations()
 const duplicateIndex = async (indexUid: string) => {
   const newIndexUid = await doDuplicateIndex(indexUid)
@@ -230,8 +270,14 @@ en:
     primaryKey: Primary Key
     createdAt: Created At
     updatedAt: Updated At
+    fieldsCount: Fields
+    indexSize: Size
   labels:
     isIndexing: Indexing
+    embeddings: '{numberOfEmbeddings} embeddings'
+    embeddingsTooltip: '{numberOfEmbeddings} embeddings across {numberOfEmbeddedDocuments} embedded documents'
+    used: '{size} used'
+    sizeTooltip: 'Raw document DB size: {rawDocumentDbSize} · Avg. document size: {avgDocumentSize}'
   actions:
     create: Create
     createExpanded: Create an index
