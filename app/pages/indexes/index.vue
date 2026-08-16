@@ -8,7 +8,15 @@
     <template v-if="indexes.length > 0">
       <Table
         :items="indexes"
-        :keys="['uid', 'primaryKey', 'createdAt', 'updatedAt', 'fieldsCount', 'indexSize', 'numberOfDocuments']">
+        :keys="[
+          'uid',
+          'primaryKey',
+          'updatedAt',
+          'numberOfDocuments',
+          'fieldsCount',
+          'numberOfEmbeddings',
+          'indexSize',
+        ]">
         <template #columns>
           <th scope="col" class="relative isolate">
             {{ t('columns.index') }}
@@ -18,8 +26,12 @@
           <th scope="col">
             {{ t('columns.primaryKey') }}
           </th>
-          <th scope="col">{{ t('columns.createdAt') }}</th>
           <th scope="col">{{ t('columns.updatedAt') }}</th>
+          <th scope="col">
+            <div class="text-right">
+              {{ t('columns.numberOfDocuments') }}
+            </div>
+          </th>
           <th scope="col">
             <div class="text-right">
               {{ t('columns.fieldsCount') }}
@@ -27,12 +39,12 @@
           </th>
           <th scope="col">
             <div class="text-right">
-              {{ t('columns.indexSize') }}
+              {{ t('columns.numberOfEmbeddings') }}
             </div>
           </th>
           <th scope="col">
             <div class="text-right">
-              {{ t('columns.numberOfDocuments') }}
+              {{ t('columns.indexSize') }}
             </div>
           </th>
           <th />
@@ -48,13 +60,6 @@
               <Badge v-if="item.isIndexing" class="text-xs uppercase">
                 {{ t('labels.isIndexing') }}
               </Badge>
-              <Badge
-                v-if="item.numberOfEmbeddings > 0"
-                theme="neutral"
-                class="text-xs uppercase"
-                v-tippy="t('labels.embeddingsTooltip', item)">
-                {{ t('labels.embeddings', item) }}
-              </Badge>
             </span>
             <div class="absolute right-full bottom-0 h-px w-screen bg-gray-100" />
             <div class="absolute bottom-0 left-0 h-px w-screen bg-gray-100" />
@@ -62,19 +67,24 @@
           <td>
             <Badge theme="neutral">{{ item.primaryKey }}</Badge>
           </td>
-          <td>{{ formatDate(item.createdAt) }}</td>
           <td>{{ formatDate(item.updatedAt) }}</td>
           <td class="text-right">
+            {{ item.numberOfDocuments }}
+          </td>
+          <td class="text-right">
             {{ Object.keys(item.fieldDistribution ?? {}).length }}
+          </td>
+          <td class="text-right">
+            <template v-if="item.numberOfEmbeddings > 0">
+              <span v-tippy="embeddingsTooltip(item)">{{ item.numberOfEmbeddings }}</span>
+            </template>
+            <span v-else class="text-gray-300">—</span>
           </td>
           <td class="text-right" v-tippy="sizeTooltip(item)">
             <div class="font-medium">{{ filesize(item.indexSize ?? 0).human() }}</div>
             <div class="text-xs text-gray-400">
               {{ t('labels.used', { size: filesize(item.usedIndexSize ?? 0).human() }) }}
             </div>
-          </td>
-          <td class="text-right">
-            {{ item.numberOfDocuments }}
           </td>
           <td class="text-right">
             <UDropdownMenu :items="indexMenuItems(item)" :content="{ align: 'end' }" :ui="{ content: 'w-48' }">
@@ -180,6 +190,9 @@ const sizeTooltip = (item: Index & { rawDocumentDbSize?: number; avgDocumentSize
     avgDocumentSize: filesize(item.avgDocumentSize ?? 0).human(),
   })
 
+const embeddingsTooltip = (item: Index & { numberOfEmbeddedDocuments?: number }) =>
+  t('labels.embeddingsTooltip', { numberOfEmbeddedDocuments: item.numberOfEmbeddedDocuments ?? 0 })
+
 const { duplicateIndex: doDuplicateIndex } = useIndexOperations()
 const duplicateIndex = async (indexUid: string) => {
   const newIndexUid = await doDuplicateIndex(indexUid)
@@ -268,14 +281,13 @@ en:
     index: Index
     numberOfDocuments: Nb. docs
     primaryKey: Primary Key
-    createdAt: Created At
     updatedAt: Updated At
     fieldsCount: Fields
+    numberOfEmbeddings: Embeddings
     indexSize: Size
   labels:
     isIndexing: Indexing
-    embeddings: '{numberOfEmbeddings} embeddings'
-    embeddingsTooltip: '{numberOfEmbeddings} embeddings across {numberOfEmbeddedDocuments} embedded documents'
+    embeddingsTooltip: 'Across {numberOfEmbeddedDocuments} embedded documents'
     used: '{size} used'
     sizeTooltip: 'Raw document DB size: {rawDocumentDbSize} · Avg. document size: {avgDocumentSize}'
   actions:
