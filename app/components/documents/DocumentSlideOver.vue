@@ -15,7 +15,13 @@
 
         <p v-if="fetching" class="text-sm font-light text-gray-500 italic">{{ t('loading') }}</p>
 
-        <JsonEditorVue v-else v-model="json" mode="text" :read-only="loading" class="json-editor min-h-0 flex-1" />
+        <JsonEditorVue
+          v-else
+          v-model="json"
+          mode="text"
+          :read-only="loading"
+          :onRenderMenu="hideTableMode"
+          class="json-editor min-h-0 flex-1" />
 
         <footer class="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <Button
@@ -68,6 +74,21 @@ const fetching = ref(true)
 /** Last known persisted state, used to reset the editor. Not named `document`: that shadows the global. */
 const savedDocument = ref<any>(null)
 const json = ref('')
+
+/** Subset of vanilla-jsoneditor's `MenuItem` we need; it isn't a direct dependency of ours. */
+type MenuItem = { type: string; text?: string; className?: string }
+
+/**
+ * A Meilisearch document is always a JSON object, and table mode only opens arrays — the button
+ * could never do anything but show "an object cannot be opened in table mode". Drop it, and hand
+ * its `jse-last` class to `tree`, which the menu's CSS uses to close the button group's border.
+ * Matching on the label is what the library gives us; if it ever renames them, the button simply
+ * comes back.
+ */
+const hideTableMode = (items: MenuItem[]) =>
+  items
+    .filter(({ text }) => 'table' !== text)
+    .map((item) => ('tree' === item.text ? { ...item, className: `${item.className ?? ''} jse-last` } : item))
 
 /**
  * `mode="text"` hands back the raw text (`stringified` defaults to `true`), but the built-in mode
