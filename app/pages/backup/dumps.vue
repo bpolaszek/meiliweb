@@ -27,7 +27,8 @@
 <script setup lang="ts">
 import { tryOrThrow, useMeiliClient, useToasts } from '#imports'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS } from '~/stores/toasts'
-import { useFormSubmit, useTask } from '~/composables'
+import { EXPORT_MIN_VERSION, useFormSubmit, useTask } from '~/composables'
+import { useVersion } from '~/stores'
 import Alert from '~/components/layout/Alert.vue'
 import PageTabs from '~/components/layout/PageTabs.vue'
 import BackupTasksTable from '~/components/backup/BackupTasksTable.vue'
@@ -36,6 +37,7 @@ import Button from '~/components/layout/forms/Button.vue'
 
 const { t } = useI18n()
 const meili = useMeiliClient()
+const { satisfiesVersion } = useVersion()
 const fetchTasks = () => tryOrThrow(() => meili.tasks.getTasks({ types: ['dumpCreation'] }))
 const { createToast } = useToasts()
 const processTask = useTask()
@@ -45,10 +47,11 @@ const { loading, error, handle } = useFormSubmit({
     text: t('confirmations.create.text'),
   },
 })
-const tabs = [
+const tabs = computed(() => [
   { label: t('tabs.dumps'), to: '/backup/dumps' },
   { label: t('tabs.snapshots'), to: '/backup/snapshots' },
-]
+  ...(satisfiesVersion(EXPORT_MIN_VERSION) ? [{ label: t('tabs.export'), to: '/backup/export' }] : []),
+])
 const self = reactive({
   tasks: await fetchTasks(),
 })
@@ -93,6 +96,7 @@ en:
   tabs:
     dumps: Dumps
     snapshots: Snapshots
+    export: Export
   columns:
     dumpUid: Dump Uid
   emptyState: No dumps yet.
