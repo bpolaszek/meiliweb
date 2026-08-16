@@ -6,7 +6,17 @@
       </Button>
     </template>
     <template v-if="indexes.length > 0">
-      <Table :items="indexes" :keys="['uid', 'numberOfDocuments', 'primaryKey', 'createdAt', 'updatedAt']">
+      <Table
+        :items="indexes"
+        :keys="[
+          'uid',
+          'primaryKey',
+          'updatedAt',
+          'numberOfDocuments',
+          'fieldsCount',
+          'numberOfEmbeddings',
+          'indexSize',
+        ]">
         <template #columns>
           <th scope="col" class="relative isolate">
             {{ t('columns.index') }}
@@ -16,11 +26,25 @@
           <th scope="col">
             {{ t('columns.primaryKey') }}
           </th>
-          <th scope="col">{{ t('columns.createdAt') }}</th>
           <th scope="col">{{ t('columns.updatedAt') }}</th>
           <th scope="col">
             <div class="text-right">
               {{ t('columns.numberOfDocuments') }}
+            </div>
+          </th>
+          <th scope="col">
+            <div class="text-right">
+              {{ t('columns.fieldsCount') }}
+            </div>
+          </th>
+          <th scope="col">
+            <div class="text-right">
+              {{ t('columns.numberOfEmbeddings') }}
+            </div>
+          </th>
+          <th scope="col">
+            <div class="text-right">
+              {{ t('columns.indexSize') }}
             </div>
           </th>
           <th />
@@ -43,10 +67,27 @@
           <td>
             <Badge theme="neutral">{{ item.primaryKey }}</Badge>
           </td>
-          <td>{{ formatDate(item.createdAt) }}</td>
           <td>{{ formatDate(item.updatedAt) }}</td>
           <td class="text-right">
             {{ item.numberOfDocuments }}
+          </td>
+          <td class="text-right">
+            {{ Object.keys(item.fieldDistribution ?? {}).length }}
+          </td>
+          <td class="text-right">
+            <template v-if="item.numberOfEmbeddings > 0">
+              <span v-tippy="embeddingsTooltip(item)">{{ item.numberOfEmbeddings }}</span>
+            </template>
+            <span v-else class="text-gray-300">—</span>
+          </td>
+          <td class="text-right" v-tippy="sizeTooltip(item)">
+            <template v-if="item.indexSize != null">
+              <div class="font-medium">{{ filesize(item.indexSize).human() }}</div>
+              <div class="text-xs text-gray-400">
+                {{ t('labels.used', { size: filesize(item.usedIndexSize ?? 0).human() }) }}
+              </div>
+            </template>
+            <div v-else class="font-medium">{{ filesize(item.rawDocumentDbSize ?? 0).human() }}</div>
           </td>
           <td class="text-right">
             <UDropdownMenu :items="indexMenuItems(item)" :content="{ align: 'end' }" :ui="{ content: 'w-48' }">
@@ -100,6 +141,7 @@ import { Index } from 'meilisearch'
 import { promiseTimeout, whenever } from '@vueuse/core'
 import { navigateTo } from '#imports'
 import PageSize from '~/components/layout/pagination/PageSize.vue'
+import filesize from 'file-size'
 
 const { t } = useI18n()
 useHead({
@@ -131,15 +173,33 @@ const fetchIndexes = async (offset = self.offset, limit = self.itemsPerPage) =>
 whenever(
   toRef(self, 'indexes'),
   async (indexes) => {
-    for (const index of indexes) {
-      let indexInfo = await meili.getIndex(index.uid)
-      Object.assign(index, await indexInfo.getStats())
-    }
+    // `indexSize` and `usedIndexSize` are returned by the API but not yet typed by
+    // meilisearch@0.60.0's IndexStats — checked against a live 1.53.1 instance.
+    await Promise.all(
+      indexes.map(async (index) => {
+        const indexInfo = await meili.getIndex(index.uid)
+        Object.assign(index, await indexInfo.getStats())
+      }),
+    )
   },
   { immediate: true },
 )
 
 const { satisfiesVersion } = useVersion()
+
+const sizeTooltip = (item: Index & { indexSize?: number; rawDocumentDbSize?: number; avgDocumentSize?: number }) =>
+  item.indexSize != null
+    ? t('labels.sizeTooltip', {
+        rawDocumentDbSize: filesize(item.rawDocumentDbSize ?? 0).human(),
+        avgDocumentSize: filesize(item.avgDocumentSize ?? 0).human(),
+      })
+    : t('labels.sizeTooltipFallback', {
+        avgDocumentSize: filesize(item.avgDocumentSize ?? 0).human(),
+      })
+
+const embeddingsTooltip = (item: Index & { numberOfEmbeddedDocuments?: number }) =>
+  t('labels.embeddingsTooltip', { numberOfEmbeddedDocuments: item.numberOfEmbeddedDocuments ?? 0 })
+
 const { duplicateIndex: doDuplicateIndex } = useIndexOperations()
 const duplicateIndex = async (indexUid: string) => {
   const newIndexUid = await doDuplicateIndex(indexUid)
@@ -228,10 +288,16 @@ en:
     index: Index
     numberOfDocuments: Nb. docs
     primaryKey: Primary Key
-    createdAt: Created At
     updatedAt: Updated At
+    fieldsCount: Fields
+    numberOfEmbeddings: Embeddings
+    indexSize: Size
   labels:
     isIndexing: Indexing
+    embeddingsTooltip: 'Across {numberOfEmbeddedDocuments} embedded documents'
+    used: '{size} used'
+    sizeTooltip: 'Raw document DB size: {rawDocumentDbSize} · Avg. document size: {avgDocumentSize}'
+    sizeTooltipFallback: 'Avg. document size: {avgDocumentSize}'
   actions:
     create: Create
     createExpanded: Create an index
