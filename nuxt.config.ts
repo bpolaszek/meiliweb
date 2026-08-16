@@ -54,6 +54,7 @@ export default defineNuxtConfig({
         '@vueuse/core',
         'file-size', // CJS
         'humanize-string',
+        'json-editor-vue',
         'json-oneline-stringify',
         'jwt-encode', // CJS
         'match-operator',
