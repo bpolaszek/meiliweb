@@ -40,9 +40,9 @@
     <nav class="flex items-center gap-2">
       <button
         v-if="showRerank"
-        v-tippy="t('actions.rerank')"
+        v-tippy="personalizeApplied ? t('actions.undoRerank') : t('actions.rerank')"
         type="button"
-        :disabled="!canRerank || rerankLoading"
+        :disabled="(!canRerank && !personalizeApplied) || rerankLoading"
         @click="emit('rerank')"
         :class="[
           'disabled:cursor-default disabled:text-gray-300',
@@ -113,6 +113,7 @@ en:
   actions:
     showPerformanceDetails: Show performance details
     rerank: Rerank results with personalization
+    undoRerank: Show results without personalization
   labels:
     nbEstimatedHits: Nb. estimated hits
     processingTime: Processing time

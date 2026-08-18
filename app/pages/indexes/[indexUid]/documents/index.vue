@@ -297,6 +297,15 @@ const rerankLoading = ref(false)
 // button can reflect it — cleared as soon as any other search overwrites the resultset.
 const personalizeApplied = ref(false)
 const rerank = async () => {
+  // Toggle: re-clicking while personalized results are showing reverts to the plain search
+  // instead of reranking again.
+  if (personalizeApplied.value) {
+    rerankLoading.value = true
+    self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+    personalizeApplied.value = false
+    rerankLoading.value = false
+    return
+  }
   rerankLoading.value = true
   try {
     self.resultset = await searchClient.index(index.uid).search(null, {
