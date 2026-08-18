@@ -189,7 +189,7 @@ const [primaryKey, rawFilterableAttributes, sortableAttributes, searchableAttrib
 const filterableAttributes = getFilterableAttributePatterns(rawFilterableAttributes)
 const facetSearchableAttributes = getFacetSearchableAttributePatterns(rawFilterableAttributes)
 
-const { fields } = useFields(primaryKey, Object.keys(stats.fieldDistribution))
+const { fields } = useFields(primaryKey, Object.keys(stats.fieldDistribution), index.uid)
 const { appliedSort, facets, itemsPerPage, viewMode, searchSettings } = useIndexLocalSettings(index.uid)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
 

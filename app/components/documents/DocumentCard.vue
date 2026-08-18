@@ -74,6 +74,7 @@ const picture = computed(() =>
 const { fieldsWithoutPrimaryKey, nameField } = useFields(
   props.primaryKey,
   computed(() => Object.keys(props.document)),
+  props.indexUid,
 )
 const self: any = reactive({
   nameField,

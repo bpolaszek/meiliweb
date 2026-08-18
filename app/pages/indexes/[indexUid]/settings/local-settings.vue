@@ -6,6 +6,7 @@
 
     <AttributesAsDateTimeEditor :index-uid="indexUid" />
     <AttributesAsBadgesEditor :index-uid="indexUid" />
+    <AttributesAsNameEditor :index-uid="indexUid" :fields="fields" />
     <AttributesAsIllustrationEditor :index-uid="indexUid" :fields="fields" />
   </section>
 </template>
@@ -13,6 +14,7 @@
 <script setup lang="ts">
 import AttributesAsDateTimeEditor from '~/components/settings/AttributesAsDateTimeEditor.vue'
 import AttributesAsBadgesEditor from '~/components/settings/AttributesAsBadgesEditor.vue'
+import AttributesAsNameEditor from '~/components/settings/AttributesAsNameEditor.vue'
 import AttributesAsIllustrationEditor from '~/components/settings/AttributesAsIllustrationEditor.vue'
 import { useMeiliClient } from '~/composables'
 import { tryOrThrow } from '~/utils'
