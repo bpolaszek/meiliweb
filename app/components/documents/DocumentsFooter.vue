@@ -44,7 +44,12 @@
         type="button"
         :disabled="!canRerank || rerankLoading"
         @click="emit('rerank')"
-        class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
+        :class="[
+          'disabled:cursor-default disabled:text-gray-300',
+          personalizeApplied
+            ? 'enabled:text-primary-600 enabled:hover:text-primary-800'
+            : 'enabled:text-gray-600 enabled:hover:text-gray-800',
+        ]">
         <Icon name="heroicons:sparkles" :class="['size-4', { 'animate-spin': rerankLoading }]" />
       </button>
       <span>
@@ -85,12 +90,14 @@ type Props = {
   showRerank?: boolean
   canRerank?: boolean
   rerankLoading?: boolean
+  personalizeApplied?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
   showRerank: false,
   canRerank: false,
   rerankLoading: false,
+  personalizeApplied: false,
 })
 const emit = defineEmits<{
   (e: 'rerank'): void

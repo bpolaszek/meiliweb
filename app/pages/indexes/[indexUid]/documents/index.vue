@@ -131,6 +131,7 @@
         :show-rerank="personalizeAvailable"
         :can-rerank="personalizeEnabled && !!personalizeUserContext.trim()"
         :rerank-loading="rerankLoading"
+        :personalize-applied="personalizeApplied"
         @rerank="rerank" />
     </template>
   </Layout>
@@ -286,11 +287,15 @@ provideDocumentViewer((documentId: DocumentId) => {
 })
 const refreshDocuments = async () => {
   self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+  personalizeApplied.value = false
 }
 
 // Explicit, user-triggered rerank of the current results via Cohere personalization — see the
 // comment on searchParams above for why this isn't wired into search-as-you-type.
 const rerankLoading = ref(false)
+// Tracks whether the currently displayed results are the personalized ones, so the rerank
+// button can reflect it — cleared as soon as any other search overwrites the resultset.
+const personalizeApplied = ref(false)
 const rerank = async () => {
   rerankLoading.value = true
   try {
@@ -298,6 +303,7 @@ const rerank = async () => {
       ...searchParams,
       personalize: { userContext: personalizeUserContext.value },
     })
+    personalizeApplied.value = true
   } catch {
     // There's no way to know ahead of time whether the instance's Cohere key is configured
     // (see personalizeAvailable above) — a rejected personalized search is the only signal.
@@ -319,6 +325,7 @@ watch(
   searchParams,
   async (searchParams) => {
     self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+    personalizeApplied.value = false
   },
   { deep: true },
 )
