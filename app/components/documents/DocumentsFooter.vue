@@ -37,22 +37,33 @@
       </label>
     </UniqueId>
     <span>{{ t('labels.pagination', { currentPage, lastPage }) }}</span>
-    <nav>
+    <nav class="flex items-center gap-2">
       <button
+        v-if="showRerank"
+        v-tippy="t('actions.rerank')"
         type="button"
-        :disabled="currentPage === 1"
-        @click="offset = getPageOffset(previousPage)"
+        :disabled="!canRerank || rerankLoading"
+        @click="emit('rerank')"
         class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
-        {{ t('labels.previous') }}
+        <Icon name="heroicons:sparkles" :class="['size-4', { 'animate-spin': rerankLoading }]" />
       </button>
-      /
-      <button
-        type="button"
-        :disabled="currentPage === lastPage"
-        @click="offset = getPageOffset(nextPage)"
-        class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
-        {{ t('labels.next') }}
-      </button>
+      <span>
+        <button
+          type="button"
+          :disabled="currentPage === 1"
+          @click="offset = getPageOffset(previousPage)"
+          class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
+          {{ t('labels.previous') }}
+        </button>
+        /
+        <button
+          type="button"
+          :disabled="currentPage === lastPage"
+          @click="offset = getPageOffset(nextPage)"
+          class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
+          {{ t('labels.next') }}
+        </button>
+      </span>
     </nav>
   </footer>
 </template>
@@ -71,9 +82,19 @@ type Props = {
   nextPage: number
   indexUid?: string
   performanceDetails?: Record<string, unknown>
+  showRerank?: boolean
+  canRerank?: boolean
+  rerankLoading?: boolean
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), {
+  showRerank: false,
+  canRerank: false,
+  rerankLoading: false,
+})
+const emit = defineEmits<{
+  (e: 'rerank'): void
+}>()
 const offset = defineModel('offset')
 const itemsPerPage = defineModel('itemsPerPage') as unknown as Ref<number>
 const { t } = useI18n()
@@ -84,6 +105,7 @@ const { getPageOffset } = usePagination(itemsPerPage)
 en:
   actions:
     showPerformanceDetails: Show performance details
+    rerank: Rerank results with personalization
   labels:
     nbEstimatedHits: Nb. estimated hits
     processingTime: Processing time

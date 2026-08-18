@@ -127,7 +127,11 @@
         :nb-total-items="resultset.estimatedTotalHits"
         :processing-time-ms="resultset.processingTimeMs"
         :index-uid="index.uid"
-        :performance-details="resultset.performanceDetails" />
+        :performance-details="resultset.performanceDetails"
+        :show-rerank="personalizeAvailable"
+        :can-rerank="personalizeEnabled && !!personalizeUserContext.trim()"
+        :rerank-loading="rerankLoading"
+        @rerank="rerank" />
     </template>
   </Layout>
 </template>
@@ -155,7 +159,7 @@ import DocumentsAsMap from '~/components/documents/DocumentsAsMap.vue'
 import HybridSearchControl from '~/components/documents/HybridSearchControl.vue'
 import DebugSearchControl from '~/components/documents/DebugSearchControl.vue'
 import PersonalizeSearchControl from '~/components/documents/PersonalizeSearchControl.vue'
-import { reactiveComputed, refDebounced } from '@vueuse/core'
+import { reactiveComputed } from '@vueuse/core'
 import { TOAST_FAILURE, useToasts, useVersion } from '~/stores'
 
 const { t } = useI18n()
@@ -201,11 +205,6 @@ const {
 } = useIndexLocalSettings(index.uid)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
 const searchTerms = ref('')
-// Personalization reranks via Cohere, which the user's rate limit can't absorb on every
-// keystroke of search-as-you-type. Only send it once typing has been idle for 1s: this ref
-// lags behind searchTerms and only catches up once it stops changing for that long.
-const searchTermsSettled = refDebounced(searchTerms, 1000)
-const isTyping = computed(() => searchTermsSettled.value !== searchTerms.value)
 const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } = usePagination(itemsPerPage)
 
 // Direct call (not tryOrThrow): older instances (or ones without the vector store feature
@@ -250,11 +249,9 @@ const searchParams = reactive({
   // Guarded here too (not just hidden in DebugSearchControl's UI) so a value persisted while
   // connected to a newer instance can't leak into a request against an older one.
   showPerformanceDetails: computed(() => showPerformanceDetails.value && satisfiesVersion('>=1.35.0')),
-  personalize: computed(() =>
-    personalizeAvailable.value && personalizeEnabled.value && personalizeUserContext.value.trim() && !isTyping.value
-      ? { userContext: personalizeUserContext.value }
-      : undefined,
-  ),
+  // personalize is deliberately NOT wired in here: reranking via Cohere is slow and rate-limited,
+  // so it must never ride along with search-as-you-type. It's only sent by rerank() below, on
+  // explicit user action.
 })
 const resultset = ref(await tryOrThrow(() => searchClient.index(index.uid).search(null, searchParams)))
 
@@ -291,6 +288,26 @@ const refreshDocuments = async () => {
   self.resultset = await searchClient.index(index.uid).search(null, searchParams)
 }
 
+// Explicit, user-triggered rerank of the current results via Cohere personalization — see the
+// comment on searchParams above for why this isn't wired into search-as-you-type.
+const rerankLoading = ref(false)
+const rerank = async () => {
+  rerankLoading.value = true
+  try {
+    self.resultset = await searchClient.index(index.uid).search(null, {
+      ...searchParams,
+      personalize: { userContext: personalizeUserContext.value },
+    })
+  } catch {
+    // There's no way to know ahead of time whether the instance's Cohere key is configured
+    // (see personalizeAvailable above) — a rejected personalized search is the only signal.
+    resetPersonalize()
+    createToast({ ...TOAST_FAILURE(t), title: t('errors.personalizeFailed') })
+  } finally {
+    rerankLoading.value = false
+  }
+}
+
 watch(appliedSort, () => (searchParams.offset = 0))
 watch(appliedFilters, () => (searchParams.offset = 0))
 watch(itemsPerPage, () => (searchParams.offset = 0))
@@ -298,22 +315,10 @@ watch(searchTerms, () => (searchParams.offset = 0))
 watch(hybridEnabled, () => (searchParams.offset = 0))
 watch(hybridEmbedder, () => (searchParams.offset = 0))
 watch(hybridSemanticRatio, () => (searchParams.offset = 0))
-watch(personalizeEnabled, () => (searchParams.offset = 0))
-watch(personalizeUserContext, () => (searchParams.offset = 0))
 watch(
   searchParams,
   async (searchParams) => {
-    try {
-      self.resultset = await searchClient.index(index.uid).search(null, searchParams)
-    } catch (error) {
-      // There's no way to know ahead of time whether the instance's Cohere key is configured
-      // (see personalizeAvailable above) — a rejected personalized search is the only signal.
-      // Fall back to a plain search rather than leaving the page stuck on stale results.
-      if (!personalizeEnabled.value) throw error
-      resetPersonalize()
-      createToast({ ...TOAST_FAILURE(t), title: t('errors.personalizeFailed') })
-      self.resultset = await searchClient.index(index.uid).search(null, searchParams)
-    }
+    self.resultset = await searchClient.index(index.uid).search(null, searchParams)
   },
   { deep: true },
 )
