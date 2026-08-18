@@ -1,7 +1,7 @@
 <template>
   <ul v-if="renderAsBadges && value.length > 0" class="flex flex-wrap gap-1">
     <Badge as="li" v-for="_value of displayedValues" class="rounded-lg bg-primary-800 px-1.5 py-0.5 text-xs text-white">
-      {{ _value }}
+      <HighlightedText :value="_value" />
     </Badge>
     <li v-if="isTruncated">
       <button @click="showMore = !showMore" class="font-medium text-gray-500">
@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import HighlightedText from './HighlightedText.vue'
 import ValueRenderer from './ValueRenderer.vue'
 import Badge from '~/components/layout/Badge.vue'
 

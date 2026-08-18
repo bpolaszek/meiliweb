@@ -52,22 +52,14 @@
         :ui="{ base: 'rounded-lg' }"
         class="grow lg:w-80" />
 
-      <HybridSearchControl
-        v-if="hasEmbedders"
-        v-model:enabled="hybridEnabled"
-        v-model:embedder="hybridEmbedder"
-        v-model:semantic-ratio="hybridSemanticRatio"
-        :embedders="embedderNames" />
-
-      <DebugSearchControl
-        v-model:show-ranking-score="showRankingScore"
-        v-model:show-ranking-score-details="showRankingScoreDetails"
-        v-model:show-performance-details="showPerformanceDetails" />
-
-      <PersonalizeSearchControl
-        v-if="personalizeAvailable"
-        v-model:enabled="personalizeEnabled"
-        v-model:user-context="personalizeUserContext" />
+      <button v-tippy="t('actions.searchSettings')" type="button" @click="openSearchSettings()">
+        <Icon
+          name="ph:sliders-fill"
+          :class="[
+            'size-6',
+            hasCustomSearchSettings ? 'text-primary-600 hover:text-primary-800' : 'text-gray-600 hover:text-gray-800',
+          ]" />
+      </button>
 
       <button v-tippy="t('actions.documentView')" @click="viewMode = 'documents'">
         <Icon
@@ -110,7 +102,7 @@
     <MainComponent
       v-else
       :index-uid="index.uid"
-      :documents="resultset.hits"
+      :documents="hits"
       :primary-key="primaryKey"
       :applied-filters="appliedFilters"
       :can-filter-geo-documents="canFilterGeoDocuments"
@@ -129,7 +121,7 @@
         :index-uid="index.uid"
         :performance-details="resultset.performanceDetails"
         :show-rerank="personalizeAvailable"
-        :can-rerank="personalizeEnabled && !!personalizeUserContext.trim()"
+        :can-rerank="'' !== personalizeUserContext.trim()"
         :rerank-loading="rerankLoading"
         :personalize-applied="personalizeApplied"
         @rerank="rerank" />
@@ -140,6 +132,7 @@
 <script setup lang="ts">
 import {
   provideDocumentViewer,
+  provideHighlightTags,
   useFields,
   useIndexLocalSettings,
   useMeiliClient,
@@ -147,7 +140,15 @@ import {
   usePagination,
   type DocumentId,
 } from '~/composables'
-import { getFacetSearchableAttributePatterns, getFilterableAttributePatterns, tryOrThrow } from '~/utils'
+import {
+  buildSearchParams,
+  DEFAULT_SEARCH_SETTINGS,
+  getFacetSearchableAttributePatterns,
+  getFilterableAttributePatterns,
+  getFormattedAttributes,
+  tryOrThrow,
+  type SearchSettings,
+} from '~/utils'
 import { NuxtLink } from '#components'
 import FilterPanel from '~/components/documents/FilterPanel.vue'
 import { AppliedFilters } from '~/utils/applied-filters'
@@ -157,11 +158,10 @@ import DocumentsAsCards from '~/components/documents/DocumentsAsCards.vue'
 import DocumentsAsTable from '~/components/documents/DocumentsAsTable.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentsAsMap from '~/components/documents/DocumentsAsMap.vue'
-import HybridSearchControl from '~/components/documents/HybridSearchControl.vue'
-import DebugSearchControl from '~/components/documents/DebugSearchControl.vue'
-import PersonalizeSearchControl from '~/components/documents/PersonalizeSearchControl.vue'
+import SearchSettingsModal from '~/components/documents/search-settings/SearchSettingsModal.vue'
 import { reactiveComputed } from '@vueuse/core'
-import { TOAST_FAILURE, useToasts, useVersion } from '~/stores'
+import type { SearchParams } from 'meilisearch'
+import { TOAST_FAILURE, usePromisifiedDialogs, useToasts, useVersion } from '~/stores'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -170,6 +170,7 @@ const meili = useMeiliClient()
 const tenant = useMultiTenancy()
 const { satisfiesVersion } = useVersion()
 const { createToast } = useToasts()
+const { openDialog } = usePromisifiedDialogs()
 // Search personalization requires Meilisearch >= 1.25. Unlike hybrid search's embedders,
 // there's no capability endpoint to probe whether the instance's Cohere key is actually
 // configured — that can only be discovered by a failing search, handled below.
@@ -178,35 +179,26 @@ const searchClient = reactiveComputed(() => (tenant.tenantToken ? useMeiliClient
 const { formatDate } = useDateFormatter()
 const index = await tryOrThrow(() => meili.getIndex(indexUid as string))
 const filterPanelOpen = ref(false)
-const [primaryKey, rawFilterableAttributes, sortableAttributes, stats] = await Promise.all([
+const [primaryKey, rawFilterableAttributes, sortableAttributes, searchableAttributes, stats] = await Promise.all([
   index.fetchPrimaryKey() as Promise<string>,
   index.getFilterableAttributes(),
   index.getSortableAttributes(),
+  index.getSearchableAttributes(),
   index.getStats(),
 ])
 const filterableAttributes = getFilterableAttributePatterns(rawFilterableAttributes)
 const facetSearchableAttributes = getFacetSearchableAttributePatterns(rawFilterableAttributes)
 
 const { fields } = useFields(primaryKey, Object.keys(stats.fieldDistribution))
-const {
-  appliedSort,
-  facets,
-  itemsPerPage,
-  viewMode,
-  hybridEnabled,
-  hybridEmbedder,
-  hybridSemanticRatio,
-  resetHybridSearch,
-  showRankingScore,
-  showRankingScoreDetails,
-  showPerformanceDetails,
-  personalizeEnabled,
-  personalizeUserContext,
-  resetPersonalize,
-} = useIndexLocalSettings(index.uid)
+const { appliedSort, facets, itemsPerPage, viewMode, searchSettings } = useIndexLocalSettings(index.uid)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
 const searchTerms = ref('')
 const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } = usePagination(itemsPerPage)
+
+// Settings are only ever replaced wholesale (the modal hands back a full object), so patching a
+// single knob goes through here rather than mutating the stored object in place.
+const updateSearchSettings = (patch: Partial<SearchSettings>) =>
+  (searchSettings.value = { ...searchSettings.value, ...patch })
 
 // Direct call (not tryOrThrow): older instances (or ones without the vector store feature
 // enabled) don't expose embedders — degrade to "no hybrid search" rather than the fatal
@@ -220,53 +212,96 @@ try {
 const embedderNames = Object.keys(embedders)
 const hasEmbedders = embedderNames.length > 0
 
+// Resets everything hybrid-related in one go, so no caller can reset one field and forget the
+// others (e.g. leaving a stale semanticRatio next to an empty embedder).
+const resetHybridSearch = () =>
+  updateSearchSettings({
+    hybridEnabled: DEFAULT_SEARCH_SETTINGS.hybridEnabled,
+    hybridEmbedder: DEFAULT_SEARCH_SETTINGS.hybridEmbedder,
+    hybridSemanticRatio: DEFAULT_SEARCH_SETTINGS.hybridSemanticRatio,
+  })
+
 // The embedder stored in localStorage may no longer exist (renamed/deleted since the user
 // last configured hybrid search) — reconcile against the live list *before* it can ever be
 // sent to Meilisearch, which would otherwise reject the search and break the page.
 if (!hasEmbedders) {
-  if (hybridEnabled.value || hybridEmbedder.value) resetHybridSearch()
-} else if (hybridEmbedder.value && !embedderNames.includes(hybridEmbedder.value)) {
+  if (searchSettings.value.hybridEnabled || searchSettings.value.hybridEmbedder) resetHybridSearch()
+} else if (searchSettings.value.hybridEmbedder && !embedderNames.includes(searchSettings.value.hybridEmbedder)) {
   resetHybridSearch()
 }
 // Pre-select an embedder for convenience once one exists — this only fills the dropdown,
 // it does NOT turn hybrid search on (hybridEnabled stays whatever it was/defaults to false).
-if (hasEmbedders && !hybridEmbedder.value) {
-  hybridEmbedder.value = embedderNames[0]
+if (hasEmbedders && !searchSettings.value.hybridEmbedder) {
+  updateSearchSettings({ hybridEmbedder: embedderNames[0] })
 }
 
-const searchParams = reactive({
-  q: searchTerms,
-  sort: appliedSort,
-  limit: itemsPerPage,
-  offset,
-  filter: computed(() => `${appliedFilters}`),
-  hybrid: computed(() =>
-    hybridEnabled.value && hybridEmbedder.value
-      ? { embedder: hybridEmbedder.value, semanticRatio: hybridSemanticRatio.value }
-      : undefined,
-  ),
-  showRankingScore,
-  showRankingScoreDetails,
-  // Guarded here too (not just hidden in DebugSearchControl's UI) so a value persisted while
-  // connected to a newer instance can't leak into a request against an older one.
-  showPerformanceDetails: computed(() => showPerformanceDetails.value && satisfiesVersion('>=1.35.0')),
+// Guarded here too (not just hidden in the modal's UI) so a value persisted while connected to a
+// newer instance can't leak into a request against an older one.
+const effectiveSettings = computed<SearchSettings>(() => ({
+  ...searchSettings.value,
+  showPerformanceDetails: searchSettings.value.showPerformanceDetails && satisfiesVersion('>=1.35.0'),
+}))
+const searchParams = computed<SearchParams>(() => ({
+  q: searchTerms.value,
+  sort: appliedSort.value,
+  limit: itemsPerPage.value,
+  offset: offset.value,
+  filter: `${appliedFilters}`,
+  ...buildSearchParams(effectiveSettings.value),
   // personalize is deliberately NOT wired in here: reranking via Cohere is slow and rate-limited,
   // so it must never ride along with search-as-you-type. It's only sent by rerank() below, on
   // explicit user action.
-})
-const resultset = ref(await tryOrThrow(() => searchClient.index(index.uid).search(null, searchParams)))
+}))
+// Anything the user tuned beyond Meilisearch's defaults ends up as a search parameter — which is
+// exactly what the settings button lights up for.
+const hasCustomSearchSettings = computed(
+  () =>
+    Object.keys(buildSearchParams(effectiveSettings.value)).length > 0 ||
+    '' !== searchSettings.value.personalizeUserContext,
+)
+const resultset = ref(await tryOrThrow(() => searchClient.index(index.uid).search(null, searchParams.value)))
 
-const displayFields = computed(() => [
-  ...fields.value,
-  ...(showRankingScore.value ? ['_rankingScore'] : []),
-  ...(showRankingScoreDetails.value ? ['_rankingScoreDetails'] : []),
-])
+// Highlighted matches come back wrapped in the configured markers; StringRenderer strips them and
+// paints the matches. Cropped-only attributes carry no markers, hence the guard on highlighting.
+provideHighlightTags(() =>
+  searchSettings.value.attributesToHighlight.length > 0
+    ? { preTag: searchSettings.value.highlightPreTag, postTag: searchSettings.value.highlightPostTag }
+    : null,
+)
+
+const displayFields = computed(() => {
+  const { attributesToRetrieve, showRankingScore, showRankingScoreDetails } = searchSettings.value
+  // An empty list means Meilisearch returns everything — see SearchSettings.
+  const retrieved =
+    0 === attributesToRetrieve.length
+      ? fields.value
+      : fields.value.filter((field) => attributesToRetrieve.includes(field))
+  return [
+    ...retrieved,
+    ...(showRankingScore ? ['_rankingScore'] : []),
+    ...(showRankingScoreDetails ? ['_rankingScoreDetails'] : []),
+  ]
+})
 const hasGeoDocuments = computed(() => Object.keys(stats.fieldDistribution).includes('_geo'))
 const canFilterGeoDocuments = computed(() => filterableAttributes.includes('_geo'))
 const self = reactive({
   resultset,
   totalItems,
   viewMode,
+})
+// Highlighted and cropped attributes are only available in `_formatted`; swapping them in here
+// keeps every view (table, cards, map) unaware that the values went through Meilisearch's
+// formatter. Untouched attributes keep their raw value — and their type. `_formatted` itself is
+// dropped: the cards view lists whatever keys a hit carries, and it has no business being one.
+const hits = computed(() => {
+  const formattedAttributes = getFormattedAttributes(searchSettings.value)
+  if (0 === formattedAttributes.length) return self.resultset.hits
+  return self.resultset.hits.map(({ _formatted, ...hit }: Record<string, any>) => ({
+    ...hit,
+    ...Object.fromEntries(
+      formattedAttributes.filter((field) => field in (_formatted ?? {})).map((field) => [field, _formatted[field]]),
+    ),
+  }))
 })
 const MainComponent = computed(() =>
   match(self.viewMode, [
@@ -275,6 +310,25 @@ const MainComponent = computed(() =>
     ['map', DocumentsAsMap],
   ]),
 )
+
+const openSearchSettings = async () => {
+  try {
+    const settings = await openDialog(SearchSettingsModal, {
+      settings: searchSettings.value,
+      attributes: fields.value,
+      primaryKey,
+      filterableAttributes,
+      searchableAttributes,
+      embedders: embedderNames,
+      personalizeAvailable: personalizeAvailable.value,
+    })
+    searchSettings.value = settings
+    // Narrower results may not reach the page the user was on.
+    offset.value = 0
+  } catch {
+    // DismissedDialog — the modal was closed without applying anything, leave the search alone.
+  }
+}
 
 // Clicking a document id anywhere in the results (table cells, cards) opens the CRUD slideover.
 // It is loaded on demand: it pulls in vanilla-jsoneditor, which weighs more than this page does.
@@ -286,7 +340,7 @@ provideDocumentViewer((documentId: DocumentId) => {
   documentSlideOverOpen.value = true
 })
 const refreshDocuments = async () => {
-  self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+  self.resultset = await searchClient.index(index.uid).search(null, searchParams.value)
   personalizeApplied.value = false
 }
 
@@ -296,12 +350,15 @@ const rerankLoading = ref(false)
 // Tracks whether the currently displayed results are the personalized ones, so the rerank
 // button can reflect it — cleared as soon as any other search overwrites the resultset.
 const personalizeApplied = ref(false)
+// An empty user context is what "personalization off" looks like now that the modal has no
+// switch for it: there is nothing to personalize on.
+const personalizeUserContext = computed(() => searchSettings.value.personalizeUserContext)
 const rerank = async () => {
   // Toggle: re-clicking while personalized results are showing reverts to the plain search
   // instead of reranking again.
   if (personalizeApplied.value) {
     rerankLoading.value = true
-    self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+    self.resultset = await searchClient.index(index.uid).search(null, searchParams.value)
     personalizeApplied.value = false
     rerankLoading.value = false
     return
@@ -309,35 +366,28 @@ const rerank = async () => {
   rerankLoading.value = true
   try {
     self.resultset = await searchClient.index(index.uid).search(null, {
-      ...searchParams,
+      ...searchParams.value,
       personalize: { userContext: personalizeUserContext.value },
     })
     personalizeApplied.value = true
   } catch {
     // There's no way to know ahead of time whether the instance's Cohere key is configured
     // (see personalizeAvailable above) — a rejected personalized search is the only signal.
-    resetPersonalize()
+    updateSearchSettings({ personalizeUserContext: DEFAULT_SEARCH_SETTINGS.personalizeUserContext })
     createToast({ ...TOAST_FAILURE(t), title: t('errors.personalizeFailed') })
   } finally {
     rerankLoading.value = false
   }
 }
 
-watch(appliedSort, () => (searchParams.offset = 0))
-watch(appliedFilters, () => (searchParams.offset = 0))
-watch(itemsPerPage, () => (searchParams.offset = 0))
-watch(searchTerms, () => (searchParams.offset = 0))
-watch(hybridEnabled, () => (searchParams.offset = 0))
-watch(hybridEmbedder, () => (searchParams.offset = 0))
-watch(hybridSemanticRatio, () => (searchParams.offset = 0))
-watch(
-  searchParams,
-  async (searchParams) => {
-    self.resultset = await searchClient.index(index.uid).search(null, searchParams)
-    personalizeApplied.value = false
-  },
-  { deep: true },
-)
+watch(appliedSort, () => (offset.value = 0))
+watch(appliedFilters, () => (offset.value = 0))
+watch(itemsPerPage, () => (offset.value = 0))
+watch(searchTerms, () => (offset.value = 0))
+watch(searchParams, async (searchParams) => {
+  self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+  personalizeApplied.value = false
+})
 watch(resultset, () => (self.totalItems = self.resultset.estimatedTotalHits), {
   deep: true,
   immediate: true,
@@ -359,6 +409,7 @@ en:
     tableView: View as data table
     mapView: View as map
     toggleFilters: Open filter panel
+    searchSettings: Search settings
     clearTenantToken: Clear tenant token
   labels:
     filters: Sort & Filter

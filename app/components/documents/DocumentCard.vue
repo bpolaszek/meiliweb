@@ -8,7 +8,7 @@
         <header class="mb-2 flex items-center justify-between border-b border-b-gray-300 pb-2">
           <h2 class="flex gap-2 text-lg font-medium">
             <span v-if="nameField === primaryKey">#</span>
-            <span class="line-clamp-1 text-gray-700">{{ name }}</span>
+            <HighlightedText :value="name" class="line-clamp-1 text-gray-700" />
           </h2>
         </header>
         <dl class="space-y-2 @xl:space-y-0">
@@ -50,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import HighlightedText from './HighlightedText.vue'
 import ValueRenderer from './ValueRenderer.vue'
 import DocumentIdLink from './DocumentIdLink.vue'
 import { useFields } from '~/composables'
