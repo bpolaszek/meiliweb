@@ -1,9 +1,8 @@
 <template>
-  <PromisifiedDialog :title="t('title')" :ui="{ content: 'max-w-3xl', body: 'text-sm max-h-[70vh] overflow-y-auto' }">
+  <PromisifiedDialog :title="t('title')" :ui="{ content: 'max-w-5xl', body: 'text-sm max-h-[70vh] overflow-y-auto' }">
     <template #default="{ resolve }">
       <form :id="formId" class="space-y-4" @submit.prevent="resolve(cloneSearchSettings(draft))">
         <HybridSearchSection
-          v-if="embedders.length > 0"
           v-model:enabled="draft.hybridEnabled"
           v-model:embedder="draft.hybridEmbedder"
           v-model:semantic-ratio="draft.hybridSemanticRatio"

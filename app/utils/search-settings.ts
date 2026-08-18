@@ -7,9 +7,11 @@ import type { MatchingStrategies, SearchParams } from 'meilisearch'
 // meaning) and vanishingly rare in real documents — if one ever leaks through a renderer we don't
 // parse, it reads as a bracket rather than as broken markup. Both fields stay user-editable, and
 // the parser is tag-agnostic, so `<em>` still works for anyone who wants it.
-export const DEFAULT_HIGHLIGHT_PRE_TAG = '⟦'
-export const DEFAULT_HIGHLIGHT_POST_TAG = '⟧'
-export const DEFAULT_CROP_LENGTH = 10
+export const DEFAULT_HIGHLIGHT_PRE_TAG = '[[[['
+export const DEFAULT_HIGHLIGHT_POST_TAG = ']]]]'
+// 0 means "don't ask for a crop length at all", which is why nothing crop-related is sent by
+// default — see buildSearchParams.
+export const DEFAULT_CROP_LENGTH = 0
 export const DEFAULT_CROP_MARKER = '…'
 export const DEFAULT_MATCHING_STRATEGY: MatchingStrategies = 'last'
 export const DEFAULT_SEMANTIC_RATIO = 0.5
@@ -87,8 +89,11 @@ export const buildSearchParams = (settings: SearchSettings): SearchParams => {
   }
   if (settings.attributesToCrop.length > 0) {
     params.attributesToCrop = settings.attributesToCrop
-    if (settings.cropLength) params.cropLength = settings.cropLength
-    if (settings.cropMarker) params.cropMarker = settings.cropMarker
+    // A crop length of 0 sends neither the length nor the marker, leaving both to Meilisearch.
+    if (settings.cropLength > 0) {
+      params.cropLength = settings.cropLength
+      if (settings.cropMarker) params.cropMarker = settings.cropMarker
+    }
   }
   if (settings.matchingStrategy !== DEFAULT_MATCHING_STRATEGY) params.matchingStrategy = settings.matchingStrategy
   if (null !== settings.rankingScoreThreshold) params.rankingScoreThreshold = settings.rankingScoreThreshold

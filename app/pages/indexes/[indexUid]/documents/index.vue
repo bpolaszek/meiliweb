@@ -370,11 +370,17 @@ const rerank = async () => {
       personalize: { userContext: personalizeUserContext.value },
     })
     personalizeApplied.value = true
-  } catch {
-    // There's no way to know ahead of time whether the instance's Cohere key is configured
-    // (see personalizeAvailable above) — a rejected personalized search is the only signal.
-    updateSearchSettings({ personalizeUserContext: DEFAULT_SEARCH_SETTINGS.personalizeUserContext })
-    createToast({ ...TOAST_FAILURE(t), title: t('errors.personalizeFailed') })
+  } catch (error) {
+    // There's no way to know ahead of time whether personalization is usable on this instance
+    // (see personalizeAvailable above) — a rejected search is the only signal, and its message is
+    // the only thing that tells the two failure modes apart: the feature being off entirely, or a
+    // key the instance can't authenticate with. Hence the server's own wording, and hence *not*
+    // clearing the user context: it's valid input, and it's the only way back to this state.
+    createToast({
+      ...TOAST_FAILURE(t),
+      title: t('errors.personalizeFailed'),
+      text: (error as Error).message,
+    })
   } finally {
     rerankLoading.value = false
   }
@@ -416,5 +422,5 @@ en:
     multitenancyEnabled: Tenant preview
     search: Search...
   errors:
-    personalizeFailed: Search personalization isn't configured on this instance. It has been turned off.
+    personalizeFailed: Personalized search failed
 </i18n>

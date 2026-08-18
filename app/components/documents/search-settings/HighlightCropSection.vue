@@ -9,8 +9,8 @@
         <UInput v-model="highlightPostTag" class="w-full" />
       </UFormField>
 
-      <UFormField :label="t('labels.cropLength')">
-        <UInput v-model="cropLength" type="number" :min="1" class="w-full" />
+      <UFormField :label="t('labels.cropLength')" :help="t('help.cropLength')">
+        <UInput v-model="cropLength" type="number" :min="0" class="w-full" />
       </UFormField>
 
       <UFormField :label="t('labels.cropMarker')">
@@ -40,5 +40,6 @@ en:
     cropLength: Crop length
     cropMarker: Crop marker
   help:
+    cropLength: 0 leaves both the length and the marker to Meilisearch.
     tags: Not rendered as HTML — it's a delimiter the app parses back out to paint matches.
 </i18n>
