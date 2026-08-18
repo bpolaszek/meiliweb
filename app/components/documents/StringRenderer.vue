@@ -1,8 +1,6 @@
 <template>
   <div :class="self.showExpandButton ? 'flex flex-col items-end gap-1' : ''">
-    <span :class="{ 'line-clamp-3': self.truncated }" ref="textElement">
-      {{ value }}
-    </span>
+    <HighlightedText ref="textElement" :value :class="{ 'line-clamp-3': self.truncated }" />
     <button
       v-if="self.showExpandButton"
       @click="self.truncated = !self.truncated"
@@ -19,6 +17,8 @@
 
 <script setup lang="ts">
 import { templateRef } from '@vueuse/core'
+import type { ComponentPublicInstance } from 'vue'
+import HighlightedText from './HighlightedText.vue'
 
 type Props = {
   value: string | number | boolean
@@ -28,16 +28,16 @@ defineProps<Props>()
 
 const self = reactive({
   truncated: true,
-  textElement: templateRef('textElement'),
+  textElement: templateRef<ComponentPublicInstance>('textElement'),
   showExpandButton: false,
 })
 
 const { t } = useI18n()
 
 const checkTextOverflow = () => {
-  if (!self.textElement) return
+  const element = self.textElement?.$el as HTMLElement | undefined
+  if (!element) return
 
-  const element = self.textElement
   if (element.scrollHeight > element.clientHeight) {
     self.showExpandButton = true
   }
