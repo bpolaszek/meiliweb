@@ -127,7 +127,12 @@
         :nb-total-items="resultset.estimatedTotalHits"
         :processing-time-ms="resultset.processingTimeMs"
         :index-uid="index.uid"
-        :performance-details="resultset.performanceDetails" />
+        :performance-details="resultset.performanceDetails"
+        :show-rerank="personalizeAvailable"
+        :can-rerank="personalizeEnabled && !!personalizeUserContext.trim()"
+        :rerank-loading="rerankLoading"
+        :personalize-applied="personalizeApplied"
+        @rerank="rerank" />
     </template>
   </Layout>
 </template>
@@ -245,11 +250,9 @@ const searchParams = reactive({
   // Guarded here too (not just hidden in DebugSearchControl's UI) so a value persisted while
   // connected to a newer instance can't leak into a request against an older one.
   showPerformanceDetails: computed(() => showPerformanceDetails.value && satisfiesVersion('>=1.35.0')),
-  personalize: computed(() =>
-    personalizeAvailable.value && personalizeEnabled.value && personalizeUserContext.value.trim()
-      ? { userContext: personalizeUserContext.value }
-      : undefined,
-  ),
+  // personalize is deliberately NOT wired in here: reranking via Cohere is slow and rate-limited,
+  // so it must never ride along with search-as-you-type. It's only sent by rerank() below, on
+  // explicit user action.
 })
 const resultset = ref(await tryOrThrow(() => searchClient.index(index.uid).search(null, searchParams)))
 
@@ -284,6 +287,40 @@ provideDocumentViewer((documentId: DocumentId) => {
 })
 const refreshDocuments = async () => {
   self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+  personalizeApplied.value = false
+}
+
+// Explicit, user-triggered rerank of the current results via Cohere personalization — see the
+// comment on searchParams above for why this isn't wired into search-as-you-type.
+const rerankLoading = ref(false)
+// Tracks whether the currently displayed results are the personalized ones, so the rerank
+// button can reflect it — cleared as soon as any other search overwrites the resultset.
+const personalizeApplied = ref(false)
+const rerank = async () => {
+  // Toggle: re-clicking while personalized results are showing reverts to the plain search
+  // instead of reranking again.
+  if (personalizeApplied.value) {
+    rerankLoading.value = true
+    self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+    personalizeApplied.value = false
+    rerankLoading.value = false
+    return
+  }
+  rerankLoading.value = true
+  try {
+    self.resultset = await searchClient.index(index.uid).search(null, {
+      ...searchParams,
+      personalize: { userContext: personalizeUserContext.value },
+    })
+    personalizeApplied.value = true
+  } catch {
+    // There's no way to know ahead of time whether the instance's Cohere key is configured
+    // (see personalizeAvailable above) — a rejected personalized search is the only signal.
+    resetPersonalize()
+    createToast({ ...TOAST_FAILURE(t), title: t('errors.personalizeFailed') })
+  } finally {
+    rerankLoading.value = false
+  }
 }
 
 watch(appliedSort, () => (searchParams.offset = 0))
@@ -293,22 +330,11 @@ watch(searchTerms, () => (searchParams.offset = 0))
 watch(hybridEnabled, () => (searchParams.offset = 0))
 watch(hybridEmbedder, () => (searchParams.offset = 0))
 watch(hybridSemanticRatio, () => (searchParams.offset = 0))
-watch(personalizeEnabled, () => (searchParams.offset = 0))
-watch(personalizeUserContext, () => (searchParams.offset = 0))
 watch(
   searchParams,
   async (searchParams) => {
-    try {
-      self.resultset = await searchClient.index(index.uid).search(null, searchParams)
-    } catch (error) {
-      // There's no way to know ahead of time whether the instance's Cohere key is configured
-      // (see personalizeAvailable above) — a rejected personalized search is the only signal.
-      // Fall back to a plain search rather than leaving the page stuck on stale results.
-      if (!personalizeEnabled.value) throw error
-      resetPersonalize()
-      createToast({ ...TOAST_FAILURE(t), title: t('errors.personalizeFailed') })
-      self.resultset = await searchClient.index(index.uid).search(null, searchParams)
-    }
+    self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+    personalizeApplied.value = false
   },
   { deep: true },
 )

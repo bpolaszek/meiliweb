@@ -37,22 +37,38 @@
       </label>
     </UniqueId>
     <span>{{ t('labels.pagination', { currentPage, lastPage }) }}</span>
-    <nav>
+    <nav class="flex items-center gap-2">
       <button
+        v-if="showRerank"
+        v-tippy="personalizeApplied ? t('actions.undoRerank') : t('actions.rerank')"
         type="button"
-        :disabled="currentPage === 1"
-        @click="offset = getPageOffset(previousPage)"
-        class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
-        {{ t('labels.previous') }}
+        :disabled="(!canRerank && !personalizeApplied) || rerankLoading"
+        @click="emit('rerank')"
+        :class="[
+          'disabled:cursor-default disabled:text-gray-300',
+          personalizeApplied
+            ? 'enabled:text-primary-600 enabled:hover:text-primary-800'
+            : 'enabled:text-gray-600 enabled:hover:text-gray-800',
+        ]">
+        <Icon name="heroicons:sparkles" :class="['size-4', { 'animate-spin': rerankLoading }]" />
       </button>
-      /
-      <button
-        type="button"
-        :disabled="currentPage === lastPage"
-        @click="offset = getPageOffset(nextPage)"
-        class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
-        {{ t('labels.next') }}
-      </button>
+      <span>
+        <button
+          type="button"
+          :disabled="currentPage === 1"
+          @click="offset = getPageOffset(previousPage)"
+          class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
+          {{ t('labels.previous') }}
+        </button>
+        /
+        <button
+          type="button"
+          :disabled="currentPage === lastPage"
+          @click="offset = getPageOffset(nextPage)"
+          class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
+          {{ t('labels.next') }}
+        </button>
+      </span>
     </nav>
   </footer>
 </template>
@@ -71,9 +87,21 @@ type Props = {
   nextPage: number
   indexUid?: string
   performanceDetails?: Record<string, unknown>
+  showRerank?: boolean
+  canRerank?: boolean
+  rerankLoading?: boolean
+  personalizeApplied?: boolean
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), {
+  showRerank: false,
+  canRerank: false,
+  rerankLoading: false,
+  personalizeApplied: false,
+})
+const emit = defineEmits<{
+  (e: 'rerank'): void
+}>()
 const offset = defineModel('offset')
 const itemsPerPage = defineModel('itemsPerPage') as unknown as Ref<number>
 const { t } = useI18n()
@@ -84,6 +112,8 @@ const { getPageOffset } = usePagination(itemsPerPage)
 en:
   actions:
     showPerformanceDetails: Show performance details
+    rerank: Rerank results with personalization
+    undoRerank: Show results without personalization
   labels:
     nbEstimatedHits: Nb. estimated hits
     processingTime: Processing time
