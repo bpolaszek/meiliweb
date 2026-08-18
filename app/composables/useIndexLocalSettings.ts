@@ -13,6 +13,7 @@ type UseIndexLocalSettings = {
   viewMode: ViewMode
   updateMode: UpdateMode
   searchSettings: SearchSettings
+  illustrationAttribute: string | null
 }
 
 const DEFAULT_ITEMS_PER_PAGE = 20
@@ -31,6 +32,7 @@ export const useIndexLocalSettings = (indexUid: string) => {
     viewMode: DEFAULT_VIEW_MODE,
     updateMode: DEFAULT_UPDATE_MODE,
     searchSettings: DEFAULT_SEARCH_SETTINGS,
+    illustrationAttribute: null,
   })
 
   const self = reactive({ storage })
@@ -70,6 +72,10 @@ export const useIndexLocalSettings = (indexUid: string) => {
     searchSettings: computed({
       get: () => ({ ...DEFAULT_SEARCH_SETTINGS, ...(self.storage.searchSettings ?? {}) }),
       set: (value: SearchSettings) => (self.storage.searchSettings = value),
+    }),
+    illustrationAttribute: computed({
+      get: () => self.storage.illustrationAttribute ?? null,
+      set: (value: string | null) => (self.storage.illustrationAttribute = value),
     }),
   }
 }

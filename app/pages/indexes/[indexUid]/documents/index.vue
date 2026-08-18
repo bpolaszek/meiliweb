@@ -192,6 +192,14 @@ const facetSearchableAttributes = getFacetSearchableAttributePatterns(rawFiltera
 const { fields } = useFields(primaryKey, Object.keys(stats.fieldDistribution))
 const { appliedSort, facets, itemsPerPage, viewMode, searchSettings } = useIndexLocalSettings(index.uid)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
+
+// Facets/sort stored while connected to this index may no longer be filterable/sortable (removed
+// from the index settings since last visit) — reconcile against the live lists *before* they can
+// ever be sent to Meilisearch, which would otherwise reject the search and break the page.
+const validFacets = facets.value.filter((facet) => filterableAttributes.includes(facet))
+if (validFacets.length !== facets.value.length) facets.value = validFacets
+const validSort = appliedSort.value.filter((sort) => sortableAttributes.includes(sort.replace(/:(asc|desc)$/, '')))
+if (validSort.length !== appliedSort.value.length) appliedSort.value = validSort
 const searchTerms = ref('')
 const { offset, totalItems, currentPage, previousPage, nextPage, lastPage } = usePagination(itemsPerPage)
 

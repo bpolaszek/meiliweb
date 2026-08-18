@@ -53,7 +53,7 @@
 import HighlightedText from './HighlightedText.vue'
 import ValueRenderer from './ValueRenderer.vue'
 import DocumentIdLink from './DocumentIdLink.vue'
-import { useFields } from '~/composables'
+import { useFields, useIndexLocalSettings } from '~/composables'
 import { looksLikeAPictureUrl } from '~/utils'
 
 type Props = {
@@ -64,7 +64,12 @@ type Props = {
 
 const props = defineProps<Props>()
 
-const picture = computed(() => Object.values(props.document).find(looksLikeAPictureUrl) as string | null)
+const { illustrationAttribute } = useIndexLocalSettings(props.indexUid)
+const picture = computed(() =>
+  illustrationAttribute.value
+    ? props.document[illustrationAttribute.value] ?? null
+    : (Object.values(props.document).find(looksLikeAPictureUrl) as string | null),
+)
 
 const { fieldsWithoutPrimaryKey, nameField } = useFields(
   props.primaryKey,
