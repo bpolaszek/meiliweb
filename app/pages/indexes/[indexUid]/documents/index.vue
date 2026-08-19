@@ -1,5 +1,5 @@
 <template>
-  <Layout :title="humanizeString(index.uid)" :subtitle="subtitle">
+  <Layout no-padding-bottom :title="humanizeString(index.uid)" :subtitle="subtitle">
     <USlideover
       v-model:open="filterPanelOpen"
       :title="t('labels.filters')"
