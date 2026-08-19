@@ -13,6 +13,7 @@ type UseIndexLocalSettings = {
   viewMode: ViewMode
   updateMode: UpdateMode
   searchSettings: SearchSettings
+  similarDocumentsEmbedder: string | null
   illustrationAttribute: string | null
   nameAttribute: string | null
 }
@@ -33,6 +34,7 @@ export const useIndexLocalSettings = (indexUid: string) => {
     viewMode: DEFAULT_VIEW_MODE,
     updateMode: DEFAULT_UPDATE_MODE,
     searchSettings: DEFAULT_SEARCH_SETTINGS,
+    similarDocumentsEmbedder: null,
     illustrationAttribute: null,
     nameAttribute: null,
   })
@@ -74,6 +76,12 @@ export const useIndexLocalSettings = (indexUid: string) => {
     searchSettings: computed({
       get: () => ({ ...DEFAULT_SEARCH_SETTINGS, ...(self.storage.searchSettings ?? {}) }),
       set: (value: SearchSettings) => (self.storage.searchSettings = value),
+    }),
+    // Which embedder the "similar documents" mode compares on, remembered per index. Reconciled
+    // against the live embedder list by the documents page before it can reach a search request.
+    similarDocumentsEmbedder: computed({
+      get: () => self.storage.similarDocumentsEmbedder ?? null,
+      set: (value: string | null) => (self.storage.similarDocumentsEmbedder = value),
     }),
     illustrationAttribute: computed({
       get: () => self.storage.illustrationAttribute ?? null,

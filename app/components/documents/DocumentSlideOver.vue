@@ -24,15 +24,25 @@
           class="json-editor min-h-0 flex-1" />
 
         <footer class="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <Button
-            type="button"
-            icon="heroicons:trash"
-            :disabled="fetching || loading"
-            :loading="'delete' === pendingAction"
-            class="hover:text-red-600"
-            @click="remove()">
-            {{ t('actions.delete') }}
-          </Button>
+          <Buttons>
+            <Button
+              type="button"
+              icon="heroicons:trash"
+              :disabled="fetching || loading"
+              :loading="'delete' === pendingAction"
+              class="hover:text-red-600"
+              @click="remove()">
+              {{ t('actions.delete') }}
+            </Button>
+            <Button
+              v-if="findSimilarDocuments"
+              type="button"
+              icon="ph:graph"
+              :disabled="fetching || loading"
+              @click="findSimilar()">
+              {{ t('actions.findSimilar') }}
+            </Button>
+          </Buttons>
           <Buttons>
             <Button type="reset" :disabled="fetching || loading" />
             <Button type="submit" :disabled="fetching || loading" :loading="'save' === pendingAction" />
@@ -48,7 +58,7 @@ import JsonEditorVue from 'json-editor-vue'
 import Alert from '~/components/layout/Alert.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
-import { useFormSubmit, useMeiliClient, useTask, type DocumentId } from '~/composables'
+import { useFormSubmit, useMeiliClient, useSimilarDocuments, useTask, type DocumentId } from '~/composables'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS, useConfirmationDialog, useToasts } from '~/stores'
 
 type Props = {
@@ -67,6 +77,14 @@ const processTask = useTask()
 const { confirm } = useConfirmationDialog()
 const { createToast } = useToasts()
 const { loading, error, handle } = useFormSubmit()
+
+/** `null` on indexes without embedders — see the documents page. */
+const findSimilarDocuments = useSimilarDocuments()
+/** Comparing to this document means leaving it: the results behind the slideover are about to change. */
+const findSimilar = () => {
+  open.value = false
+  findSimilarDocuments?.(props.documentId)
+}
 
 /** Which of the two actions is running, so only its own button spins. */
 const pendingAction = ref<'save' | 'delete' | null>(null)
@@ -180,6 +198,7 @@ en:
   loading: Loading document...
   actions:
     delete: Delete document
+    findSimilar: Similar documents
   confirmations:
     delete: 'Delete document {documentId}? This cannot be undone.'
   errors:

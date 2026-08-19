@@ -26,6 +26,7 @@
                   :value="document[primaryKey]"
                   :level="0" />
               </DocumentIdLink>
+              <SimilarDocumentsLink :document-id="document[primaryKey]" class="ml-2" />
             </dd>
           </div>
           <template v-for="key of fieldsWithoutPrimaryKey">
@@ -53,6 +54,7 @@
 import HighlightedText from './HighlightedText.vue'
 import ValueRenderer from './ValueRenderer.vue'
 import DocumentIdLink from './DocumentIdLink.vue'
+import SimilarDocumentsLink from './SimilarDocumentsLink.vue'
 import { useFields, useIndexLocalSettings } from '~/composables'
 import { looksLikeAPictureUrl } from '~/utils'
 
