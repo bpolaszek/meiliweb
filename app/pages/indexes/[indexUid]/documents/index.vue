@@ -28,13 +28,6 @@
       @deleted="refreshDocuments()" />
 
     <template #actions>
-      <SimilarDocumentsBanner
-        v-if="similarDocuments"
-        v-model:embedder="selectedEmbedder"
-        :document-id="similarDocuments.documentId"
-        :embedders="embedderNames"
-        @close="clearSimilarDocuments()" />
-
       <div
         v-if="tenant.tenantToken"
         class="inline-flex items-center gap-1 rounded-lg border-0 border-gray-200 px-4 py-2">
@@ -100,6 +93,14 @@
         <Icon name="heroicons-outline:cog" />
       </NuxtLink>
     </template>
+
+    <SimilarDocumentsBanner
+      v-if="similarDocuments"
+      v-model:embedder="selectedEmbedder"
+      :document-id="similarDocuments.documentId"
+      :embedders="embedderNames"
+      @close="clearSimilarDocuments()"
+      class="mb-6 w-full" />
 
     <DocumentsEmptyState
       v-if="0 === resultset.estimatedTotalHits"
