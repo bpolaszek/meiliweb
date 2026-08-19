@@ -28,6 +28,13 @@
       @deleted="refreshDocuments()" />
 
     <template #actions>
+      <SimilarDocumentsBanner
+        v-if="similarDocuments"
+        v-model:embedder="selectedEmbedder"
+        :document-id="similarDocuments.documentId"
+        :embedders="embedderNames"
+        @close="clearSimilarDocuments()" />
+
       <div
         v-if="tenant.tenantToken"
         class="inline-flex items-center gap-1 rounded-lg border-0 border-gray-200 px-4 py-2">
@@ -131,8 +138,10 @@
 
 <script setup lang="ts">
 import {
+  extractEmbedding,
   provideDocumentViewer,
   provideHighlightTags,
+  provideSimilarDocuments,
   useFields,
   useIndexLocalSettings,
   useMeiliClient,
@@ -158,8 +167,10 @@ import DocumentsAsCards from '~/components/documents/DocumentsAsCards.vue'
 import DocumentsAsTable from '~/components/documents/DocumentsAsTable.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentsAsMap from '~/components/documents/DocumentsAsMap.vue'
+import SimilarDocumentsBanner from '~/components/documents/SimilarDocumentsBanner.vue'
 import SearchSettingsModal from '~/components/documents/search-settings/SearchSettingsModal.vue'
 import { reactiveComputed } from '@vueuse/core'
+import { field as filterField } from 'meilisearch-filters'
 import type { SearchParams } from 'meilisearch'
 import { TOAST_FAILURE, usePromisifiedDialogs, useToasts, useVersion } from '~/stores'
 
@@ -190,7 +201,9 @@ const filterableAttributes = getFilterableAttributePatterns(rawFilterableAttribu
 const facetSearchableAttributes = getFacetSearchableAttributePatterns(rawFilterableAttributes)
 
 const { fields } = useFields(primaryKey, Object.keys(stats.fieldDistribution), index.uid)
-const { appliedSort, facets, itemsPerPage, viewMode, searchSettings } = useIndexLocalSettings(index.uid)
+const { appliedSort, facets, itemsPerPage, viewMode, searchSettings, similarDocumentsEmbedder } = useIndexLocalSettings(
+  index.uid,
+)
 const appliedFilters = reactive(new AppliedFilters()) as AppliedFilters
 
 // Facets/sort stored while connected to this index may no longer be filterable/sortable (removed
@@ -243,6 +256,79 @@ if (hasEmbedders && !searchSettings.value.hybridEmbedder) {
   updateSearchSettings({ hybridEmbedder: embedderNames[0] })
 }
 
+// Same reconciliation for the embedder the "similar documents" mode compares on, which is
+// remembered per index: a stored embedder that no longer exists must never reach a search request.
+if (!hasEmbedders) {
+  similarDocumentsEmbedder.value = null
+} else if (!similarDocumentsEmbedder.value || !embedderNames.includes(similarDocumentsEmbedder.value)) {
+  similarDocumentsEmbedder.value = embedderNames[0] as string
+}
+// Non-null wherever the banner is rendered: the mode can only be entered when an embedder exists.
+const selectedEmbedder = computed({
+  get: () => similarDocumentsEmbedder.value as string,
+  set: (embedder: string) => (similarDocumentsEmbedder.value = embedder),
+})
+
+// The document the results are currently compared to, together with the embedding it was compared
+// on. Both are kept in a single ref so the embedder and its vector can never be out of sync — a
+// vector of the wrong dimensions would make every subsequent search fail. `null` = plain search.
+type SimilarDocuments = { documentId: DocumentId; embedder: string; vector: Array<number> }
+const similarDocuments = ref<SimilarDocuments | null>(null)
+const clearSimilarDocuments = () => {
+  similarDocuments.value = null
+  offset.value = 0
+}
+
+// Fetching the document's embedding is what "find similar documents" really does: the vector then
+// rides along with every search until the mode is closed. Failures (no embedding for this
+// embedder, document gone, ...) fall back to plain search rather than leaving a stale vector
+// behind — see the note on the ref above.
+const findSimilarDocuments = async (documentId: DocumentId) => {
+  const embedder = similarDocumentsEmbedder.value
+  if (!embedder) return
+  try {
+    const document = await meili.index(index.uid).getDocument(documentId, { retrieveVectors: true })
+    const vector = extractEmbedding(document, embedder)
+    if (null === vector) throw new Error(t('errors.noEmbedding', { embedder }))
+    searchTerms.value = ''
+    offset.value = 0
+    similarDocuments.value = { documentId, embedder, vector }
+  } catch (error) {
+    clearSimilarDocuments()
+    createToast({
+      ...TOAST_FAILURE(t),
+      title: t('errors.similarDocumentsFailed'),
+      text: (error as Error).message,
+    })
+  }
+}
+// Provided only where it can work, so the button hides itself on indexes without embedders.
+if (hasEmbedders) provideSimilarDocuments(findSimilarDocuments)
+
+// Comparing to a document is a pure vector search: the embedding replaces the query entirely, and
+// it overrides whatever hybrid search the user configured for as long as the mode is on.
+// Meilisearch only accepts `vector` alongside `hybrid.embedder`.
+const similarSearchParams = computed<SearchParams>(() =>
+  similarDocuments.value
+    ? {
+        q: '',
+        vector: similarDocuments.value.vector,
+        hybrid: { embedder: similarDocuments.value.embedder, semanticRatio: 1 },
+      }
+    : {},
+)
+
+// The compared document itself would always come back first, with a perfect similarity score.
+// Excluding it server-side keeps the hit count honest, but filtering on the primary key requires
+// it to be filterable — which it isn't by default, hence the client-side fallback in `hits`.
+const canExcludeSimilarDocument = filterableAttributes.includes(primaryKey)
+const searchFilter = computed(() => {
+  const applied = `${appliedFilters}`
+  if (!similarDocuments.value || !canExcludeSimilarDocument) return applied
+  const exclusion = filterField(primaryKey).notEquals(similarDocuments.value.documentId).toString()
+  return applied ? `(${applied}) AND ${exclusion}` : exclusion
+})
+
 // Guarded here too (not just hidden in the modal's UI) so a value persisted while connected to a
 // newer instance can't leak into a request against an older one.
 const effectiveSettings = computed<SearchSettings>(() => ({
@@ -254,8 +340,9 @@ const searchParams = computed<SearchParams>(() => ({
   sort: appliedSort.value,
   limit: itemsPerPage.value,
   offset: offset.value,
-  filter: `${appliedFilters}`,
+  filter: searchFilter.value,
   ...buildSearchParams(effectiveSettings.value),
+  ...similarSearchParams.value,
   // personalize is deliberately NOT wired in here: reranking via Cohere is slow and rate-limited,
   // so it must never ride along with search-as-you-type. It's only sent by rerank() below, on
   // explicit user action.
@@ -302,9 +389,15 @@ const self = reactive({
 // formatter. Untouched attributes keep their raw value — and their type. `_formatted` itself is
 // dropped: the cards view lists whatever keys a hit carries, and it has no business being one.
 const hits = computed(() => {
+  // Excluding the compared document server-side isn't always possible (see the search filter
+  // above) — it is then dropped here, at the cost of one row missing from the page.
+  const documents =
+    similarDocuments.value && !canExcludeSimilarDocument
+      ? self.resultset.hits.filter((hit: any) => `${hit[primaryKey]}` !== `${similarDocuments.value?.documentId}`)
+      : self.resultset.hits
   const formattedAttributes = getFormattedAttributes(searchSettings.value)
-  if (0 === formattedAttributes.length) return self.resultset.hits
-  return self.resultset.hits.map(({ _formatted, ...hit }: Record<string, any>) => ({
+  if (0 === formattedAttributes.length) return documents
+  return documents.map(({ _formatted, ...hit }: Record<string, any>) => ({
     ...hit,
     ...Object.fromEntries(
       formattedAttributes.filter((field) => field in (_formatted ?? {})).map((field) => [field, _formatted[field]]),
@@ -397,7 +490,15 @@ const rerank = async () => {
 watch(appliedSort, () => (offset.value = 0))
 watch(appliedFilters, () => (offset.value = 0))
 watch(itemsPerPage, () => (offset.value = 0))
-watch(searchTerms, () => (offset.value = 0))
+// Typing a query means the user wants to search again, not to keep comparing to a document.
+watch(searchTerms, (searchTerms) => {
+  if ('' !== searchTerms) clearSimilarDocuments()
+  offset.value = 0
+})
+// Switching embedder re-compares the same document on the new one.
+watch(similarDocumentsEmbedder, () => {
+  if (similarDocuments.value) findSimilarDocuments(similarDocuments.value.documentId)
+})
 watch(searchParams, async (searchParams) => {
   self.resultset = await searchClient.index(index.uid).search(null, searchParams)
   personalizeApplied.value = false
@@ -431,4 +532,6 @@ en:
     search: Search...
   errors:
     personalizeFailed: Personalized search failed
+    similarDocumentsFailed: Could not find similar documents
+    noEmbedding: This document has no embedding for the "{embedder}" embedder.
 </i18n>
