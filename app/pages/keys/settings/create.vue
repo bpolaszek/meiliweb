@@ -14,14 +14,14 @@
         <dt class="font-medium">{{ t('alerts.success.uid') }}:</dt>
         <dd>
           {{ createdKey.uid }}
-          <ClipboardButton :source="createdKey.uid" />
+          <ClipboardButton :source="createdKey.uid" class="size-4" />
         </dd>
       </dl>
       <dl class="flex items-center gap-2">
         <dt class="font-medium">{{ t('alerts.success.secretKey') }}:</dt>
         <dd>
           {{ createdKey.key }}
-          <ClipboardButton :source="createdKey.key" />
+          <ClipboardButton :source="createdKey.key" class="size-4" />
         </dd>
       </dl>
     </Alert>
