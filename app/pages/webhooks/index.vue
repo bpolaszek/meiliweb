@@ -27,7 +27,7 @@
         <td>
           <span class="inline-flex items-center gap-1 font-mono text-sm whitespace-nowrap">
             {{ webhooks[i].uuid }}
-            <ClipboardButton :source="webhooks[i].uuid" class="shrink-0 grow-0" />
+            <ClipboardButton :source="webhooks[i].uuid" class="size-4 shrink-0 grow-0" />
           </span>
         </td>
         <td>

@@ -28,7 +28,7 @@
               <ClipboardButton
                 :source="keys.results[i].key"
                 :copy-text="t('hints.copySecretKey')"
-                class="shrink-0 grow-0" />
+                class="size-4 shrink-0 grow-0" />
             </span>
             <span v-tippy="keys.results[i].description" class="line-clamp-1 text-sm font-light text-gray-600">
               {{ keys.results[i].description }}
@@ -39,7 +39,7 @@
           <div class="flex flex-col">
             <span class="inline-flex items-center gap-1 whitespace-nowrap">
               {{ keys.results[i].uid }}
-              <ClipboardButton :source="keys.results[i].uid" class="shrink-0 grow-0" />
+              <ClipboardButton :source="keys.results[i].uid" class="size-4 shrink-0 grow-0" />
             </span>
           </div>
         </td>
