@@ -77,6 +77,17 @@
         </td>
       </template>
     </Table>
+    <div class="mt-4 flex items-center justify-between">
+      <PageSize v-model="itemsPerPage" />
+      <UPagination
+        :page="currentPage"
+        :total="lastPage"
+        :items-per-page="1"
+        :sibling-count="2"
+        active-color="primary"
+        variant="ghost"
+        @update:page="handlePageChange" />
+    </div>
   </Layout>
 </template>
 
@@ -94,7 +105,8 @@ import {
 } from '~/stores'
 import KeyEditPromptModal from '~/components/keys/KeyEditPromptModal.vue'
 import type { DropdownMenuItem } from '@nuxt/ui'
-import type { Key } from 'meilisearch'
+import type { Key, KeysResults } from 'meilisearch'
+import PageSize from '~/components/layout/pagination/PageSize.vue'
 import { NuxtLink } from '#components'
 import Table from '~/components/layout/tables/Table.vue'
 import ClipboardButton from '~/components/layout/forms/ClipboardButton.vue'
@@ -112,10 +124,26 @@ useHead({
   title: t('title'),
 })
 
-const keys = ref(await tryOrThrow(() => client.getKeys()))
+// Register lifecycle-bound composables before the first `await` so they keep their component context.
+const itemsPerPage = ref(20)
+const { offset, totalItems, currentPage, lastPage, getPageOffset } = usePagination(itemsPerPage)
+
+const keys = ref<KeysResults>({ results: [], offset: 0, limit: itemsPerPage.value, total: 0 })
 const refresh = async () => {
-  keys.value = await client.getKeys()
+  keys.value = await client.getKeys({ offset: offset.value, limit: itemsPerPage.value })
+  totalItems.value = keys.value.total
 }
+await tryOrThrow(() => refresh())
+
+const handlePageChange = (page: number) => {
+  offset.value = getPageOffset(page)
+}
+
+// A page size change resets the offset in `usePagination`; refresh explicitly when it was already 0.
+watch(offset, () => refresh())
+watch(itemsPerPage, () => {
+  if (0 === offset.value) refresh()
+})
 
 const editKey = async (key: Key) => {
   let payload: { name: string; description: string }
@@ -149,7 +177,12 @@ const deleteKey = async (key: Key) => {
   try {
     await client.deleteKey(key.uid)
     toast.update({ ...TOAST_SUCCESS(t) })
-    await refresh()
+    // Deleting the last key of the last page would leave it empty: step back one page.
+    if (keys.value.results.length === 1 && offset.value > 0) {
+      offset.value = getPageOffset(currentPage.value - 1)
+    } else {
+      await refresh()
+    }
   } catch {
     toast.update({ ...TOAST_FAILURE(t) })
   }
