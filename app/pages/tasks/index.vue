@@ -3,8 +3,8 @@
     <DefineTreeRendering v-slot="{ value }">
       <div v-if="'object' === typeof value && null !== value" class="table">
         <div v-for="[_key, _value] of Object.entries(value)" class="table-row">
-          <dt class="table-cell">{{ _key }}</dt>
-          <dd class="table-cell p-1 text-xs">
+          <dt class="table-cell whitespace-nowrap">{{ _key }}</dt>
+          <dd class="table-cell p-1 text-xs wrap-anywhere">
             <DocumentationLink v-if="'link' === _key" :href="_value as string">
               {{ _value }}
             </DocumentationLink>

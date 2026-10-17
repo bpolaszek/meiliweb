@@ -1,6 +1,6 @@
 <template>
   <div class="flow-root overflow-hidden">
-    <div class="mx-auto max-w-7xl">
+    <div class="mx-auto max-w-page">
       <table class="w-full text-left">
         <thead class="bg-white">
           <slot name="head">
@@ -21,7 +21,9 @@
           </slot>
         </thead>
         <tbody>
-          <tr v-for="(item, rowIndex) of items" class="*:relative *:py-4 *:pr-3 *:text-sm *:text-gray-900">
+          <tr
+            v-for="(item, rowIndex) of items"
+            class="*:relative *:py-4 *:pr-3 *:text-sm *:wrap-anywhere *:text-gray-900">
             <slot :item="item" :index="rowIndex">
               <template v-for="(key, index) of keys">
                 <td v-if="0 === index" class="font-medium">

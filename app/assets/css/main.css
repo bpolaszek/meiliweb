@@ -7,6 +7,8 @@
 
 /* Meiliweb brand palette — mapped to the `primary` semantic color in app.config.ts */
 @theme static {
+  --container-page: 96rem;
+
   --color-meili-50: #fef1f7;
   --color-meili-100: #fee5f2;
   --color-meili-200: #ffcbe7;
