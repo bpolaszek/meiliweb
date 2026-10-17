@@ -13,5 +13,6 @@ export * from './resettable-ref'
 export * from './safe-torefs'
 export * from './search-settings'
 export * from './try-or-throw'
+export * from './wait-for-tasks'
 
 export type I18nT = (key: string, args?: any) => string

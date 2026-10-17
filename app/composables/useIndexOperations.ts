@@ -12,6 +12,7 @@ import {
   usePromisifiedDialogs,
   useToasts,
 } from '~/stores'
+import { waitForTasks } from '~/utils'
 
 type RenameIndexOptions = {
   newIndexUid?: string
@@ -143,7 +144,7 @@ export const useIndexOperations = () => {
       chunkSize,
     )
 
-    await meili.tasks.waitForTasks(taskUids, {
+    await waitForTasks(meili, taskUids, {
       timeout: 1000 * 60 * 5 * taskUids.length,
     })
 

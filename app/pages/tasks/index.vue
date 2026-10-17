@@ -106,7 +106,8 @@ import { type Task } from 'meilisearch'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import StreamStatusIndicator from '~/components/layout/StreamStatusIndicator.vue'
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate, useTimeoutPoll } from '@vueuse/core'
+import { fetchTasksByUids, TASK_POLL_INTERVAL_MS, waitForTask } from '~/utils'
 import InfiniteLoading from 'v3-infinite-loading'
 
 const { t } = useI18n()
@@ -187,7 +188,7 @@ const cancelTask = async (task: Task) => {
     title: t('toasts.cancelTask'),
   })
   const cancelTask = await meili.tasks.cancelTasks({ uids: [task.uid] })
-  await meili.tasks.waitForTask(cancelTask.taskUid)
+  await waitForTask(meili, cancelTask.taskUid)
   toast.destroy()
   task.status = 'canceled'
 }
@@ -220,40 +221,26 @@ const reconnect = async () => {
   self.tasks = await tryOrThrow(() => meili.tasks.getTasks(tasksQuery.value))
 }
 
-const watchers = new WeakMap()
-watch(
-  [pendingTasks, status],
-  ([tasks, status]) => {
-    // Polling fallback: only for instances that don't support streaming at all. Once the stream
-    // gave up (`disconnected`) we surface that instead of silently degrading to polling — see
-    // `StreamStatusIndicator`.
-    if ('streaming' === status || 'disconnected' === status) {
-      return
+// Polling fallback: only for instances that don't support streaming at all. Once the stream gave up
+// (`disconnected`) we surface that instead of silently degrading to polling — see `StreamStatusIndicator`.
+// One `GET /tasks?uids=…` per tick for all pending tasks, instead of one request per task.
+const refreshPendingTasks = async () => {
+  const updatedTasks = await fetchTasksByUids(
+    meili,
+    self.pendingTasks.map((task: Task) => task.uid),
+  )
+  for (const updatedTask of updatedTasks) {
+    const task = self.tasks.results.find((candidate: Task) => candidate.uid === updatedTask.uid)
+    if (task) {
+      Object.assign(task, updatedTask)
     }
-    tasks.forEach(async (task) => {
-      if (watchers.has(task)) {
-        return
-      }
-      watchers.set(task, this)
-      if (task.status === 'enqueued') {
-        const interval = setInterval(async () => {
-          let updatedTask = await meili.tasks.getTask(task.uid)
-          if (updatedTask.status !== 'enqueued') {
-            clearInterval(interval)
-            watchers.delete(task)
-            Object.assign(task, updatedTask)
-          }
-        }, 500)
-      } else {
-        const updatedTask = await meili.tasks.waitForTask(task.uid, {
-          timeout: 1000 * 3600 * 24,
-          interval: 500,
-        })
-        Object.assign(task, updatedTask)
-      }
-    })
-  },
-  { immediate: true, deep: true },
+  }
+}
+const { pause, resume } = useTimeoutPoll(refreshPendingTasks, TASK_POLL_INTERVAL_MS, { immediate: false })
+watch(
+  () => pendingTasks.value.length > 0 && !['streaming', 'disconnected'].includes(status.value),
+  (shouldPoll) => (shouldPoll ? resume() : pause()),
+  { immediate: true },
 )
 </script>
 
