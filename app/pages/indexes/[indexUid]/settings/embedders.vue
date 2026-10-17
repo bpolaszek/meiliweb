@@ -19,6 +19,7 @@
       :key="position"
       v-model="embedders[position]"
       :initial="savedSettings.get(entry.name)"
+      :features
       @remove="removeEmbedder(position)" />
 
     <div class="flex" :class="embedders.length > 0 ? 'justify-end' : 'justify-center py-16'">
@@ -80,6 +81,13 @@ const { loading, error, handle } = useFormSubmit({
 const processTask = useTask()
 const { createToast } = useToasts()
 const { confirm } = useConfirmationDialog()
+
+// Unknown when the key can't read experimental features: let Meilisearch be the judge then.
+const enabledFeatures = (await meili.getExperimentalFeatures().catch(() => null)) as Record<string, boolean> | null
+const features = {
+  multimodal: enabledFeatures?.multimodal ?? true,
+  compositeEmbedders: enabledFeatures?.compositeEmbedders ?? true,
+}
 
 const fetchEmbedders = async () => parseEmbedders(await index.getEmbedders())
 // Embedders as saved on the instance: the payload only carries what differs from them.

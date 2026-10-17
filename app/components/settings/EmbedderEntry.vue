@@ -27,14 +27,7 @@
       variant="subtle"
       icon="heroicons:exclamation-triangle"
       :title="t('notices.notEditable', { source: entry.settings.source })" />
-    <OpenAIEmbedderForm v-else-if="'openAi' === entry.settings.source" v-model="entry.settings" />
-    <HuggingFaceEmbedderForm v-else-if="'huggingFace' === entry.settings.source" v-model="entry.settings" />
-    <OllamaEmbedderForm v-else-if="'ollama' === entry.settings.source" v-model="entry.settings" />
-    <RestEmbedderForm v-else-if="'rest' === entry.settings.source" v-model="entry.settings" />
-    <UserProvidedEmbedderForm
-      v-else-if="'userProvided' === entry.settings.source"
-      v-model="entry.settings"
-      :name="entry.name" />
+    <EmbedderSourceForm v-else v-model="entry.settings" :name="entry.name" :multimodal="features.multimodal" />
 
     <EmbedderCommonFields
       v-if="isEditableEmbedderSource(entry.settings.source)"
@@ -57,23 +50,26 @@
 
 <script setup lang="ts">
 import EmbedderCommonFields from '~/components/settings/embedder/EmbedderCommonFields.vue'
-import HuggingFaceEmbedderForm from '~/components/settings/embedder/HuggingFaceEmbedderForm.vue'
-import OllamaEmbedderForm from '~/components/settings/embedder/OllamaEmbedderForm.vue'
-import OpenAIEmbedderForm from '~/components/settings/embedder/OpenAIEmbedderForm.vue'
-import RestEmbedderForm from '~/components/settings/embedder/RestEmbedderForm.vue'
-import UserProvidedEmbedderForm from '~/components/settings/embedder/UserProvidedEmbedderForm.vue'
+import EmbedderSourceForm from '~/components/settings/embedder/EmbedderSourceForm.vue'
 import { EMBEDDER_SOURCES, isEditableEmbedderSource, type EmbedderFormEntry, type EmbedderFormSettings } from '~/utils'
 
 type Props = {
   // Settings as currently saved on the instance, if any.
   initial?: EmbedderFormSettings
+  // Experimental features the embedder settings depend on
+  features: { multimodal: boolean; compositeEmbedders: boolean }
 }
 const props = defineProps<Props>()
 const entry = defineModel<EmbedderFormEntry>({ required: true })
 defineEmits<{ (e: 'remove'): void }>()
 
 const { t } = useI18n()
-const sourceItems = EMBEDDER_SOURCES.map((value) => ({ value, label: t(`sources.${value}`) }))
+const sourceItems = computed(() =>
+  EMBEDDER_SOURCES.map((value) => {
+    const disabled = 'composite' === value && !props.features.compositeEmbedders
+    return { value, disabled, label: t(disabled ? 'sources.compositeDisabled' : `sources.${value}`) }
+  }),
+)
 const sourceHint = computed(() =>
   props.initial && props.initial.source !== entry.value.settings.source ? t('hints.sourceChanged') : undefined,
 )
@@ -94,8 +90,10 @@ en:
     ollama: Ollama
     rest: REST
     userProvided: User provided
+    composite: Composite
+    compositeDisabled: Composite (requires the compositeEmbedders experimental feature)
   notices:
-    notEditable: "The {source} source cannot be edited here yet: this embedder is left untouched when saving."
+    notEditable: "The {source} source cannot be edited here: this embedder is left untouched when saving."
   actions:
     remove: Remove
 </i18n>

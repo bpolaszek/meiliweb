@@ -1,17 +1,5 @@
 <template>
-  <template v-if="embedderAcceptsField(embedder.source, 'documentTemplate')">
-    <UFormField :label="t('labels.documentTemplate')" :help="t('hints.documentTemplate')">
-      <Textarea
-        v-model="embedder.documentTemplate"
-        :placeholder="t('placeholders.documentTemplate', LIQUID_EXAMPLE)"
-        class="w-full font-mono text-xs"
-        :rows="5" />
-    </UFormField>
-
-    <UFormField :label="t('labels.documentTemplateMaxBytes')" :help="t('hints.documentTemplateMaxBytes')">
-      <UInput v-model.number="embedder.documentTemplateMaxBytes" type="number" :min="0" placeholder="400" />
-    </UFormField>
-  </template>
+  <EmbedderDocumentTemplateFields v-model="embedder" />
 
   <UFormField :help="binaryQuantizedLocked ? t('hints.binaryQuantizedLocked') : t('hints.binaryQuantized')">
     <USwitch
@@ -51,13 +39,8 @@
 </template>
 
 <script setup lang="ts">
-import Textarea from '~/components/layout/forms/Textarea.vue'
-import { embedderAcceptsField, type EmbedderFormSettings } from '~/utils'
-
-// Passed as a parameter: vue-i18n would parse the braces of a literal Liquid tag as its own interpolation
-const LIQUID_EXAMPLE = {
-  example: "A movie titled '{{doc.title}}' whose description starts with {{doc.overview|truncatewords: 20}}",
-}
+import EmbedderDocumentTemplateFields from '~/components/settings/embedder/EmbedderDocumentTemplateFields.vue'
+import type { EmbedderFormSettings } from '~/utils'
 
 defineProps<{
   // Binary quantization cannot be reverted once saved.
@@ -76,18 +59,12 @@ const hasDistribution = computed(
 <i18n>
 en:
   labels:
-    documentTemplate: Document template
-    documentTemplateMaxBytes: Document template max bytes
     binaryQuantized: Binary quantization
     mean: Mean
     sigma: Sigma
   sections:
     advanced: Advanced
-  placeholders:
-    documentTemplate: "{example}"
   hints:
-    documentTemplate: Liquid template turning each document into the text to embed. Leave blank to use every searchable field.
-    documentTemplateMaxBytes: Rendered templates longer than this are truncated. Defaults to 400.
     binaryQuantized: Shrinks vectors to 1 bit per dimension, which saves space and speeds up search at the cost of relevancy. Irreversible once enabled.
     binaryQuantizedLocked: Binary quantization is enabled and cannot be disabled anymore.
     distribution: Corrects the distribution of semantic scores, as an affine transformation of their mean and standard deviation (sigma). Both are between 0 and 1.
