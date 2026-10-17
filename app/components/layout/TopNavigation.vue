@@ -5,7 +5,7 @@
         mobileMenuOpen ? 'fixed inset-0 z-40 overflow-y-auto' : '',
         'relative z-10 bg-white lg:static lg:overflow-y-visible', // Added z-50 and relative
       ]">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-4 sm:px-6 lg:px-8">
         <div class="relative flex justify-between lg:gap-8 xl:grid xl:grid-cols-12">
           <div class="flex md:absolute md:inset-y-0 md:left-0 lg:static xl:col-span-2">
             <div class="flex shrink-0 items-center">
