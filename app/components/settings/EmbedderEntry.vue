@@ -5,13 +5,7 @@
         <Label required :for="id">{{ t('labels.name') }}</Label>
         <input v-model="embedder[0]" required autocomplete="off" type="text" class="w-full text-sm" />
       </div>
-      <Button
-        type="button"
-        size="small"
-        theme="primary"
-        icon="mdi:bin"
-        @click="$emit('remove', embedder[0])"
-        class="w-auto">
+      <Button type="button" size="small" theme="primary" icon="mdi:bin" @click="$emit('remove')" class="w-auto">
         {{ t('actions.remove') }}
       </Button>
     </UniqueId>
@@ -57,6 +51,7 @@ type Props = {
   embedder: [string, Embedder]
 }
 defineProps<Props>()
+defineEmits<{ (e: 'remove'): void }>()
 
 const { t } = useI18n()
 </script>
