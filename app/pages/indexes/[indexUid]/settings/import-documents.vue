@@ -49,7 +49,7 @@ import { useFormSubmit, useMeiliClient } from '~/composables'
 import { ref, type Ref } from 'vue'
 import { type ContentType, type EnqueuedTask } from 'meilisearch'
 import match from 'match-operator'
-import { readFileAsText } from '~/utils/read-file-as-text'
+import { readFileAsText, waitForTask } from '~/utils'
 import Button from '~/components/layout/forms/Button.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
 import { useToasts } from '~/stores/toasts'
@@ -115,7 +115,7 @@ const submit = async () => {
       throw e
     }
 
-    const task = await client.tasks.waitForTask(enqueuedTask.taskUid, {
+    const task = await waitForTask(client, enqueuedTask.taskUid, {
       timeout: 3600 * 1000,
     })
     toast.update({
