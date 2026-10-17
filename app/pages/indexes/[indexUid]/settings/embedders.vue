@@ -10,8 +10,8 @@
       <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#embedders" />
     </h3>
 
-    <template v-for="embedder of embedders">
-      <EmbedderEntry :embedder="embedder as [string, Embedder]" />
+    <template v-for="(embedder, position) of embedders">
+      <EmbedderEntry :embedder="embedder as [string, Embedder]" @remove="removeEmbedder(position)" />
     </template>
 
     <div class="flex" :class="embedders.length > 0 ? 'justify-end' : 'justify-center py-16'">
@@ -128,6 +128,10 @@ const addEmbedder = () => {
       binaryQuantized: false,
     },
   ])
+}
+
+const removeEmbedder = (position: number) => {
+  self.embedders.splice(position, 1)
 }
 
 const submit = async () => {
