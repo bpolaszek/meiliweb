@@ -1,59 +1,83 @@
 <template>
-  <div class="grid grid-cols-12 space-x-4">
-    <UniqueId v-slot="{ id }" as="div" class="col-span-4 space-y-2">
-      <div class="flex flex-col gap-1">
-        <Label required :for="id">{{ t('labels.name') }}</Label>
-        <input v-model="embedder[0]" required autocomplete="off" type="text" class="w-full text-sm" />
-      </div>
-      <Button type="button" size="small" theme="primary" icon="mdi:bin" @click="$emit('remove')" class="w-auto">
-        {{ t('actions.remove') }}
-      </Button>
-    </UniqueId>
-    <div class="col-span-8 space-y-2">
-      <UniqueId v-slot="{ id }" as="section">
-        <Label required :for="id">{{ t('labels.source') }}</Label>
-        <Select v-model="embedder[1]!.source" required :id class="w-full">
-          <option value="openAi">OpenAI</option>
-          <option value="huggingFace">HuggingFace</option>
-          <option value="ollama">Ollama</option>
-          <option value="rest">REST</option>
-          <option value="userProvided">User Provided</option>
-        </Select>
-      </UniqueId>
+  <section class="space-y-4 rounded-lg border border-gray-200 p-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <UFormField :label="t('labels.name')" :help="entry.persisted ? t('hints.persistedName') : undefined" required>
+        <UInput
+          v-model="entry.name"
+          required
+          :disabled="entry.persisted"
+          autocapitalize="off"
+          autocomplete="off"
+          spellcheck="false"
+          class="w-full" />
+      </UFormField>
 
-      <RestEmbedderForm v-if="'rest' === embedder[1]!.source" v-model="embedder[1] as RestEmbedder" />
-      <OllamaEmbedderForm v-if="'ollama' === embedder[1]!.source" v-model="embedder[1] as OllamaEmbedder" />
-      <OpenAIEmbedderForm v-if="'openAi' === embedder[1]!.source" v-model="embedder[1] as OpenAiEmbedder" />
-      <HuggingFaceEmbedderForm
-        v-if="'huggingFace' === embedder[1]!.source"
-        v-model="embedder[1] as HuggingFaceEmbedder" />
-
-      <UniqueId v-if="'userProvided' !== embedder[1]!.source" v-slot="{ id }" as="section" class="flex flex-col gap-1">
-        <Label :for="id">{{ t('labels.documentTemplate') }}</Label>
-        <Textarea v-model="embedder[1]!.documentTemplate" class="w-full text-sm" rows="5" />
-      </UniqueId>
+      <UFormField :label="t('labels.source')" :help="sourceHint" required>
+        <USelect
+          v-model="entry.settings.source"
+          :items="sourceItems"
+          :disabled="!isEditableEmbedderSource(entry.settings.source)"
+          class="w-full" />
+      </UFormField>
     </div>
-  </div>
+
+    <UAlert
+      v-if="!isEditableEmbedderSource(entry.settings.source)"
+      color="warning"
+      variant="subtle"
+      icon="heroicons:exclamation-triangle"
+      :title="t('notices.notEditable', { source: entry.settings.source })" />
+    <OpenAIEmbedderForm v-else-if="'openAi' === entry.settings.source" v-model="entry.settings" />
+    <HuggingFaceEmbedderForm v-else-if="'huggingFace' === entry.settings.source" v-model="entry.settings" />
+    <OllamaEmbedderForm v-else-if="'ollama' === entry.settings.source" v-model="entry.settings" />
+    <RestEmbedderForm v-else-if="'rest' === entry.settings.source" v-model="entry.settings" />
+    <UserProvidedEmbedderForm
+      v-else-if="'userProvided' === entry.settings.source"
+      v-model="entry.settings"
+      :name="entry.name" />
+
+    <EmbedderCommonFields
+      v-if="isEditableEmbedderSource(entry.settings.source)"
+      v-model="entry.settings"
+      :binary-quantized-locked="binaryQuantizedLocked" />
+
+    <footer class="flex justify-end">
+      <UButton
+        type="button"
+        variant="ghost"
+        color="neutral"
+        icon="heroicons:trash"
+        class="hover:text-red-600"
+        @click="$emit('remove')">
+        {{ t('actions.remove') }}
+      </UButton>
+    </footer>
+  </section>
 </template>
 
 <script setup lang="ts">
-import Label from '~/components/layout/forms/Label.vue'
-import Button from '~/components/layout/forms/Button.vue'
-import type { Embedder, HuggingFaceEmbedder, OllamaEmbedder, OpenAiEmbedder, RestEmbedder } from 'meilisearch'
-import Select from '~/components/layout/forms/Select.vue'
-import RestEmbedderForm from '~/components/settings/embedder/RestEmbedderForm.vue'
-import Textarea from '~/components/layout/forms/Textarea.vue'
+import EmbedderCommonFields from '~/components/settings/embedder/EmbedderCommonFields.vue'
+import HuggingFaceEmbedderForm from '~/components/settings/embedder/HuggingFaceEmbedderForm.vue'
 import OllamaEmbedderForm from '~/components/settings/embedder/OllamaEmbedderForm.vue'
 import OpenAIEmbedderForm from '~/components/settings/embedder/OpenAIEmbedderForm.vue'
-import HuggingFaceEmbedderForm from '~/components/settings/embedder/HuggingFaceEmbedderForm.vue'
+import RestEmbedderForm from '~/components/settings/embedder/RestEmbedderForm.vue'
+import UserProvidedEmbedderForm from '~/components/settings/embedder/UserProvidedEmbedderForm.vue'
+import { EMBEDDER_SOURCES, isEditableEmbedderSource, type EmbedderFormEntry, type EmbedderFormSettings } from '~/utils'
 
 type Props = {
-  embedder: [string, Embedder]
+  // Settings as currently saved on the instance, if any.
+  initial?: EmbedderFormSettings
 }
-defineProps<Props>()
+const props = defineProps<Props>()
+const entry = defineModel<EmbedderFormEntry>({ required: true })
 defineEmits<{ (e: 'remove'): void }>()
 
 const { t } = useI18n()
+const sourceItems = EMBEDDER_SOURCES.map((value) => ({ value, label: t(`sources.${value}`) }))
+const sourceHint = computed(() =>
+  props.initial && props.initial.source !== entry.value.settings.source ? t('hints.sourceChanged') : undefined,
+)
+const binaryQuantizedLocked = computed(() => true === props.initial?.binaryQuantized)
 </script>
 
 <i18n>
@@ -61,7 +85,17 @@ en:
   labels:
     name: Embedder name
     source: Source
-    documentTemplate: Document template
+  hints:
+    persistedName: Saved embedders cannot be renamed. Remove it and add a new one instead.
+    sourceChanged: Changing the source resets the whole configuration and regenerates all embeddings.
+  sources:
+    openAi: OpenAI
+    huggingFace: Hugging Face (local)
+    ollama: Ollama
+    rest: REST
+    userProvided: User provided
+  notices:
+    notEditable: "The {source} source cannot be edited here yet: this embedder is left untouched when saving."
   actions:
     remove: Remove
 </i18n>
