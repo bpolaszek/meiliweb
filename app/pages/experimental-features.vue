@@ -68,6 +68,7 @@ const KNOWN_ORDER = [
   'network',
   'getTaskDocumentsRoute',
   'taskQueueCompactionRoute',
+  'tasksStreamingRoute',
   'compositeEmbedders',
   'chatCompletions',
   'multimodal',
@@ -155,6 +156,10 @@ en:
     taskQueueCompactionRoute:
       label: Task queue compaction route
       description: Enables the route to compact the task queue database.
+    tasksStreamingRoute:
+      label: Task and batch streaming
+      description: Enables the /tasks/stream and /batches/stream routes. Meiliweb uses them to receive task
+                   and batch updates live instead of polling the instance.
     compositeEmbedders:
       label: Composite embedders
       description: Enables composite embedders combining multiple embedding sources.
