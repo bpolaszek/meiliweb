@@ -21,6 +21,7 @@
           :placeholder="EXAMPLES[kind]"
           class="w-full font-mono text-xs"
           :rows="4" />
+        <EmbedderTemplatePreview :kind :template="fragment.value" class="mt-1" />
       </UFormField>
       <UButton
         type="button"
@@ -40,6 +41,7 @@
 
 <script setup lang="ts">
 import Textarea from '~/components/layout/forms/Textarea.vue'
+import EmbedderTemplatePreview from '~/components/settings/embedder/EmbedderTemplatePreview.vue'
 import type { EmbedderFragmentRow } from '~/utils'
 
 type Kind = 'indexingFragments' | 'searchFragments'

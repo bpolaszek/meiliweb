@@ -27,7 +27,7 @@
       variant="subtle"
       icon="heroicons:exclamation-triangle"
       :title="t('notices.notEditable', { source: entry.settings.source })" />
-    <EmbedderSourceForm v-else v-model="entry.settings" :name="entry.name" :multimodal="features.multimodal" />
+    <EmbedderSourceForm v-else v-model="entry.settings" :name="entry.name" />
 
     <EmbedderCommonFields
       v-if="isEditableEmbedderSource(entry.settings.source)"
@@ -53,6 +53,7 @@ import EmbedderCommonFields from '~/components/settings/embedder/EmbedderCommonF
 import EmbedderSourceForm from '~/components/settings/embedder/EmbedderSourceForm.vue'
 import {
   COMPOSITE_EMBEDDERS_MIN_VERSION,
+  EMBEDDER_FEATURES,
   EMBEDDER_SOURCES,
   isEditableEmbedderSource,
   type EmbedderFormEntry,
@@ -62,8 +63,6 @@ import {
 type Props = {
   // Settings as currently saved on the instance, if any.
   initial?: EmbedderFormSettings
-  // Experimental features the embedder settings depend on
-  features: { multimodal: boolean; compositeEmbedders: boolean }
 }
 const props = defineProps<Props>()
 const entry = defineModel<EmbedderFormEntry>({ required: true })
@@ -71,6 +70,7 @@ defineEmits<{ (e: 'remove'): void }>()
 
 const { t } = useI18n()
 const { satisfiesVersion } = useVersion()
+const features = inject(EMBEDDER_FEATURES)!
 const sourceItems = computed(() =>
   EMBEDDER_SOURCES.filter(
     (value) =>
@@ -78,7 +78,7 @@ const sourceItems = computed(() =>
       satisfiesVersion(COMPOSITE_EMBEDDERS_MIN_VERSION) ||
       value === entry.value.settings.source,
   ).map((value) => {
-    const disabled = 'composite' === value && !props.features.compositeEmbedders
+    const disabled = 'composite' === value && !features.compositeEmbedders
     return { value, disabled, label: t(disabled ? 'sources.compositeDisabled' : `sources.${value}`) }
   }),
 )

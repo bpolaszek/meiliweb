@@ -1,4 +1,5 @@
 import type { Embedder, Embedders } from 'meilisearch'
+import type { InjectionKey } from 'vue'
 
 export const EMBEDDER_SOURCES = ['openAi', 'huggingFace', 'ollama', 'rest', 'userProvided', 'composite'] as const
 export type EmbedderSource = (typeof EMBEDDER_SOURCES)[number]
@@ -63,6 +64,14 @@ export const embedderFields = (source: EmbedderSource, part?: CompositeEmbedderP
 
 export const embedderAcceptsField = (source: EmbedderSource, field: string, part?: CompositeEmbedderPart) =>
   embedderFields(source, part).includes(field)
+
+// Experimental features the embedder settings depend on, provided by the embedders page.
+export type EmbedderFeatures = {
+  multimodal: boolean
+  compositeEmbedders: boolean
+  renderRoute: boolean
+}
+export const EMBEDDER_FEATURES: InjectionKey<EmbedderFeatures> = Symbol('embedderFeatures')
 
 export type EmbedderFragmentRow = {
   name: string

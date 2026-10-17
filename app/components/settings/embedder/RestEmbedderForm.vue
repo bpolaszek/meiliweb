@@ -80,6 +80,7 @@ import EmbedderFragmentsEditor from '~/components/settings/embedder/EmbedderFrag
 import { useConfirmationDialog } from '~/stores'
 import {
   embedderAcceptsField,
+  EMBEDDER_FEATURES,
   EMBEDDER_FRAGMENT_FIELDS,
   EMBEDDER_JSON_FIELDS,
   EMBEDDER_PRESETS,
@@ -102,12 +103,11 @@ const LIQUID_PLACEHOLDERS = {
 const props = defineProps<{
   // Set when editing a part of a composite embedder
   part?: CompositeEmbedderPart
-  // Whether the `multimodal` experimental feature is enabled
-  multimodal: boolean
 }>()
 const embedder = defineModel<EmbedderFormSettings>({ required: true })
 const { t, te } = useI18n()
 const { confirm } = useConfirmationDialog()
+const { multimodal } = inject(EMBEDDER_FEATURES)!
 
 const fragmentFields = EMBEDDER_FRAGMENT_FIELDS.filter((field) => embedderAcceptsField('rest', field, props.part))
 const hasFragments = computed(() => fragmentFields.some((field) => embedder.value[field]?.length))
