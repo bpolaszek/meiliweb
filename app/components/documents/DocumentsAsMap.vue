@@ -61,7 +61,7 @@ type ZoomEndEvent = {
 }
 
 const props = defineProps<Props>()
-const { nameField } = useFields(props.primaryKey, props.fields)
+const { nameField } = useFields(props.primaryKey, props.fields, props.indexUid)
 const center = ref([0, 0])
 const scrollToDocument = (doc: any) => {
   document.getElementById(`document-${doc[props.primaryKey]}`)?.scrollIntoView({ behavior: 'smooth' })

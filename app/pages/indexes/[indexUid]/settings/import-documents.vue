@@ -22,13 +22,15 @@
       </Select>
     </UniqueId>
 
-    <UniqueId as="section" v-slot="{ id }" class="space-y-1 *:block">
-      <Label required :for="id">{{ t('labels.updateMode') }}</Label>
-      <Select :id="id" v-model="updateMode" class="w-full">
-        <option value="replace">{{ t('updateModes.replace') }}</option>
-        <option value="update">{{ t('updateModes.update') }}</option>
-      </Select>
-    </UniqueId>
+    <UFormField :label="t('labels.updateMode')" required>
+      <URadioGroup v-model="updateMode" :items="updateModeItems" />
+    </UFormField>
+
+    <USwitch
+      v-if="satisfiesVersion('>=1.31.0')"
+      v-model="skipCreation"
+      :label="t('labels.skipCreation')"
+      :description="t('hints.skipCreation')" />
 
     <footer class="flex flex-col items-center justify-end sm:flex-row">
       <Buttons>
@@ -53,7 +55,7 @@ import Buttons from '~/components/layout/forms/Buttons.vue'
 import { useToasts } from '~/stores/toasts'
 import Alert from '~/components/layout/Alert.vue'
 import { promiseTimeout } from '@vueuse/core'
-import { useConfirmationDialog } from '~/stores'
+import { useConfirmationDialog, useVersion } from '~/stores'
 
 type Props = {
   indexUid: string
@@ -66,12 +68,19 @@ const { updateMode } = useIndexLocalSettings(props.indexUid)
 const { loading, error, handle } = useFormSubmit()
 const { createToast } = useToasts()
 const { confirm } = useConfirmationDialog()
+const { satisfiesVersion } = useVersion()
+
+const updateModeItems = computed(() => [
+  { label: t('updateModes.replace'), value: 'replace' as const },
+  { label: t('updateModes.update'), value: 'update' as const },
+])
 
 const self = reactive({
   file: ref(),
   error,
   updateMode,
   contentType: ref('application/json') as Ref<ContentType>,
+  skipCreation: ref(false),
 })
 
 const submit = async () => {
@@ -90,9 +99,16 @@ const submit = async () => {
     toast.update({ text: t('toasts.success.uploadText') })
     let enqueuedTask: EnqueuedTask
     try {
+      const queryParams = satisfiesVersion('>=1.31.0') ? { skipCreation: self.skipCreation } : {}
       enqueuedTask = await match(self.updateMode, [
-        ['replace', () => client.index(props.indexUid).addDocumentsFromString(documents, self.contentType)],
-        ['update', () => client.index(props.indexUid).updateDocumentsFromString(documents, self.contentType)],
+        [
+          'replace',
+          () => client.index(props.indexUid).addDocumentsFromString(documents, self.contentType, queryParams),
+        ],
+        [
+          'update',
+          () => client.index(props.indexUid).updateDocumentsFromString(documents, self.contentType, queryParams),
+        ],
       ])
     } catch (e) {
       toast.destroy()
@@ -130,7 +146,7 @@ const submit = async () => {
   })
 }
 
-const { contentType, file } = toRefs(self)
+const { contentType, file, skipCreation } = toRefs(self)
 useHead({
   title: `${t('title')} - ${props.indexUid}`,
 })
@@ -143,9 +159,13 @@ en:
     pickAFile: File to import
     contentType: Content type
     updateMode: Import mode
+    skipCreation: Do not create new documents
   updateModes:
     replace: Replace (drops document if exists, replaces by the new one)
     update: Update (adds document if not exists, only updates properties otherwise)
+  hints:
+    skipCreation: Only documents that already exist (matched by primary key) will be updated. Documents whose
+                  primary key isn't found yet will be skipped instead of created.
   actions:
     import: Import
   toasts:

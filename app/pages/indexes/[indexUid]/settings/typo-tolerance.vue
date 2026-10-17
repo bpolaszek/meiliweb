@@ -53,9 +53,15 @@
       <SplitLinesTextarea v-model="typoTolerance!.disableOnAttributes!" class="h-20 w-full text-sm" />
     </UniqueId>
 
-    <UniqueId v-if="satisfiesVersion('^1.15')" v-slot="{ id }" as="div" class="col-span-8">
-      <Label :for="id">{{ t('labels.disableOnNumbers') }}</Label>
-      <SplitLinesTextarea v-model="typoTolerance!.disableOnNumbers!" class="h-20 w-full text-sm" />
+    <UniqueId
+      v-if="satisfiesVersion('^1.15')"
+      as="section"
+      v-slot="{ id }"
+      class="flex items-center justify-between gap-2">
+      <Label :for="id" class="flex items-center gap-2">
+        <span>{{ t('labels.disableOnNumbers') }}</span>
+      </Label>
+      <USwitch :id="id" v-model="typoTolerance!.disableOnNumbers" />
     </UniqueId>
 
     <footer class="flex flex-col items-center justify-between sm:flex-row">

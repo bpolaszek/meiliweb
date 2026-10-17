@@ -82,3 +82,10 @@ body {
   --slider-tooltip-bg: #fa3a90;
   --slider-handle-ring-color: #fa3a9030;
 }
+
+/* Search matches, painted by useSearchHighlight through the CSS Custom Highlight API. Only the
+   properties the spec allows on ::highlight() work here — background, color, text-decoration. */
+::highlight(meili-search-match) {
+  background-color: var(--color-meili-100);
+  color: var(--color-meili-800);
+}

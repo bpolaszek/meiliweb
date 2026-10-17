@@ -9,6 +9,20 @@
       <dt>{{ t('labels.processingTime') }}:</dt>
       <dd>{{ processingTimeMs }}ms</dd>
     </dl>
+    <UPopover v-if="performanceDetails">
+      <button v-tippy="t('actions.showPerformanceDetails')" type="button">
+        <Icon name="mdi:speedometer" class="size-4 text-gray-600 hover:text-gray-800" />
+      </button>
+      <template #content>
+        <div class="max-w-sm p-4 text-xs">
+          <ObjectValueRenderer
+            :index-uid="indexUid"
+            field="performanceDetails"
+            :value="performanceDetails"
+            :level="0" />
+        </div>
+      </template>
+    </UPopover>
     <UniqueId as="div" v-slot="{ id }" class="inline-flex items-center gap-1">
       <select :id="id" v-model="itemsPerPage">
         <option :value="1">1</option>
@@ -23,28 +37,45 @@
       </label>
     </UniqueId>
     <span>{{ t('labels.pagination', { currentPage, lastPage }) }}</span>
-    <nav>
+    <nav class="flex items-center gap-2">
       <button
+        v-if="showRerank"
+        v-tippy="personalizeApplied ? t('actions.undoRerank') : t('actions.rerank')"
         type="button"
-        :disabled="currentPage === 1"
-        @click="offset = getPageOffset(previousPage)"
-        class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
-        {{ t('labels.previous') }}
+        :disabled="(!canRerank && !personalizeApplied) || rerankLoading"
+        @click="emit('rerank')"
+        :class="[
+          'disabled:cursor-default disabled:text-gray-300',
+          personalizeApplied
+            ? 'enabled:text-primary-600 enabled:hover:text-primary-800'
+            : 'enabled:text-gray-600 enabled:hover:text-gray-800',
+        ]">
+        <Icon name="heroicons:sparkles" :class="['size-4', { 'animate-spin': rerankLoading }]" />
       </button>
-      /
-      <button
-        type="button"
-        :disabled="currentPage === lastPage"
-        @click="offset = getPageOffset(nextPage)"
-        class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
-        {{ t('labels.next') }}
-      </button>
+      <span>
+        <button
+          type="button"
+          :disabled="currentPage === 1"
+          @click="offset = getPageOffset(previousPage)"
+          class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
+          {{ t('labels.previous') }}
+        </button>
+        /
+        <button
+          type="button"
+          :disabled="currentPage === lastPage"
+          @click="offset = getPageOffset(nextPage)"
+          class="enabled:text-gray-600 enabled:hover:text-gray-800 disabled:cursor-default disabled:text-gray-300">
+          {{ t('labels.next') }}
+        </button>
+      </span>
     </nav>
   </footer>
 </template>
 
 <script setup lang="ts">
 import { usePagination } from '~/composables'
+import ObjectValueRenderer from '~/components/documents/ObjectValueRenderer.vue'
 import type { Ref } from 'vue'
 
 type Props = {
@@ -54,9 +85,23 @@ type Props = {
   lastPage: number
   previousPage: number
   nextPage: number
+  indexUid?: string
+  performanceDetails?: Record<string, unknown>
+  showRerank?: boolean
+  canRerank?: boolean
+  rerankLoading?: boolean
+  personalizeApplied?: boolean
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), {
+  showRerank: false,
+  canRerank: false,
+  rerankLoading: false,
+  personalizeApplied: false,
+})
+const emit = defineEmits<{
+  (e: 'rerank'): void
+}>()
 const offset = defineModel('offset')
 const itemsPerPage = defineModel('itemsPerPage') as unknown as Ref<number>
 const { t } = useI18n()
@@ -65,6 +110,10 @@ const { getPageOffset } = usePagination(itemsPerPage)
 
 <i18n>
 en:
+  actions:
+    showPerformanceDetails: Show performance details
+    rerank: Rerank results with personalization
+    undoRerank: Show results without personalization
   labels:
     nbEstimatedHits: Nb. estimated hits
     processingTime: Processing time

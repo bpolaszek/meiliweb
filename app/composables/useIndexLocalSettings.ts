@@ -1,5 +1,6 @@
 import { useLocalStorage } from '@vueuse/core'
 import { useCredentials, type CredentialsRecord } from '~/stores'
+import { DEFAULT_SEARCH_SETTINGS, type SearchSettings } from '~/utils'
 
 type ViewMode = 'table' | 'documents' | 'map'
 type UpdateMode = 'replace' | 'update'
@@ -11,20 +12,15 @@ type UseIndexLocalSettings = {
   itemsPerPage: number
   viewMode: ViewMode
   updateMode: UpdateMode
-  hybridEnabled: boolean
-  hybridEmbedder: string | null
-  hybridSemanticRatio: number
+  searchSettings: SearchSettings
+  similarDocumentsEmbedder: string | null
+  illustrationAttribute: string | null
+  nameAttribute: string | null
 }
 
 const DEFAULT_ITEMS_PER_PAGE = 20
 const DEFAULT_VIEW_MODE = 'documents'
 const DEFAULT_UPDATE_MODE = 'replace'
-// Hybrid search is opt-in: keyword search must keep working exactly as before unless the
-// user explicitly turns it on, so `hybridEnabled` defaults to false regardless of how many
-// embedders the index has. 0.5 matches the Meilisearch API default for `semanticRatio`.
-const DEFAULT_HYBRID_ENABLED = false
-const DEFAULT_HYBRID_EMBEDDER = null
-const DEFAULT_HYBRID_SEMANTIC_RATIO = 0.5
 
 export const useIndexLocalSettings = (indexUid: string) => {
   const { credentials } = useCredentials()
@@ -37,9 +33,10 @@ export const useIndexLocalSettings = (indexUid: string) => {
     itemsPerPage: DEFAULT_ITEMS_PER_PAGE,
     viewMode: DEFAULT_VIEW_MODE,
     updateMode: DEFAULT_UPDATE_MODE,
-    hybridEnabled: DEFAULT_HYBRID_ENABLED,
-    hybridEmbedder: DEFAULT_HYBRID_EMBEDDER,
-    hybridSemanticRatio: DEFAULT_HYBRID_SEMANTIC_RATIO,
+    searchSettings: DEFAULT_SEARCH_SETTINGS,
+    similarDocumentsEmbedder: null,
+    illustrationAttribute: null,
+    nameAttribute: null,
   })
 
   const self = reactive({ storage })
@@ -73,26 +70,26 @@ export const useIndexLocalSettings = (indexUid: string) => {
       get: () => self.storage.updateMode ?? DEFAULT_UPDATE_MODE,
       set: (value: UpdateMode) => (self.storage.updateMode = value),
     }),
-    hybridEnabled: computed({
-      get: () => self.storage.hybridEnabled ?? DEFAULT_HYBRID_ENABLED,
-      set: (value: boolean) => (self.storage.hybridEnabled = value),
+    // Everything the search settings modal edits, committed in one go on submit. Defaults are
+    // merged back in on read so settings persisted by an older version of the app (which knew
+    // fewer keys) don't come back as `undefined` search parameters.
+    searchSettings: computed({
+      get: () => ({ ...DEFAULT_SEARCH_SETTINGS, ...(self.storage.searchSettings ?? {}) }),
+      set: (value: SearchSettings) => (self.storage.searchSettings = value),
     }),
-    hybridEmbedder: computed({
-      get: () => self.storage.hybridEmbedder ?? DEFAULT_HYBRID_EMBEDDER,
-      set: (value: string | null) => (self.storage.hybridEmbedder = value),
+    // Which embedder the "similar documents" mode compares on, remembered per index. Reconciled
+    // against the live embedder list by the documents page before it can reach a search request.
+    similarDocumentsEmbedder: computed({
+      get: () => self.storage.similarDocumentsEmbedder ?? null,
+      set: (value: string | null) => (self.storage.similarDocumentsEmbedder = value),
     }),
-    hybridSemanticRatio: computed({
-      get: () => self.storage.hybridSemanticRatio ?? DEFAULT_HYBRID_SEMANTIC_RATIO,
-      set: (value: number) => (self.storage.hybridSemanticRatio = value),
+    illustrationAttribute: computed({
+      get: () => self.storage.illustrationAttribute ?? null,
+      set: (value: string | null) => (self.storage.illustrationAttribute = value),
     }),
-    // Call this whenever the stored embedder no longer matches the index's live embedder
-    // list (renamed/deleted) — resets everything hybrid-related to its default in one go,
-    // so no caller can reset one field and forget the others (e.g. leaving a stale
-    // semanticRatio next to an empty embedder).
-    resetHybridSearch: () => {
-      self.storage.hybridEnabled = DEFAULT_HYBRID_ENABLED
-      self.storage.hybridEmbedder = DEFAULT_HYBRID_EMBEDDER
-      self.storage.hybridSemanticRatio = DEFAULT_HYBRID_SEMANTIC_RATIO
-    },
+    nameAttribute: computed({
+      get: () => self.storage.nameAttribute ?? null,
+      set: (value: string | null) => (self.storage.nameAttribute = value),
+    }),
   }
 }

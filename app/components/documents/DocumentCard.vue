@@ -8,7 +8,7 @@
         <header class="mb-2 flex items-center justify-between border-b border-b-gray-300 pb-2">
           <h2 class="flex gap-2 text-lg font-medium">
             <span v-if="nameField === primaryKey">#</span>
-            <span class="line-clamp-1 text-gray-700">{{ name }}</span>
+            <HighlightedText :value="name" class="line-clamp-1 text-gray-700" />
           </h2>
         </header>
         <dl class="space-y-2 @xl:space-y-0">
@@ -19,11 +19,14 @@
               {{ primaryKey }}
             </dt>
             <dd class="table-cell text-justify text-sm font-semibold text-gray-800 @xl:p-1">
-              <ValueRenderer
-                :index-uid="indexUid"
-                :field="primaryKey as string"
-                :value="document[primaryKey]"
-                :level="0" />
+              <DocumentIdLink :document-id="document[primaryKey]">
+                <ValueRenderer
+                  :index-uid="indexUid"
+                  :field="primaryKey as string"
+                  :value="document[primaryKey]"
+                  :level="0" />
+              </DocumentIdLink>
+              <SimilarDocumentsLink :document-id="document[primaryKey]" class="ml-2" />
             </dd>
           </div>
           <template v-for="key of fieldsWithoutPrimaryKey">
@@ -48,8 +51,11 @@
 </template>
 
 <script setup lang="ts">
+import HighlightedText from './HighlightedText.vue'
 import ValueRenderer from './ValueRenderer.vue'
-import { useFields } from '~/composables'
+import DocumentIdLink from './DocumentIdLink.vue'
+import SimilarDocumentsLink from './SimilarDocumentsLink.vue'
+import { useFields, useIndexLocalSettings } from '~/composables'
 import { looksLikeAPictureUrl } from '~/utils'
 
 type Props = {
@@ -60,9 +66,18 @@ type Props = {
 
 const props = defineProps<Props>()
 
-const picture = computed(() => Object.values(props.document).find(looksLikeAPictureUrl) as string | null)
+const { illustrationAttribute } = useIndexLocalSettings(props.indexUid)
+const picture = computed(() =>
+  illustrationAttribute.value
+    ? props.document[illustrationAttribute.value] ?? null
+    : (Object.values(props.document).find(looksLikeAPictureUrl) as string | null),
+)
 
-const { fieldsWithoutPrimaryKey, nameField } = useFields(props.primaryKey, Object.keys(props.document))
+const { fieldsWithoutPrimaryKey, nameField } = useFields(
+  props.primaryKey,
+  computed(() => Object.keys(props.document)),
+  props.indexUid,
+)
 const self: any = reactive({
   nameField,
   name: computed(() => props.document[self.nameField]),

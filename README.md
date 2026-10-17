@@ -7,11 +7,18 @@ https://github.com/bpolaszek/meiliweb/assets/5569077/b4100e75-1e70-45dd-8c38-926
 
 ## Features
 
-- 🛢️ Indexes management: create indexes, update settings
-- 🔍 Documents management: import documents, search, sort, filter
-- 🗝️ Access keys management: Create keys, generate tenant tokens (JWTs)
-- 📋 Tasks management
-- 🅿️ Dumps / snapshots management
+- 🛢️ **Indexes**: create indexes, browse and edit every setting (searchable / filterable / sortable
+  attributes, ranking rules, typo tolerance, synonyms, stop words, dictionary, separator tokens,
+  embedders, displayed fields, foreign keys...)
+- 🔍 **Documents**: import, search, sort, filter, edit, delete documents
+- 🗝️ **Access keys**: create keys, generate tenant tokens (JWTs)
+- 📋 **Tasks**: browse and monitor the task queue
+- 🅿️ **Backup**: one-click dumps, snapshots and index export to a remote instance
+- 🕸️ **Network**: manage multi-instance / sharded network settings
+- 🪝 **Webhooks**: manage webhooks
+- 🧭 **Search rules**: manage search rules
+- 💬 **Chat**: use Meilisearch's AI-powered chat, when enabled on the instance
+- 🧪 **Experimental features**: toggle Meilisearch experimental features from the UI
 
 ## Demo
 
@@ -19,10 +26,11 @@ You can run Meilweb on your search instances, provided they expose appropriate C
 
 ## Local usage
 
-Meiliweb is a [Nuxt 3](https://nuxt.com/) single-page application that entirely runs on the client side.
+Meiliweb is a [Nuxt 4](https://nuxt.com/) single-page application that entirely runs on the client
+side: there's no backend, it talks directly to your Meilisearch instance from the browser.
 
-If you have some basics with [Vue](https://vuejs.org/) and [TailwindCSS](https://tailwindcss.com/), you will easily
-figure out how this application has been structured.
+If you have some basics with [Vue 3](https://vuejs.org/) (Composition API), [Tailwind CSS](https://tailwindcss.com/)
+and [Nuxt UI](https://ui.nuxt.com/), you will easily figure out how this application has been structured.
 
 [Yarn](https://yarnpkg.com/) is required to install packages.
 
@@ -33,6 +41,10 @@ Feel free to contribute!
 - [Pull requests](https://github.com/bpolaszek/meiliweb/pulls): Request changes
 
 ### Installation
+
+You mostly don't need to install it on your computer. Just head up to [https://meiliweb.pages.dev](https://meiliweb.pages.dev) and fill your instance credentials.
+
+If for some reason you want to run it locally, you can clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/bpolaszek/meiliweb.git
@@ -66,14 +78,20 @@ docker run -p 3000:3000 -d meiliweb
 
 ### Code style
 
-#### Check
+#### Check formatting
 
 ```bash
 yarn lint
 ```
 
-#### Fix
+#### Fix formatting
 
 ```bash
 yarn format
+```
+
+#### Lint
+
+```bash
+yarn run check
 ```

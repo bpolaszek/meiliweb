@@ -1,5 +1,6 @@
 import match from 'match-operator'
 import type { ComputedRef, MaybeRef } from 'vue'
+import { useIndexLocalSettings } from './useIndexLocalSettings'
 
 type UseFieldsReturn = {
   fields: ComputedRef<Array<string>>
@@ -7,18 +8,27 @@ type UseFieldsReturn = {
   nameField: ComputedRef<string>
 }
 
-export const useFields = (primaryKey: MaybeRef<string>, fields: MaybeRef<Array<string>>): UseFieldsReturn => {
+export const useFields = (
+  primaryKey: MaybeRef<string>,
+  fields: MaybeRef<Array<string>>,
+  indexUid?: string,
+): UseFieldsReturn => {
+  // Falls back to auto-detection whenever the override is unset, or no longer among this
+  // document's fields (attribute removed from the index, or simply absent on this document).
+  const nameAttribute = indexUid ? useIndexLocalSettings(indexUid).nameAttribute : computed(() => null)
   const self: any = reactive({
     primaryKey,
     fields,
     nameField: computed(() =>
-      match(true, [
-        [self.fields.includes('name'), 'name'],
-        [self.fields.includes('title'), 'title'],
-        [self.fields.includes('label'), 'label'],
-        [self.fields.includes('id'), 'id'],
-        [match.default, self.primaryKey],
-      ]),
+      nameAttribute.value && self.fields.includes(nameAttribute.value)
+        ? nameAttribute.value
+        : match(true, [
+            [self.fields.includes('name'), 'name'],
+            [self.fields.includes('title'), 'title'],
+            [self.fields.includes('label'), 'label'],
+            [self.fields.includes('id'), 'id'],
+            [match.default, self.primaryKey],
+          ]),
     ),
     sortedFields: computed(() => [
       self.primaryKey,

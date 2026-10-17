@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full flex-col overflow-hidden">
+  <div class="flex h-full flex-col overflow-hidden" :class="noPaddingBottom || 'pb-8'">
     <LayoutTopNavigation />
     <div class="relative grow">
       <div class="absolute inset-0 flex flex-col">
@@ -35,6 +35,7 @@ type Props = {
   title: string
   subtitle?: string
   nowrap?: boolean
+  noPaddingBottom?: boolean
 }
 
 defineProps<Props>()

@@ -50,7 +50,12 @@ export const useToasts = defineStore('toasts', () => {
     title: options.title,
     description: options.text,
     icon: options.icon,
-    duration: 0 === (options.ttl ?? TOAST_DEFAULT_TTL) ? Infinity : options.ttl ?? TOAST_DEFAULT_TTL,
+    // A `ttl` of 0 means "indefinite", and reka-ui's ToastRoot starts no auto-close timer for a
+    // duration of 0 — just like Infinity. Prefer 0: ToastRoot only refreshes its `remaining` time
+    // from a requestAnimationFrame loop, so it lags one render behind a duration change. Coming
+    // from Infinity, the toast progress bar was fed `Infinity / newDuration * 100` and ProgressRoot
+    // rejected it; coming from 0, the stale value fails the `remaining > 0` guard it sits behind.
+    duration: options.ttl ?? TOAST_DEFAULT_TTL,
     close: options.dismissable ?? true,
     ui: {
       icon: ['size-6', ...(Array.isArray(options.iconClasses) ? options.iconClasses : [options.iconClasses ?? ''])]
