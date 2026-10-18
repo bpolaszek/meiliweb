@@ -1,5 +1,6 @@
 export * from './applied-filters'
 export * from './create-jwt'
+export * from './embedder-presets'
 export * from './embedders'
 export * from './exporter'
 export * from './filterable-attributes'
