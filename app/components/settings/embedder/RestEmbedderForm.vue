@@ -51,7 +51,10 @@
     <Textarea v-model="embedder[field]" :required="'headers' !== field" class="w-full font-mono text-xs" :rows="6" />
   </UFormField>
 
-  <details class="rounded-lg border border-gray-200 text-sm" :open="hasFragments">
+  <details
+    v-if="multimodalSupported || hasFragments"
+    class="rounded-lg border border-gray-200 text-sm"
+    :open="hasFragments">
     <summary class="cursor-pointer px-3 py-2 font-medium text-gray-700">{{ t('sections.multimodal') }}</summary>
     <div class="space-y-4 px-3 pb-3">
       <UAlert
@@ -80,6 +83,7 @@ import {
   EMBEDDER_FRAGMENT_FIELDS,
   EMBEDDER_JSON_FIELDS,
   EMBEDDER_PRESETS,
+  MULTIMODAL_MIN_VERSION,
   type CompositeEmbedderPart,
   type EmbedderFormSettings,
   type EmbedderFragmentRow,
@@ -110,7 +114,14 @@ const hasFragments = computed(() => fragmentFields.some((field) => embedder.valu
 // Meilisearch can't infer the dimensions of an embedder using indexing fragments
 const hasIndexingFragments = computed(() => embedder.value.indexingFragments?.length > 0)
 
-const presetItems = EMBEDDER_PRESETS.map(({ id, label }) => ({ value: id, label }))
+const { satisfiesVersion } = useVersion()
+const multimodalSupported = computed(() => satisfiesVersion(MULTIMODAL_MIN_VERSION))
+// Presets relying on fragments can't work before multimodal embedders exist
+const presetItems = computed(() =>
+  EMBEDDER_PRESETS.filter(
+    ({ build, models }) => multimodalSupported.value || undefined === build(models[0]!).indexingFragments,
+  ).map(({ id, label }) => ({ value: id, label })),
+)
 const presetId = ref<string>()
 const preset = computed(() => EMBEDDER_PRESETS.find(({ id }) => id === presetId.value))
 const presetModelName = ref<string>()

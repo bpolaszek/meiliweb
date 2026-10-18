@@ -6,6 +6,9 @@ export type EmbedderSource = (typeof EMBEDDER_SOURCES)[number]
 // Sources a composite embedder can delegate to.
 export const SUB_EMBEDDER_SOURCES = ['openAi', 'huggingFace', 'ollama', 'rest'] as const
 
+// Versions of Meilisearch that introduced the experimental features embedders depend on
+export const COMPOSITE_EMBEDDERS_MIN_VERSION = '>=1.14.0'
+export const MULTIMODAL_MIN_VERSION = '>=1.16.0'
 export const COMPOSITE_EMBEDDER_PARTS = ['searchEmbedder', 'indexingEmbedder'] as const
 export type CompositeEmbedderPart = (typeof COMPOSITE_EMBEDDER_PARTS)[number]
 
