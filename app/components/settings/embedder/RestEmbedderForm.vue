@@ -47,8 +47,12 @@
     :label="t(`labels.${field}`)"
     :help="t(`hints.${field}`, LIQUID_PLACEHOLDERS)"
     :error="!isValidJson(embedder[field]) && t('errors.invalidJson')"
-    :required="'headers' !== field">
-    <Textarea v-model="embedder[field]" :required="'headers' !== field" class="w-full font-mono text-xs" :rows="6" />
+    :required="!OPTIONAL_EMBEDDER_JSON_FIELDS.includes(field)">
+    <Textarea
+      v-model="embedder[field]"
+      :required="!OPTIONAL_EMBEDDER_JSON_FIELDS.includes(field)"
+      class="w-full font-mono text-xs"
+      :rows="6" />
   </UFormField>
 
   <details
@@ -85,6 +89,7 @@ import {
   EMBEDDER_JSON_FIELDS,
   EMBEDDER_PRESETS,
   MULTIMODAL_MIN_VERSION,
+  OPTIONAL_EMBEDDER_JSON_FIELDS,
   type CompositeEmbedderPart,
   type EmbedderFormSettings,
   type EmbedderFragmentRow,

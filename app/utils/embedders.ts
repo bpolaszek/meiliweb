@@ -11,6 +11,8 @@ export const SUB_EMBEDDER_SOURCES = ['openAi', 'huggingFace', 'ollama', 'rest'] 
 export const COMPOSITE_EMBEDDERS_MIN_VERSION = '>=1.14.0'
 export const MULTIMODAL_MIN_VERSION = '>=1.16.0'
 export const RENDER_ROUTE_MIN_VERSION = '>=1.48.0'
+// Sources relying on the compositeEmbedders experimental feature
+export const COMPOSITE_EMBEDDER_SOURCES: readonly string[] = ['composite']
 export const COMPOSITE_EMBEDDER_PARTS = ['searchEmbedder', 'indexingEmbedder'] as const
 export type CompositeEmbedderPart = (typeof COMPOSITE_EMBEDDER_PARTS)[number]
 
@@ -48,6 +50,7 @@ const FIELDS_EXCLUDED_FROM_PART: Record<CompositeEmbedderPart, readonly string[]
 
 // Edited as raw JSON text in the form.
 export const EMBEDDER_JSON_FIELDS = ['request', 'response', 'headers'] as const
+export const OPTIONAL_EMBEDDER_JSON_FIELDS: readonly string[] = ['headers']
 
 // Edited as a list of named JSON values in the form.
 export const EMBEDDER_FRAGMENT_FIELDS = ['indexingFragments', 'searchFragments'] as const
@@ -100,6 +103,23 @@ export class InvalidEmbedderJsonError extends Error {
     public field: string,
   ) {
     super(`Invalid JSON in ${field} of embedder ${embedder}`)
+  }
+}
+
+// A single PATCH can't delete an embedder and create another one under the same name.
+export class EmbedderNameTakenError extends Error {
+  constructor(public embedder: string) {
+    super(`An embedder named ${embedder} is already saved`)
+  }
+}
+
+export class DuplicateFragmentNameError extends Error {
+  constructor(
+    public embedder: string,
+    public field: string,
+    public fragment: string,
+  ) {
+    super(`Duplicate fragment name in ${field} of embedder ${embedder}: ${fragment}`)
   }
 }
 
@@ -168,6 +188,10 @@ const toApiValue = (embedder: string, field: string, value: any): any => {
   }
   if ((EMBEDDER_FRAGMENT_FIELDS as readonly string[]).includes(field)) {
     const rows: EmbedderFragmentRow[] = Array.isArray(value) ? value : []
+    const duplicate = rows.find(({ name }, i) => rows.findIndex((row) => row.name === name) !== i)
+    if (undefined !== duplicate) {
+      throw new DuplicateFragmentNameError(embedder, field, duplicate.name)
+    }
     return 0 === rows.length
       ? null
       : Object.fromEntries(
@@ -266,6 +290,10 @@ export const buildEmbeddersPayload = (entries: EmbedderFormEntry[], initialEntri
   }
 
   const initialSettings = new Map(initialEntries.map(({ name, settings }) => [name, settings]))
+  const recreated = entries.find(({ name, persisted }) => !persisted && initialSettings.has(name))
+  if (undefined !== recreated) {
+    throw new EmbedderNameTakenError(recreated.name)
+  }
   const payload: Record<string, Record<string, any> | null> = {}
   for (const name of initialSettings.keys()) {
     if (!names.has(name)) {

@@ -52,6 +52,7 @@
 import EmbedderCommonFields from '~/components/settings/embedder/EmbedderCommonFields.vue'
 import EmbedderSourceForm from '~/components/settings/embedder/EmbedderSourceForm.vue'
 import {
+  COMPOSITE_EMBEDDER_SOURCES,
   COMPOSITE_EMBEDDERS_MIN_VERSION,
   EMBEDDER_FEATURES,
   EMBEDDER_SOURCES,
@@ -74,11 +75,11 @@ const features = inject(EMBEDDER_FEATURES)!
 const sourceItems = computed(() =>
   EMBEDDER_SOURCES.filter(
     (value) =>
-      'composite' !== value ||
+      !COMPOSITE_EMBEDDER_SOURCES.includes(value) ||
       satisfiesVersion(COMPOSITE_EMBEDDERS_MIN_VERSION) ||
       value === entry.value.settings.source,
   ).map((value) => {
-    const disabled = 'composite' === value && !features.compositeEmbedders
+    const disabled = COMPOSITE_EMBEDDER_SOURCES.includes(value) && !features.compositeEmbedders
     return { value, disabled, label: t(disabled ? 'sources.compositeDisabled' : `sources.${value}`) }
   }),
 )
@@ -86,6 +87,22 @@ const sourceHint = computed(() =>
   props.initial && props.initial.source !== entry.value.settings.source ? t('hints.sourceChanged') : undefined,
 )
 const binaryQuantizedLocked = computed(() => true === props.initial?.binaryQuantized)
+
+// The saved API key comes back redacted: it is left out of the payload when the source changes, so don't show it as kept.
+watch(
+  () => entry.value.settings.source,
+  (source) => {
+    const savedApiKey = props.initial?.apiKey
+    if (undefined === savedApiKey) {
+      return
+    }
+    if (source !== props.initial?.source && savedApiKey === entry.value.settings.apiKey) {
+      entry.value.settings.apiKey = ''
+    } else if (source === props.initial?.source && !entry.value.settings.apiKey) {
+      entry.value.settings.apiKey = savedApiKey
+    }
+  },
+)
 </script>
 
 <i18n>

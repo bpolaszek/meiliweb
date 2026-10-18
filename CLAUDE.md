@@ -138,7 +138,9 @@ const POOLING_MIN_VERSION = '>=1.14.0'
 - Hide what the instance can't do; when a whole page depends on it, show an `Alert` saying which version it needs.
 - An experimental feature doesn't exist before the release that introduced it: `GET /experimental-features`
   simply omits its key, and `/experimental-features` won't list it. Gate it on the version first, then on the
-  flag — never treat a missing key as "enabled".
+  flag — never treat a missing key as "enabled" on an instance older than the feature. Once the version
+  matches, defaulting to enabled is fine when the API key can't read `/experimental-features` at all:
+  Meilisearch will then reject what isn't enabled by itself.
 
 ## Patterns & idioms
 
