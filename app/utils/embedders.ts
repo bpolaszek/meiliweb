@@ -308,3 +308,12 @@ export const buildEmbeddersPayload = (entries: EmbedderFormEntry[], initialEntri
   }
   return payload as Embedders
 }
+
+// A Liquid output or tag reading the search request's `media`, e.g. `{{media.image.data}}`.
+const MEDIA_REFERENCE = /\{[{%][^}]*\bmedia\b/
+
+/** Whether queries can be embedded from `media` — for a composite embedder, that's up to its search part. */
+export const hasMediaSearchFragments = (embedder: Record<string, any> | null | undefined): boolean => {
+  const fragments = embedder?.searchFragments ?? embedder?.searchEmbedder?.searchFragments ?? {}
+  return Object.values(fragments).some((fragment: any) => MEDIA_REFERENCE.test(JSON.stringify(fragment?.value)))
+}
