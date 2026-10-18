@@ -41,7 +41,7 @@
     "vue3-leaflet": "github:geonativefr/vue3-leaflet",
     "vue3-sortablejs": "^1.0.7",
     "xxh32": "^2.0.4",
-    "yaml": "^2.4.1"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.2",
