@@ -5,7 +5,7 @@
       <p class="text-xs text-gray-600">{{ t(`${kind}.description`, LIQUID_VARIABLES) }}</p>
     </header>
 
-    <div v-for="(fragment, i) of fragments" :key="i" class="flex items-start gap-2">
+    <div v-for="(fragment, i) of fragments" :key="objectKey(fragment)" class="flex items-start gap-2">
       <UInput
         v-model="fragment.name"
         required
@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import Textarea from '~/components/layout/forms/Textarea.vue'
-import type { EmbedderFragmentRow } from '~/utils'
+import { objectKey, type EmbedderFragmentRow } from '~/utils'
 
 type Kind = 'indexingFragments' | 'searchFragments'
 
