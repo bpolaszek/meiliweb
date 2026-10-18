@@ -78,6 +78,22 @@ const sourceHint = computed(() =>
   props.initial && props.initial.source !== entry.value.settings.source ? t('hints.sourceChanged') : undefined,
 )
 const binaryQuantizedLocked = computed(() => true === props.initial?.binaryQuantized)
+
+// The saved API key comes back redacted: it is left out of the payload when the source changes, so don't show it as kept.
+watch(
+  () => entry.value.settings.source,
+  (source) => {
+    const savedApiKey = props.initial?.apiKey
+    if (undefined === savedApiKey) {
+      return
+    }
+    if (source !== props.initial?.source && savedApiKey === entry.value.settings.apiKey) {
+      entry.value.settings.apiKey = ''
+    } else if (source === props.initial?.source && !entry.value.settings.apiKey) {
+      entry.value.settings.apiKey = savedApiKey
+    }
+  },
+)
 </script>
 
 <i18n>
