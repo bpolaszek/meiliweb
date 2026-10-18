@@ -19,6 +19,7 @@
       :key="objectKey(entry)"
       v-model="embedders[position]"
       :initial="entry.persisted ? savedSettings.get(entry.name) : undefined"
+      :features
       @remove="removeEmbedder(position)" />
 
     <div class="flex" :class="embedders.length > 0 ? 'justify-end' : 'justify-center py-16'">
@@ -57,6 +58,7 @@ import {
   buildEmbeddersPayload,
   createEmbedderFormSettings,
   DuplicateEmbedderNameError,
+  DuplicateFragmentNameError,
   EmbedderNameTakenError,
   InvalidEmbedderJsonError,
   objectKey,
@@ -83,6 +85,13 @@ const processTask = useTask()
 const { createToast } = useToasts()
 const { confirm } = useConfirmationDialog()
 
+// Unknown when the key can't read experimental features: let Meilisearch be the judge then.
+const enabledFeatures = (await meili.getExperimentalFeatures().catch(() => null)) as Record<string, boolean> | null
+const features = {
+  multimodal: enabledFeatures?.multimodal ?? true,
+  compositeEmbedders: enabledFeatures?.compositeEmbedders ?? true,
+}
+
 const fetchEmbedders = async () => parseEmbedders(await index.getEmbedders())
 // Embedders as saved on the instance: the payload only carries what differs from them.
 const saved = shallowRef<EmbedderFormEntry[]>(await fetchEmbedders())
@@ -95,6 +104,10 @@ const errorMessage = computed(() => {
   }
   if (error.value instanceof EmbedderNameTakenError) {
     return t('errors.nameTaken', { embedder: error.value.embedder })
+  }
+  if (error.value instanceof DuplicateFragmentNameError) {
+    const { embedder, field, fragment } = error.value
+    return t('errors.duplicateFragmentName', { embedder, field, fragment })
   }
   if (error.value instanceof DuplicateEmbedderNameError) {
     return t('errors.duplicateName', { embedder: error.value.embedder })
@@ -203,5 +216,6 @@ en:
   errors:
     invalidJson: "The {field} of embedder {embedder} is not valid JSON."
     duplicateName: "Several embedders are named {embedder}."
+    duplicateFragmentName: "Several {field} of embedder {embedder} are named {fragment}."
     nameTaken: "An embedder named {embedder} is already saved: save its removal first, or give the new one another name."
 </i18n>

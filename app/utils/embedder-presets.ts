@@ -12,6 +12,9 @@ export type EmbedderPresetSettings = {
   response: Record<string, any>
   headers?: Record<string, string>
   dimensions: number
+  // Multimodal presets only: they require the `multimodal` experimental feature
+  indexingFragments?: Record<string, { value: any }>
+  searchFragments?: Record<string, { value: any }>
 }
 
 export type EmbedderPreset = {
@@ -64,6 +67,30 @@ export const EMBEDDER_PRESETS: EmbedderPreset[] = [
       { name: 'voyage-law-2', dimensions: 1024 },
     ],
     build: openAiLike('https://api.voyageai.com/v1/embeddings'),
+  },
+  {
+    id: 'voyageMultimodal',
+    label: 'Voyage AI (multimodal)',
+    docUrl: `${DOCS_BASE_URL}/how_to/image_search_with_multimodal`,
+    models: [{ name: 'voyage-multimodal-3', dimensions: 1024 }],
+    build: (model) => ({
+      url: 'https://api.voyageai.com/v1/multimodalembeddings',
+      request: { inputs: ['{{fragment}}', '{{..}}'], model: model.name },
+      response: { data: [{ embedding: '{{embedding}}' }, '{{..}}'] },
+      dimensions: model.dimensions,
+      indexingFragments: {
+        text: { value: { content: [{ type: 'text', text: '{{doc.title}}: {{doc.description}}' }] } },
+        image: { value: { content: [{ type: 'image_url', image_url: '{{doc.poster_url}}' }] } },
+      },
+      searchFragments: {
+        text: { value: { content: [{ type: 'text', text: '{{q}}' }] } },
+        image: {
+          value: {
+            content: [{ type: 'image_base64', image_base64: 'data:{{media.image.mime}};base64,{{media.image.data}}' }],
+          },
+        },
+      },
+    }),
   },
   {
     id: 'mistral',
