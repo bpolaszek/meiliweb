@@ -1,6 +1,7 @@
 export * from './chat-availability'
 export * from './confirmation-dialog'
 export * from './credentials'
+export * from './current-key'
 export * from './promisified-dialogs'
 export * from './toasts'
 export * from './version'
