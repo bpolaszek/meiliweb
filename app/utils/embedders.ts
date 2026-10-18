@@ -29,6 +29,7 @@ const SHARED_EMBEDDER_FIELDS = ['binaryQuantized', 'distribution'] as const
 
 // Edited as raw JSON text in the form.
 export const EMBEDDER_JSON_FIELDS = ['request', 'response', 'headers'] as const
+export const OPTIONAL_EMBEDDER_JSON_FIELDS: readonly string[] = ['headers']
 
 export const isEditableEmbedderSource = (source: string): source is EmbedderSource =>
   (EMBEDDER_SOURCES as readonly string[]).includes(source)
