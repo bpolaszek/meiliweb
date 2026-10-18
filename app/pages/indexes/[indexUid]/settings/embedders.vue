@@ -16,9 +16,9 @@
 
     <EmbedderEntry
       v-for="(entry, position) of embedders"
-      :key="position"
+      :key="objectKey(entry)"
       v-model="embedders[position]"
-      :initial="savedSettings.get(entry.name)"
+      :initial="entry.persisted ? savedSettings.get(entry.name) : undefined"
       :features
       @remove="removeEmbedder(position)" />
 
@@ -58,7 +58,9 @@ import {
   buildEmbeddersPayload,
   createEmbedderFormSettings,
   DuplicateEmbedderNameError,
+  EmbedderNameTakenError,
   InvalidEmbedderJsonError,
+  objectKey,
   parseEmbedders,
   resettableRef,
   type EmbedderFormEntry,
@@ -99,6 +101,9 @@ const errorMessage = computed(() => {
   if (error.value instanceof InvalidEmbedderJsonError) {
     return t('errors.invalidJson', { embedder: error.value.embedder, field: error.value.field })
   }
+  if (error.value instanceof EmbedderNameTakenError) {
+    return t('errors.nameTaken', { embedder: error.value.embedder })
+  }
   if (error.value instanceof DuplicateEmbedderNameError) {
     return t('errors.duplicateName', { embedder: error.value.embedder })
   }
@@ -106,7 +111,8 @@ const errorMessage = computed(() => {
 })
 
 const addEmbedder = () => {
-  const names = new Set(embedders.value.map(({ name }) => name))
+  // Saved names stay taken until the removal of their embedder is saved
+  const names = new Set([...embedders.value, ...saved.value].map(({ name }) => name))
   let name = 'default'
   for (let i = 2; names.has(name); i++) {
     name = `default-${i}`
@@ -205,4 +211,5 @@ en:
   errors:
     invalidJson: "The {field} of embedder {embedder} is not valid JSON."
     duplicateName: "Several embedders are named {embedder}."
+    nameTaken: "An embedder named {embedder} is already saved: save its removal first, or give the new one another name."
 </i18n>
