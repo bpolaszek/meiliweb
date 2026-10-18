@@ -16,7 +16,7 @@
 
     <EmbedderEntry
       v-for="(entry, position) of embedders"
-      :key="position"
+      :key="objectKey(entry)"
       v-model="embedders[position]"
       :initial="entry.persisted ? savedSettings.get(entry.name) : undefined"
       @remove="removeEmbedder(position)" />
@@ -59,6 +59,7 @@ import {
   DuplicateEmbedderNameError,
   EmbedderNameTakenError,
   InvalidEmbedderJsonError,
+  objectKey,
   parseEmbedders,
   resettableRef,
   type EmbedderFormEntry,
