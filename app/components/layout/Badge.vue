@@ -1,5 +1,5 @@
 <template>
-  <UBadge :as="as" :color="color" :variant="variant" class="rounded-lg">
+  <UBadge :as="as" :color="color" :variant="variant" class="rounded-lg whitespace-nowrap">
     <slot />
   </UBadge>
 </template>

@@ -5,7 +5,7 @@
         mobileMenuOpen ? 'fixed inset-0 z-40 overflow-y-auto' : '',
         'relative z-10 bg-white lg:static lg:overflow-y-visible', // Added z-50 and relative
       ]">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-4 sm:px-6 lg:px-8">
         <div class="relative flex justify-between lg:gap-8 xl:grid xl:grid-cols-12">
           <div class="flex md:absolute md:inset-y-0 md:left-0 lg:static xl:col-span-2">
             <div class="flex shrink-0 items-center">
@@ -16,8 +16,11 @@
                 <div class="flex flex-col">
                   <a href="/" class="text-lg font-semibold">Meiliweb</a>
                   <div class="-mt-1 flex items-center gap-2">
-                    <a href="/" class="text-sm font-light text-gray-600">
-                      {{ credentials!.baseUri }} - Meilisearch
+                    <a
+                      href="/"
+                      v-tippy="credentials!.name ? credentials!.baseUri : undefined"
+                      class="text-sm font-light text-gray-600">
+                      {{ credentials!.name || credentials!.baseUri }} - Meilisearch
                       {{ version?.pkgVersion }}
                     </a>
                     <UDropdownMenu :items="instanceMenuItems" :content="{ align: 'end' }" :ui="{ content: 'w-72' }">
@@ -88,22 +91,26 @@
             </button>
           </div>
           <div class="hidden lg:flex lg:items-center lg:justify-end xl:col-span-4">
-            <GithubButton />
+            <span v-if="connectedAs" class="truncate text-sm text-gray-600">
+              {{ t('connectedAs') }}
+              <strong class="font-semibold">{{ connectedAs }}</strong>
+            </span>
             <LogoutButton />
           </div>
         </div>
-        <nav class="hidden lg:flex lg:space-x-8 lg:py-2" aria-label="Global">
+        <nav class="hidden lg:flex lg:items-center lg:py-2" aria-label="Global">
           <NuxtLink
             v-for="item in visibleNavigation"
             :key="item.name"
             :to="item.href"
             :class="[
               item.current ? 'bg-primary-600 text-gray-50' : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900',
-              'inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium',
+              'mr-8 inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium',
             ]"
             :aria-current="item.current ? 'page' : undefined">
             {{ item.name }}
           </NuxtLink>
+          <GithubButton class="ml-auto" />
         </nav>
       </div>
 
@@ -122,8 +129,12 @@
           </NuxtLink>
         </div>
         <div class="border-t border-gray-200 pt-4 pb-3">
-          <div class="mx-auto flex max-w-3xl items-center justify-center px-4 sm:px-6">
-            <GithubButton />
+          <div class="mx-auto flex max-w-3xl items-center justify-center gap-2 px-4 sm:px-6">
+            <span v-if="connectedAs" class="truncate text-sm text-gray-600">
+              {{ t('connectedAs') }}
+              <strong class="font-semibold">{{ connectedAs }}</strong>
+            </span>
+            <GithubButton class="ml-3" />
             <LogoutButton />
           </div>
         </div>
@@ -138,7 +149,7 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import { computed, reactive, ref, toRefs } from 'vue'
 import GithubButton from '~/components/layout/GithubButton.vue'
 import LogoutButton from '~/components/layout/LogoutButton.vue'
-import { useChatAvailability, useCredentials, useVersion } from '~/stores'
+import { MASTER_KEY, useChatAvailability, useCredentials, useCurrentKey, useVersion } from '~/stores'
 
 const route = useRoute()
 const { available: chatAvailable } = safeToRefs(useChatAvailability())
@@ -197,6 +208,8 @@ const visibleNavigation = computed(() => navigation.filter((item) => item.visibl
 const { credentials, records, switchInstance, removeInstance: doRemoveInstance } = safeToRefs(useCredentials())
 const { confirm } = useConfirmationDialog()
 const { version } = useVersion()
+const { key: currentKey } = safeToRefs(useCurrentKey())
+const connectedAs = computed(() => (currentKey.value === MASTER_KEY ? t('masterKey') : currentKey.value))
 const mobileMenuOpen = ref(false)
 const self: any = reactive({
   records,
@@ -227,6 +240,8 @@ const { savedInstances } = toRefs(self)
 
 <i18n>
 en:
+  connectedAs: "Connected:"
+  masterKey: Master key
   actions:
     connectToInstance: Connect to another instance
     switchInstance: Switch Instance

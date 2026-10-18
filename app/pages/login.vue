@@ -7,9 +7,35 @@
         <span class="text-3xl font-semibold">Meiliweb</span>
       </NuxtLink>
 
+      <section v-if="savedInstances.length > 0" class="space-y-2 px-4">
+        <h2 class="text-lg font-semibold">{{ t('loggedInTitle') }}</h2>
+        <ul class="divide-y divide-gray-200 rounded-md border border-gray-200">
+          <li v-for="instance in savedInstances" :key="instance.id" class="flex items-center gap-2 px-3 py-2">
+            <button
+              type="button"
+              class="flex min-w-0 grow items-center gap-2 text-left hover:text-primary-800"
+              @click="switchInstance(instance.id!)">
+              <Icon name="heroicons:server" class="size-5 shrink-0" />
+              <span class="flex min-w-0 flex-col">
+                <span class="truncate">{{ instance.name || instance.baseUri }}</span>
+                <span v-if="instance.name" class="truncate text-xs text-gray-500">{{ instance.baseUri }}</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              v-tippy="t('logout')"
+              class="shrink-0 text-gray-400 hover:text-gray-600"
+              @click="logoutFrom(instance.id!)">
+              <span class="sr-only">{{ t('logout') }}</span>
+              <Icon name="ant-design:logout-outlined" class="size-4 -rotate-90" aria-hidden="true" />
+            </button>
+          </li>
+        </ul>
+      </section>
+
       <form class="space-y-4 p-4" @submit.prevent="submit(credentials)">
         <h1 class="text-lg font-semibold">
-          {{ t('boxTitle') }}
+          {{ savedInstances.length > 0 ? t('boxTitleAnother') : t('boxTitle') }}
         </h1>
 
         <Alert v-if="error" dismissable theme="danger" @close="error = null">
@@ -54,14 +80,23 @@
 
 <script setup lang="ts">
 import { Meilisearch } from 'meilisearch'
-import { useCredentials } from '~/stores'
+import { safeToRefs } from '~/utils'
+import { useConfirmationDialog, useCredentials } from '~/stores'
 import { useFormSubmit } from '~/composables'
 import Alert from '~/components/layout/Alert.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import { toRefs } from 'vue'
 import GithubButton from '~/components/layout/GithubButton.vue'
 
-const { auth, factory } = useCredentials()
+const { auth, factory, switchInstance, removeInstance } = useCredentials()
+const { records } = safeToRefs(useCredentials())
+const { confirm } = useConfirmationDialog()
+const savedInstances = computed(() => Array.from(records.value.values()))
+const logoutFrom = async (id: string) => {
+  if (await confirm({ text: t('confirmLogout') })) {
+    removeInstance(id)
+  }
+}
 const { loading, error, handle } = useFormSubmit()
 const credentials = ref(factory())
 const self: any = reactive({
@@ -115,6 +150,10 @@ useHead({
 en:
   title: Connect
   boxTitle: Connect to your Meilisearch Instance
+  boxTitleAnother: Connect to another instance
+  loggedInTitle: Logged-in instances
+  logout: Log out
+  confirmLogout: Are you sure you want to log out from this instance?
   labels:
     instanceUrl: "Instance URL:"
     accessToken: "Access Token:"

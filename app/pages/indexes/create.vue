@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useFormSubmit, useMeiliClient } from '~/composables'
-import { resettableRef } from '~/utils'
+import { resettableRef, waitForTask } from '~/utils'
 import Button from '~/components/layout/forms/Button.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
 import Label from '~/components/layout/forms/Label.vue'
@@ -67,7 +67,7 @@ const submit = async () => {
     const task = await client.createIndex(indexUid, {
       primaryKey: self.index.primaryKey,
     })
-    await client.tasks.waitForTask(task.taskUid)
+    await waitForTask(client, task.taskUid)
     toast.update({
       ...TOAST_SUCCESS(t),
     })

@@ -1,4 +1,5 @@
-import type { EnqueuedTask } from 'meilisearch'
+import type { Embedders, EnqueuedTask } from 'meilisearch'
+import EmbedderApiKeysPromptModal from '~/components/settings/EmbedderApiKeysPromptModal.vue'
 import IndexNamePromptModal from '~/components/settings/IndexNamePromptModal.vue'
 import IndexSwapPromptModal from '~/components/settings/IndexSwapPromptModal.vue'
 import { useMeiliClient } from '~/composables/useMeiliClient'
@@ -11,6 +12,7 @@ import {
   usePromisifiedDialogs,
   useToasts,
 } from '~/stores'
+import { waitForTasks } from '~/utils'
 
 type RenameIndexOptions = {
   newIndexUid?: string
@@ -32,6 +34,28 @@ const DEFAULT_SWAP_INDEX_OPTIONS: SwapIndexOptions = {
   onStart: () => {},
 }
 
+const COMPOSITE_EMBEDDER_PARTS = ['searchEmbedder', 'indexingEmbedder'] as const
+
+export type RedactedEmbedderApiKey = {
+  embedder: string
+  part?: (typeof COMPOSITE_EMBEDDER_PARTS)[number]
+  redactedKey: string
+  // The embedder settings object holding the key, so the real key can be written back in place.
+  target: Record<string, any>
+}
+
+// Meilisearch always redacts embedder API keys when settings are read back (e.g. `abcXXXXX...`).
+const findRedactedEmbedderApiKeys = (embedders: Embedders | undefined): RedactedEmbedderApiKey[] =>
+  Object.entries(embedders ?? {}).flatMap(([embedder, settings]: [string, any]) => [
+    ...(settings?.apiKey ? [{ embedder, redactedKey: settings.apiKey, target: settings }] : []),
+    ...COMPOSITE_EMBEDDER_PARTS.filter((part) => settings?.[part]?.apiKey).map((part) => ({
+      embedder,
+      part,
+      redactedKey: settings[part].apiKey,
+      target: settings[part],
+    })),
+  ])
+
 export const useIndexOperations = () => {
   const { t } = useI18n()
   const meili = useMeiliClient()
@@ -51,6 +75,24 @@ export const useIndexOperations = () => {
       (await openDialog(IndexNamePromptModal, {
         indexUid: `${indexUid}-copy`,
       }))
+
+    // Asked before anything is created, so cancelling the prompt leaves no half-copied index behind.
+    const settings = await index.getSettings()
+    const redactedApiKeys = findRedactedEmbedderApiKeys(settings.embedders)
+    if (redactedApiKeys.length > 0) {
+      const apiKeys: string[] = await openDialog(EmbedderApiKeysPromptModal, {
+        embedders: redactedApiKeys.map(({ target, ...embedder }) => embedder),
+      })
+      redactedApiKeys.forEach(({ target }, i) => {
+        const apiKey = apiKeys[i]?.trim()
+        if (apiKey) {
+          target.apiKey = apiKey
+        } else {
+          delete target.apiKey
+        }
+      })
+    }
+
     onStart(newIndexUid)
     const toast = createToast({
       ...TOAST_PLEASEWAIT(t),
@@ -82,22 +124,27 @@ export const useIndexOperations = () => {
     }
 
     const newIndex = await meili.getIndex(newIndexUid)
-    task = await processTask(async () => newIndex.updateSettings(await index.getSettings()))
+    task = await processTask(async () => newIndex.updateSettings(settings))
     if (task.status === 'failed') {
       throw new Error('Failed to duplicate index')
     }
 
+    // Copying `_vectors` as returned (embeddings + `regenerate` flag) lets Meilisearch store them without calling the
+    // embedders again, while keeping regeneration on future updates. Vectors make documents much heavier, hence smaller
+    // chunks to stay below the payload size limit.
+    const hasEmbedders = Object.keys(settings.embedders ?? {}).length > 0
+    const chunkSize = hasEmbedders ? 1000 : 5000
     const taskUids: number[] = []
     await processIteratorByChunks(
-      exportDocuments(meili, indexUid, { limit: 5000 }),
+      exportDocuments(meili, indexUid, { limit: chunkSize, retrieveVectors: hasEmbedders }),
       async (documents: any[]) => {
         const { taskUid } = await newIndex.addDocuments(documents)
         taskUids.push(taskUid)
       },
-      5000,
+      chunkSize,
     )
 
-    await meili.tasks.waitForTasks(taskUids, {
+    await waitForTasks(meili, taskUids, {
       timeout: 1000 * 60 * 5 * taskUids.length,
     })
 

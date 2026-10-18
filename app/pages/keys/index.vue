@@ -44,12 +44,12 @@
             </span>
           </div>
         </td>
-        <td>
+        <td class="whitespace-nowrap">
           <ul>
             <li v-for="action of keys.results[i].actions">{{ action }}</li>
           </ul>
         </td>
-        <td>
+        <td class="whitespace-nowrap">
           <ul>
             <li v-for="index of keys.results[i].indexes">{{ index }}</li>
           </ul>

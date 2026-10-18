@@ -1,6 +1,7 @@
 import match from 'match-operator'
 import { type EnqueuedTask, MeilisearchRequestTimeOutError, type Task } from 'meilisearch'
 import { useMeiliClient } from '~/composables/index'
+import { waitForTask } from '~/utils'
 
 type EnqueuedTaskPromise = () => Promise<EnqueuedTask>
 type ProcessTaskOptions = {
@@ -42,9 +43,7 @@ export const useTask = () => {
     }
     const enqueuedTask = await enqueue()
     try {
-      const task = await meili.tasks.waitForTask(enqueuedTask.taskUid, {
-        timeout: timeOutMs,
-      })
+      const task = await waitForTask(meili, enqueuedTask.taskUid, { timeout: timeOutMs })
       if (task.error) {
         task.error = new TaskError(task.error.message, task.error.code, task.error.type, task.error.link)
       }

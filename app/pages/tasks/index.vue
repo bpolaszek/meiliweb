@@ -1,10 +1,17 @@
 <template>
-  <Layout :title="t('title')">
+  <div>
+    <div v-if="batchUids" class="mb-4 flex items-center gap-3 text-sm text-gray-600">
+      <span>{{ t('labels.filteredByBatch', { batchUids: batchUids.join(', ') }) }}</span>
+      <NuxtLink to="/tasks" class="font-semibold text-primary-800 hover:text-primary-700 hover:underline">
+        {{ t('buttons.clearBatchFilter') }}
+      </NuxtLink>
+    </div>
+    <StreamStatusIndicator :status="status" @reconnect="reconnect" />
     <DefineTreeRendering v-slot="{ value }">
       <div v-if="'object' === typeof value && null !== value" class="table">
         <div v-for="[_key, _value] of Object.entries(value)" class="table-row">
-          <dt class="table-cell">{{ _key }}</dt>
-          <dd class="table-cell p-1 text-xs">
+          <dt class="table-cell whitespace-nowrap">{{ _key }}</dt>
+          <dd class="table-cell p-1 text-xs wrap-anywhere">
             <DocumentationLink v-if="'link' === _key" :href="_value as string">
               {{ _value }}
             </DocumentationLink>
@@ -84,12 +91,12 @@
         </td>
       </template>
     </Table>
-    <InfiniteLoading @infinite="handleInfiniteLoading()" />
-  </Layout>
+    <InfiniteLoading @infinite="handleInfiniteLoading" />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useMeiliClient, useDateFormatter } from '#imports'
+import { useMeiliClient, useDateFormatter, useTaskStream } from '#imports'
 import { tryOrThrow } from '~/utils'
 import match from 'match-operator'
 import { NuxtLink } from '#components'
@@ -98,7 +105,9 @@ import Badge from '~/components/layout/Badge.vue'
 import { type Task } from 'meilisearch'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentationLink from '~/components/layout/DocumentationLink.vue'
-import { createReusableTemplate, watchImmediate } from '@vueuse/core'
+import StreamStatusIndicator from '~/components/layout/StreamStatusIndicator.vue'
+import { createReusableTemplate, useTimeoutPoll } from '@vueuse/core'
+import { fetchTasksByUids, TASK_POLL_INTERVAL_MS, waitForTask } from '~/utils'
 import InfiniteLoading from 'v3-infinite-loading'
 
 const { t } = useI18n()
@@ -107,12 +116,27 @@ useHead({
 })
 
 const meili = useMeiliClient()
+const route = useRoute()
 const { confirm } = useConfirmationDialog()
 const { createToast } = useToasts()
 const [DefineTreeRendering, UseTreeRendering] = createReusableTemplate()
+
+// Optional `?batchUids=1,2` filter, used by the Batches tab to drill down into a batch.
+// `app.vue`'s pageKey contains the full path, so changing the query re-runs this setup.
+const batchUids = computed(() => {
+  const { batchUids } = route.query
+  if (!batchUids) {
+    return null
+  }
+  return String(batchUids)
+    .split(',')
+    .map(Number)
+    .filter((uid) => !isNaN(uid))
+})
+const tasksQuery = computed(() => (batchUids.value ? { batchUids: batchUids.value } : {}))
+
 const self = reactive({
-  tasks: await tryOrThrow(() => meili.tasks.getTasks()),
-  lastTaskUid: null! as number,
+  tasks: await tryOrThrow(() => meili.tasks.getTasks(tasksQuery.value)),
   pendingTasks: computed((): Task[] =>
     self.tasks.results.filter((task: Task) => ['enqueued', 'processing'].includes(task.status)),
   ),
@@ -135,10 +159,25 @@ const stringifyTaskType = (type: string) =>
   ])
 
 const { tasks, pendingTasks } = toRefs(self)
-watchImmediate(tasks, (tasks) => (self.lastTaskUid = tasks.results[tasks.results.length - 1]!.uid), { deep: true })
-const handleInfiniteLoading = async () => {
-  const nextTasks = await tryOrThrow(() => meili.tasks.getTasks({ from: self.lastTaskUid }))
+
+// `v3-infinite-loading` does not re-export its `StateHandler` type from the package root.
+type InfiniteLoadingState = { loaded: () => void; complete: () => void; error: () => void }
+
+// `getTasks` returns the cursor of the next page in `next` (null once exhausted). Meilisearch's
+// `from` is inclusive, so deriving it from the last loaded uid re-fetches that same task —
+// visible as a duplicate row whenever the filtered/short list doesn't fill the viewport.
+const handleInfiniteLoading = async ($state: InfiniteLoadingState) => {
+  if (null === self.tasks.next) {
+    $state.complete()
+    return
+  }
+  const nextTasks = await tryOrThrow(() => meili.tasks.getTasks({ ...tasksQuery.value, from: self.tasks.next }))
   self.tasks.results.push(...nextTasks.results)
+  self.tasks.next = nextTasks.next
+  $state.loaded()
+  if (null === nextTasks.next) {
+    $state.complete()
+  }
 }
 const cancelTask = async (task: Task) => {
   if (!(await confirm({ text: t('confirmations.cancelTask') }))) {
@@ -149,39 +188,59 @@ const cancelTask = async (task: Task) => {
     title: t('toasts.cancelTask'),
   })
   const cancelTask = await meili.tasks.cancelTasks({ uids: [task.uid] })
-  await meili.tasks.waitForTask(cancelTask.taskUid)
+  await waitForTask(meili, cancelTask.taskUid)
   toast.destroy()
   task.status = 'canceled'
 }
 
-const watchers = new WeakMap()
-watch(
-  pendingTasks,
-  (tasks: Task[]) => {
-    tasks.forEach(async (task) => {
-      if (watchers.has(task)) {
-        return
-      }
-      watchers.set(task, this)
-      if (task.status === 'enqueued') {
-        const interval = setInterval(async () => {
-          let updatedTask = await meili.tasks.getTask(task.uid)
-          if (updatedTask.status !== 'enqueued') {
-            clearInterval(interval)
-            watchers.delete(task)
-            Object.assign(task, updatedTask)
-          }
-        }, 500)
-      } else {
-        const updatedTask = await meili.tasks.waitForTask(task.uid, {
-          timeout: 1000 * 3600 * 24,
-          interval: 500,
-        })
-        Object.assign(task, updatedTask)
-      }
-    })
+// Live updates come from the SSE stream when the instance supports it (Meilisearch >= 1.52
+// with the `tasksStreamingRoute` experimental feature). The stream carries no backlog, so it
+// only patches the tasks fetched above and prepends the ones enqueued while we watch.
+const { status, reconnect: reconnectStream } = useTaskStream({
+  query: batchUids.value ? { batchUids: batchUids.value } : {},
+  onMessage: (task: Task) => {
+    const known = self.tasks.results.find((candidate: Task) => candidate.uid === task.uid)
+    if (known) {
+      Object.assign(known, task)
+      return
+    }
+    // Results are sorted newest first. Anything below the oldest row we loaded belongs to a
+    // page the user has not scrolled to yet, so only genuinely newer tasks go on top.
+    const [newest] = self.tasks.results
+    if (!newest || task.uid > newest.uid) {
+      self.tasks.results.unshift(task)
+    }
   },
-  { immediate: true, deep: true },
+})
+
+// Manual recovery once the stream gave up (`status === 'disconnected'`): the socket carries no
+// backlog, so re-opening it alone would miss anything that happened while we were down — the
+// list has to be re-fetched too.
+const reconnect = async () => {
+  reconnectStream()
+  self.tasks = await tryOrThrow(() => meili.tasks.getTasks(tasksQuery.value))
+}
+
+// Polling fallback: only for instances that don't support streaming at all. Once the stream gave up
+// (`disconnected`) we surface that instead of silently degrading to polling — see `StreamStatusIndicator`.
+// One `GET /tasks?uids=…` per tick for all pending tasks, instead of one request per task.
+const refreshPendingTasks = async () => {
+  const updatedTasks = await fetchTasksByUids(
+    meili,
+    self.pendingTasks.map((task: Task) => task.uid),
+  )
+  for (const updatedTask of updatedTasks) {
+    const task = self.tasks.results.find((candidate: Task) => candidate.uid === updatedTask.uid)
+    if (task) {
+      Object.assign(task, updatedTask)
+    }
+  }
+}
+const { pause, resume } = useTimeoutPoll(refreshPendingTasks, TASK_POLL_INTERVAL_MS, { immediate: false })
+watch(
+  () => pendingTasks.value.length > 0 && !['streaming', 'disconnected'].includes(status.value),
+  (shouldPoll) => (shouldPoll ? resume() : pause()),
+  { immediate: true },
 )
 </script>
 
@@ -209,6 +268,9 @@ en:
     snapshotCreation: Snapshot creation
   labels:
     documentIndexRatio: Indexed {indexedDocuments}/{receivedDocuments}
+    filteredByBatch: 'Showing only the tasks of batch {batchUids}.'
+  buttons:
+    clearBatchFilter: Show all tasks
   toasts:
     cancelTask: Cancelling task
   confirmations:

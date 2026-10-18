@@ -7,12 +7,19 @@
           {{ t('description') }}
         </span>
       </span>
-      <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings#embedders" />
+      <DocumentationLink href="https://www.meilisearch.com/docs/reference/api/settings/update-embedders" />
     </h3>
 
-    <template v-for="embedder of embedders">
-      <EmbedderEntry :embedder="embedder as [string, Embedder]" />
-    </template>
+    <Alert v-if="error" dismissable theme="danger" @close="error = null">
+      <span class="whitespace-pre-line">{{ errorMessage }}</span>
+    </Alert>
+
+    <EmbedderEntry
+      v-for="(entry, position) of embedders"
+      :key="objectKey(entry)"
+      v-model="embedders[position]"
+      :initial="entry.persisted ? savedSettings.get(entry.name) : undefined"
+      @remove="removeEmbedder(position)" />
 
     <div class="flex" :class="embedders.length > 0 ? 'justify-end' : 'justify-center py-16'">
       <Button size="small" theme="primary" type="button" icon="mdi:plus" @click="addEmbedder()">
@@ -25,7 +32,7 @@
         type="button"
         theme="primary"
         icon="mdi:bin"
-        :disabled="loading || 0 === embedders.length"
+        :disabled="loading || 0 === saved.length"
         @click="resetToInitialValue()">
         {{ t('actions.clearEmbedders') }}
       </Button>
@@ -38,15 +45,27 @@
 </template>
 
 <script setup lang="ts">
-import { TaskError, useFormSubmit, useTask } from '~/composables'
-import { TOAST_FAILURE, TOAST_SUCCESS, useToasts } from '~/stores'
-import { resettableRef } from '~/utils'
-import EmbedderEntry from '~/components/settings/EmbedderEntry.vue'
+import type { Task } from 'meilisearch'
+import { TaskError, useFormSubmit, useMeiliClient, useTask } from '~/composables'
+import Alert from '~/components/layout/Alert.vue'
+import DocumentationLink from '~/components/layout/DocumentationLink.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import Buttons from '~/components/layout/forms/Buttons.vue'
-import type { Embedder, Embedders, RestEmbedder, Task } from 'meilisearch'
-import { useConfirmationDialog } from '#imports'
-import DocumentationLink from '~/components/layout/DocumentationLink.vue'
+import EmbedderEntry from '~/components/settings/EmbedderEntry.vue'
+import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS, useConfirmationDialog, useToasts } from '~/stores'
+import {
+  buildEmbeddersPayload,
+  createEmbedderFormSettings,
+  DuplicateEmbedderNameError,
+  DuplicateFragmentNameError,
+  EMBEDDER_FEATURES,
+  EmbedderNameTakenError,
+  InvalidEmbedderJsonError,
+  objectKey,
+  parseEmbedders,
+  resettableRef,
+  type EmbedderFormEntry,
+} from '~/utils'
 
 const emit = defineEmits<{
   (e: 'error', error: TaskError): void
@@ -65,105 +84,90 @@ const { loading, error, handle } = useFormSubmit({
 const processTask = useTask()
 const { createToast } = useToasts()
 const { confirm } = useConfirmationDialog()
-const parseEmbedders = (embedders: Embedders) =>
-  Object.entries(embedders ?? {}).map(([name, embedder]) => {
-    const request = JSON.stringify((embedder as RestEmbedder).request ?? {}, null, 2)
-    const response = JSON.stringify((embedder as RestEmbedder).response ?? {}, null, 2)
-    const headers = JSON.stringify((embedder as RestEmbedder).headers ?? {}, null, 2)
-    return [
-      name,
-      {
-        ...embedder,
-        request,
-        response,
-        headers,
-      },
-    ]
-  })
-const normalizeEmbedders = (embedders: [string, Embedder][]) =>
-  Object.fromEntries(
-    embedders.map(([name, embedder]) => {
-      embedder = structuredClone(embedder)!
-      if ('rest' == embedder.source) {
-        embedder.request = JSON.parse((embedder as any).request as string)
-        embedder.response = JSON.parse((embedder as any).response as string)
-        embedder.headers = JSON.parse((embedder as any).headers as string)
-      } else {
-        // @ts-ignore
-        delete embedder['request']
-        // @ts-ignore
-        delete embedder['response']
-        // @ts-ignore
-        delete embedder['headers']
-      }
-      for (const key in embedder) {
-        if ((embedder as any)[key] === '') {
-          // @ts-ignore
-          delete embedder[key]
-        }
-      }
-      return [name, embedder]
-    }),
-  )
-const { value: embedders, reset, modified } = resettableRef(parseEmbedders(await index.getEmbedders()))
-const self = reactive({ embedders })
+
+// Unknown when the key can't read experimental features: let Meilisearch be the judge then.
+const enabledFeatures = (await meili.getExperimentalFeatures().catch(() => null)) as Record<string, boolean> | null
+provide(EMBEDDER_FEATURES, {
+  multimodal: enabledFeatures?.multimodal ?? true,
+  compositeEmbedders: enabledFeatures?.compositeEmbedders ?? true,
+  renderRoute: enabledFeatures?.renderRoute ?? true,
+})
+
+const fetchEmbedders = async () => parseEmbedders(await index.getEmbedders())
+// Embedders as saved on the instance: the payload only carries what differs from them.
+const saved = shallowRef<EmbedderFormEntry[]>(await fetchEmbedders())
+const savedSettings = computed(() => new Map(saved.value.map(({ name, settings }) => [name, settings])))
+const { value: embedders, reset, modified } = resettableRef<EmbedderFormEntry[]>(saved.value)
+
+const errorMessage = computed(() => {
+  if (error.value instanceof InvalidEmbedderJsonError) {
+    return t('errors.invalidJson', { embedder: error.value.embedder, field: error.value.field })
+  }
+  if (error.value instanceof EmbedderNameTakenError) {
+    return t('errors.nameTaken', { embedder: error.value.embedder })
+  }
+  if (error.value instanceof DuplicateFragmentNameError) {
+    const { embedder, field, fragment } = error.value
+    return t('errors.duplicateFragmentName', { embedder, field, fragment })
+  }
+  if (error.value instanceof DuplicateEmbedderNameError) {
+    return t('errors.duplicateName', { embedder: error.value.embedder })
+  }
+  return error.value instanceof Error ? error.value.message : error.value
+})
+
 const addEmbedder = () => {
-  self.embedders.push([
-    'default',
-    {
-      source: 'rest',
-      url: '',
-      apiKey: '',
-      // @ts-ignore
-      model: '',
-      documentTemplate: '',
-      documentTemplateMaxBytes: undefined,
-      dimensions: undefined,
-      // @ts-ignore
-      request: '{}',
-      // @ts-ignore
-      response: '{}',
-      // @ts-ignore
-      headers: '{}',
-      binaryQuantized: false,
-    },
-  ])
+  // Saved names stay taken until the removal of their embedder is saved
+  const names = new Set([...embedders.value, ...saved.value].map(({ name }) => name))
+  let name = 'default'
+  for (let i = 2; names.has(name); i++) {
+    name = `default-${i}`
+  }
+  embedders.value.push({ name, persisted: false, settings: createEmbedderFormSettings() })
+}
+
+const removeEmbedder = (position: number) => {
+  embedders.value.splice(position, 1)
+}
+
+const reload = async () => {
+  saved.value = await fetchEmbedders()
+  reset(saved.value)
 }
 
 const submit = async () => {
-  const toast = createToast({
-    ...TOAST_PLEASEWAIT(t),
-    title: t('toasts.updateEmbedders.title'),
-  })
+  let payload: ReturnType<typeof buildEmbeddersPayload>
   try {
-    const embedderEntries = toRaw(self.embedders)
-    const embeddersObject: any = normalizeEmbedders(embedderEntries as [string, Embedder][])
-    await handle(async () => {
-      await processTask(() => index.updateEmbedders(embeddersObject), {
-        onSuccess: async () => {
-          toast.update({ ...TOAST_SUCCESS(t) })
-          reset(embedderEntries)
-        },
-        onCanceled: () =>
-          toast.update({
-            ...TOAST_FAILURE(t),
-            text: t('toasts.texts.canceledTask'),
-          }),
-        onFailure: (task: Task) => {
-          toast.update({
-            ...TOAST_FAILURE(t),
-            text: t('toasts.texts.failedTask'),
-          })
-          emit('error', task.error as TaskError)
-        },
-      })
-      reset(embedderEntries)
-    })
+    // Validated before asking for confirmation
+    payload = buildEmbeddersPayload(toRaw(embedders.value), saved.value)
   } catch (e) {
-    toast.update({ ...TOAST_FAILURE(t), text: (e as Error).message })
+    error.value = e as Error
     return
   }
+  await handle(async () => {
+    const toast = createToast({
+      ...TOAST_PLEASEWAIT(t),
+      title: t('toasts.updateEmbedders.title'),
+    })
+    const task = await processTask(() => index.updateEmbedders(payload), {
+      onSuccess: () => toast.update({ ...TOAST_SUCCESS(t) }),
+      onCanceled: () => toast.update({ ...TOAST_FAILURE(t), text: t('toasts.texts.canceledTask') }),
+      onFailure: (task: Task) => {
+        toast.update({ ...TOAST_FAILURE(t), text: t('toasts.texts.failedTask') })
+        emit('error', task.error as TaskError)
+      },
+    }).catch((e: Error) => {
+      // The settings were rejected before any task got enqueued
+      toast.update({ ...TOAST_FAILURE(t), text: e.message })
+      throw e
+    })
+    if ('failed' === task.status) {
+      throw (task as Task).error
+    }
+    await reload()
+  })
 }
+
 const resetToInitialValue = async () => {
   if (!(await confirm({ text: t('confirmations.clear') }))) {
     return
@@ -177,7 +181,6 @@ const resetToInitialValue = async () => {
   await processTask(() => index.resetEmbedders(), {
     onSuccess: async () => {
       toast.update({ ...TOAST_SUCCESS(t) })
-      reset([])
     },
     onCanceled: () =>
       toast.update({
@@ -192,14 +195,14 @@ const resetToInitialValue = async () => {
       emit('error', task.error as TaskError)
     },
   })
-  reset([])
+  await reload()
 }
 </script>
 
 <i18n>
 en:
   title: Embedders
-  description: A embedder in Meilisearch is considered equal to its associated word for the purposes of calculating search results.
+  description: Embedders turn documents and queries into vectors, enabling semantic and hybrid search.
   actions:
     addEmbedder: Add embedder
     clearEmbedders: Clear All Embedders
@@ -211,4 +214,9 @@ en:
   confirmations:
     submit: Submit changes?
     clear: Clear all embedders?
+  errors:
+    invalidJson: "The {field} of embedder {embedder} is not valid JSON."
+    duplicateName: "Several embedders are named {embedder}."
+    duplicateFragmentName: "Several {field} of embedder {embedder} are named {fragment}."
+    nameTaken: "An embedder named {embedder} is already saved: save its removal first, or give the new one another name."
 </i18n>

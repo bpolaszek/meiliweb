@@ -68,10 +68,12 @@ const KNOWN_ORDER = [
   'network',
   'getTaskDocumentsRoute',
   'taskQueueCompactionRoute',
+  'tasksStreamingRoute',
   'compositeEmbedders',
   'chatCompletions',
   'multimodal',
   'foreignKeys',
+  'renderRoute',
 ]
 
 const sortedFeatures = computed(() => {
@@ -155,6 +157,10 @@ en:
     taskQueueCompactionRoute:
       label: Task queue compaction route
       description: Enables the route to compact the task queue database.
+    tasksStreamingRoute:
+      label: Task and batch streaming
+      description: Enables the /tasks/stream and /batches/stream routes. Meiliweb uses them to receive task
+                   and batch updates live instead of polling the instance.
     compositeEmbedders:
       label: Composite embedders
       description: Enables composite embedders combining multiple embedding sources.
@@ -167,4 +173,8 @@ en:
     foreignKeys:
       label: Foreign keys
       description: Enables foreign key support for document hydration.
+    renderRoute:
+      label: Template rendering route
+      description: Enables the /render-template route. Meiliweb uses it to preview embedder document templates
+                   and fragments.
 </i18n>
