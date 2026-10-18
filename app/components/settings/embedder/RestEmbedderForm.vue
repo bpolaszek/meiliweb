@@ -39,15 +39,24 @@
     :label="t(`labels.${field}`)"
     :help="t(`hints.${field}`, LIQUID_PLACEHOLDERS)"
     :error="!isValidJson(embedder[field]) && t('errors.invalidJson')"
-    :required="'headers' !== field">
-    <Textarea v-model="embedder[field]" :required="'headers' !== field" class="w-full font-mono text-xs" :rows="6" />
+    :required="!OPTIONAL_EMBEDDER_JSON_FIELDS.includes(field)">
+    <Textarea
+      v-model="embedder[field]"
+      :required="!OPTIONAL_EMBEDDER_JSON_FIELDS.includes(field)"
+      class="w-full font-mono text-xs"
+      :rows="6" />
   </UFormField>
 </template>
 
 <script setup lang="ts">
 import Textarea from '~/components/layout/forms/Textarea.vue'
 import { useConfirmationDialog } from '~/stores'
-import { EMBEDDER_JSON_FIELDS, EMBEDDER_PRESETS, type EmbedderFormSettings } from '~/utils'
+import {
+  EMBEDDER_JSON_FIELDS,
+  EMBEDDER_PRESETS,
+  OPTIONAL_EMBEDDER_JSON_FIELDS,
+  type EmbedderFormSettings,
+} from '~/utils'
 
 // Passed as parameters: vue-i18n would parse the braces of literal placeholders as its own interpolations,
 // and refuses HTML-like tags in messages

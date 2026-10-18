@@ -29,6 +29,7 @@ const SHARED_EMBEDDER_FIELDS = ['binaryQuantized', 'distribution'] as const
 
 // Edited as raw JSON text in the form.
 export const EMBEDDER_JSON_FIELDS = ['request', 'response', 'headers'] as const
+export const OPTIONAL_EMBEDDER_JSON_FIELDS: readonly string[] = ['headers']
 
 export const isEditableEmbedderSource = (source: string): source is EmbedderSource =>
   (EMBEDDER_SOURCES as readonly string[]).includes(source)
@@ -56,6 +57,13 @@ export class InvalidEmbedderJsonError extends Error {
     public field: string,
   ) {
     super(`Invalid JSON in ${field} of embedder ${embedder}`)
+  }
+}
+
+// A single PATCH can't delete an embedder and create another one under the same name.
+export class EmbedderNameTakenError extends Error {
+  constructor(public embedder: string) {
+    super(`An embedder named ${embedder} is already saved`)
   }
 }
 
@@ -170,6 +178,10 @@ export const buildEmbeddersPayload = (entries: EmbedderFormEntry[], initialEntri
   }
 
   const initialSettings = new Map(initialEntries.map(({ name, settings }) => [name, settings]))
+  const recreated = entries.find(({ name, persisted }) => !persisted && initialSettings.has(name))
+  if (undefined !== recreated) {
+    throw new EmbedderNameTakenError(recreated.name)
+  }
   const payload: Record<string, Record<string, any> | null> = {}
   for (const name of initialSettings.keys()) {
     if (!names.has(name)) {
