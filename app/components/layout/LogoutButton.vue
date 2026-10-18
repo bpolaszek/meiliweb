@@ -25,5 +25,5 @@ const confirmLogout = async () => {
 <i18n>
 en:
   label: Sign out
-  confirmation: Do you really want to log out?
+  confirmation: Do you really want to log out from this instance?
 </i18n>
