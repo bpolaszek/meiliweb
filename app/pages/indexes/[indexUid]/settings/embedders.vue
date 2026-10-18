@@ -58,6 +58,7 @@ import {
   buildEmbeddersPayload,
   createEmbedderFormSettings,
   DuplicateEmbedderNameError,
+  DuplicateFragmentNameError,
   EmbedderNameTakenError,
   InvalidEmbedderJsonError,
   objectKey,
@@ -103,6 +104,10 @@ const errorMessage = computed(() => {
   }
   if (error.value instanceof EmbedderNameTakenError) {
     return t('errors.nameTaken', { embedder: error.value.embedder })
+  }
+  if (error.value instanceof DuplicateFragmentNameError) {
+    const { embedder, field, fragment } = error.value
+    return t('errors.duplicateFragmentName', { embedder, field, fragment })
   }
   if (error.value instanceof DuplicateEmbedderNameError) {
     return t('errors.duplicateName', { embedder: error.value.embedder })
@@ -211,5 +216,6 @@ en:
   errors:
     invalidJson: "The {field} of embedder {embedder} is not valid JSON."
     duplicateName: "Several embedders are named {embedder}."
+    duplicateFragmentName: "Several {field} of embedder {embedder} are named {fragment}."
     nameTaken: "An embedder named {embedder} is already saved: save its removal first, or give the new one another name."
 </i18n>

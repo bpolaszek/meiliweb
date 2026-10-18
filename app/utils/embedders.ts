@@ -101,6 +101,16 @@ export class EmbedderNameTakenError extends Error {
   }
 }
 
+export class DuplicateFragmentNameError extends Error {
+  constructor(
+    public embedder: string,
+    public field: string,
+    public fragment: string,
+  ) {
+    super(`Duplicate fragment name in ${field} of embedder ${embedder}: ${fragment}`)
+  }
+}
+
 export class DuplicateEmbedderNameError extends Error {
   constructor(public embedder: string) {
     super(`Duplicate embedder name: ${embedder}`)
@@ -166,6 +176,10 @@ const toApiValue = (embedder: string, field: string, value: any): any => {
   }
   if ((EMBEDDER_FRAGMENT_FIELDS as readonly string[]).includes(field)) {
     const rows: EmbedderFragmentRow[] = Array.isArray(value) ? value : []
+    const duplicate = rows.find(({ name }, i) => rows.findIndex((row) => row.name === name) !== i)
+    if (undefined !== duplicate) {
+      throw new DuplicateFragmentNameError(embedder, field, duplicate.name)
+    }
     return 0 === rows.length
       ? null
       : Object.fromEntries(
