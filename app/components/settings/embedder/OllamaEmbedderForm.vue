@@ -1,44 +1,53 @@
 <template>
-  <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-    <Label :for="id">{{ t('labels.url') }}</Label>
-    <input v-model="embedder!.url" autocomplete="off" type="url" class="form-input w-full text-sm" />
-  </UniqueId>
+  <UFormField :label="t('labels.url')" :help="t('hints.url')">
+    <UInput
+      v-model="embedder.url"
+      type="url"
+      placeholder="http://localhost:11434/api/embed"
+      autocomplete="off"
+      class="w-full" />
+  </UFormField>
 
-  <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-    <Label :for="id">{{ t('labels.apiKey') }}</Label>
-    <input v-model="embedder!.apiKey" autocomplete="off" type="password" class="form-input w-full text-sm" />
-  </UniqueId>
-
-  <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-    <UniqueId v-slot="{ id: datalist }">
-      <Label required :for="id">{{ t('labels.model') }}</Label>
-      <input
-        v-model="embedder!.model"
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <UFormField :label="t('labels.model')" required>
+      <UInput
+        v-model="embedder.model"
         required
-        :list="datalist"
+        :list="modelsListId"
+        placeholder="nomic-embed-text"
         autocomplete="off"
-        type="text"
-        class="form-input w-full text-sm" />
-      <datalist :id="datalist">
-        <option value="all-minilm" />
-        <option value="nomic-embed-text" />
-        <option value="mxbai-embed-large" />
+        class="w-full" />
+      <datalist :id="modelsListId">
+        <option v-for="model of OLLAMA_MODELS" :key="model" :value="model" />
       </datalist>
-    </UniqueId>
-  </UniqueId>
+    </UFormField>
 
-  <UniqueId v-slot="{ id }" as="section" class="flex flex-col gap-1">
-    <Label :for="id">{{ t('labels.dimensions') }}</Label>
-    <input v-model="embedder!.dimensions" autocomplete="off" type="number" min="0" class="form-input w-full text-sm" />
-  </UniqueId>
+    <UFormField :label="t('labels.dimensions')" :help="t('hints.dimensions')">
+      <UInput v-model.number="embedder.dimensions" type="number" :min="1" class="w-full" />
+    </UFormField>
+  </div>
+
+  <UFormField :label="t('labels.apiKey')" :help="t('hints.apiKey')">
+    <UInput v-model="embedder.apiKey" type="password" autocomplete="off" class="w-full" />
+  </UFormField>
 </template>
 
 <script setup lang="ts">
-import type { OllamaEmbedder } from 'meilisearch'
-import Label from '~/components/layout/forms/Label.vue'
+import type { EmbedderFormSettings } from '~/utils'
 
-const embedder = defineModel<OllamaEmbedder>()
+const OLLAMA_MODELS = [
+  'embeddinggemma',
+  'qwen3-embedding',
+  'nomic-embed-text',
+  'mxbai-embed-large',
+  'snowflake-arctic-embed2',
+  'bge-m3',
+  'all-minilm',
+]
+
+const embedder = defineModel<EmbedderFormSettings>({ required: true })
 const { t } = useI18n()
+const modelsListId = useId()
 </script>
 
 <i18n>
@@ -48,4 +57,8 @@ en:
     apiKey: API Key
     model: Model
     dimensions: Dimensions
+  hints:
+    url: As reached from the Meilisearch server. Local addresses need the --experimental-allowed-ip-networks option.
+    apiKey: Only needed when Ollama sits behind an authenticating proxy.
+    dimensions: Inferred from the model when left blank.
 </i18n>
