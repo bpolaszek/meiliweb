@@ -52,6 +52,7 @@
 import EmbedderCommonFields from '~/components/settings/embedder/EmbedderCommonFields.vue'
 import EmbedderSourceForm from '~/components/settings/embedder/EmbedderSourceForm.vue'
 import {
+  COMPOSITE_EMBEDDER_SOURCES,
   COMPOSITE_EMBEDDERS_MIN_VERSION,
   EMBEDDER_SOURCES,
   isEditableEmbedderSource,
@@ -74,11 +75,11 @@ const { satisfiesVersion } = useVersion()
 const sourceItems = computed(() =>
   EMBEDDER_SOURCES.filter(
     (value) =>
-      'composite' !== value ||
+      !COMPOSITE_EMBEDDER_SOURCES.includes(value) ||
       satisfiesVersion(COMPOSITE_EMBEDDERS_MIN_VERSION) ||
       value === entry.value.settings.source,
   ).map((value) => {
-    const disabled = 'composite' === value && !props.features.compositeEmbedders
+    const disabled = COMPOSITE_EMBEDDER_SOURCES.includes(value) && !props.features.compositeEmbedders
     return { value, disabled, label: t(disabled ? 'sources.compositeDisabled' : `sources.${value}`) }
   }),
 )
