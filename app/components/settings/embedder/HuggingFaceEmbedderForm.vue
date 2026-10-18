@@ -16,7 +16,7 @@
       <UInput v-model="embedder.revision" autocomplete="off" spellcheck="false" class="w-full font-mono" />
     </UFormField>
 
-    <UFormField :label="t('labels.pooling')" :help="t('hints.pooling')">
+    <UFormField v-if="satisfiesVersion(POOLING_MIN_VERSION)" :label="t('labels.pooling')" :help="t('hints.pooling')">
       <USelect v-model="embedder.pooling" :items="poolingItems" placeholder="useModel" class="w-full" />
     </UFormField>
   </div>
@@ -35,9 +35,11 @@ const HUGGINGFACE_MODELS = [
   'intfloat/multilingual-e5-large',
 ]
 const POOLING_METHODS = ['useModel', 'forceMean', 'forceCls'] as const
+const POOLING_MIN_VERSION = '>=1.14.0'
 
 const embedder = defineModel<EmbedderFormSettings>({ required: true })
 const { t } = useI18n()
+const { satisfiesVersion } = useVersion()
 const modelsListId = useId()
 const poolingItems = POOLING_METHODS.map((value) => ({ value, label: t(`pooling.${value}`) }))
 </script>

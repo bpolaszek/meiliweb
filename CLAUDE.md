@@ -118,6 +118,28 @@ for the route. Say so in a comment with the client version checked, so the next 
 revisit. `composables/useWebhooks.ts` and `settings/foreign-keys.vue` predate this rule and still use
 it, even though 0.60.0 now covers both — they're worth migrating.
 
+### Gate features on the Meilisearch version
+
+Meiliweb supports **Meilisearch ≥ 1.13**. Whenever you add a route, a setting, a field or an experimental
+feature, check which release introduced it (the release notes at
+https://github.com/meilisearch/meilisearch/releases are the most reliable source) and, if it is newer than
+1.13, gate it on the version:
+
+```ts
+const { satisfiesVersion } = useVersion()
+const POOLING_MIN_VERSION = '>=1.14.0'
+```
+
+```vue
+<UFormField v-if="satisfiesVersion(POOLING_MIN_VERSION)" ...></UFormField>
+```
+
+- Name the range in a `*_MIN_VERSION` constant, exported when several files share it (`EXPORT_MIN_VERSION`).
+- Hide what the instance can't do; when a whole page depends on it, show an `Alert` saying which version it needs.
+- An experimental feature doesn't exist before the release that introduced it: `GET /experimental-features`
+  simply omits its key, and `/experimental-features` won't list it. Gate it on the version first, then on the
+  flag — never treat a missing key as "enabled".
+
 ## Patterns & idioms
 
 These are load-bearing conventions across the codebase — follow them when adding code.
