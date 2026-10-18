@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-2">
+  <div v-if="satisfiesVersion(RENDER_ROUTE_MIN_VERSION)" class="space-y-2">
     <div class="flex items-center gap-2">
       <UButton
         type="button"
@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { useMeiliClient, useTemplatePreview, type TemplatePreviewKind } from '~/composables'
-import { EMBEDDER_FEATURES } from '~/utils'
+import { EMBEDDER_FEATURES, RENDER_ROUTE_MIN_VERSION } from '~/utils'
 
 const DEFAULT_DOCUMENT_TEMPLATE_MAX_BYTES = 400
 
@@ -59,6 +59,7 @@ const indexUid = useRoute().params.indexUid as string
 const meili = useMeiliClient()
 const renderTemplate = useTemplatePreview(indexUid)
 const { renderRoute } = inject(EMBEDDER_FEATURES)!
+const { satisfiesVersion } = useVersion()
 
 const open = ref(false)
 const loading = ref(false)

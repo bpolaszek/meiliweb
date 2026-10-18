@@ -10,6 +10,7 @@ export const SUB_EMBEDDER_SOURCES = ['openAi', 'huggingFace', 'ollama', 'rest'] 
 // Versions of Meilisearch that introduced the experimental features embedders depend on
 export const COMPOSITE_EMBEDDERS_MIN_VERSION = '>=1.14.0'
 export const MULTIMODAL_MIN_VERSION = '>=1.16.0'
+export const RENDER_ROUTE_MIN_VERSION = '>=1.48.0'
 export const COMPOSITE_EMBEDDER_PARTS = ['searchEmbedder', 'indexingEmbedder'] as const
 export type CompositeEmbedderPart = (typeof COMPOSITE_EMBEDDER_PARTS)[number]
 
