@@ -2,9 +2,9 @@
   <OpenAIEmbedderForm v-if="'openAi' === embedder.source" v-model="embedder" />
   <HuggingFaceEmbedderForm v-else-if="'huggingFace' === embedder.source" v-model="embedder" />
   <OllamaEmbedderForm v-else-if="'ollama' === embedder.source" v-model="embedder" />
-  <RestEmbedderForm v-else-if="'rest' === embedder.source" v-model="embedder" :part :multimodal />
+  <RestEmbedderForm v-else-if="'rest' === embedder.source" v-model="embedder" :part />
   <UserProvidedEmbedderForm v-else-if="'userProvided' === embedder.source" v-model="embedder" :name />
-  <CompositeEmbedderForm v-else-if="'composite' === embedder.source" v-model="embedder" :name :multimodal />
+  <CompositeEmbedderForm v-else-if="'composite' === embedder.source" v-model="embedder" :name />
 </template>
 
 <script setup lang="ts">
@@ -20,8 +20,6 @@ defineProps<{
   name: string
   // Set when editing a part of a composite embedder
   part?: CompositeEmbedderPart
-  // Whether the `multimodal` experimental feature is enabled
-  multimodal: boolean
 }>()
 const embedder = defineModel<EmbedderFormSettings>({ required: true })
 </script>

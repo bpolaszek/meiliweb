@@ -6,6 +6,11 @@
         :placeholder="t('placeholders.documentTemplate', LIQUID_EXAMPLE)"
         class="w-full font-mono text-xs"
         :rows="5" />
+      <EmbedderTemplatePreview
+        kind="documentTemplate"
+        :template="embedder.documentTemplate"
+        :max-bytes="embedder.documentTemplateMaxBytes"
+        class="mt-1" />
     </UFormField>
 
     <UFormField :label="t('labels.documentTemplateMaxBytes')" :help="t('hints.documentTemplateMaxBytes')">
@@ -16,6 +21,7 @@
 
 <script setup lang="ts">
 import Textarea from '~/components/layout/forms/Textarea.vue'
+import EmbedderTemplatePreview from '~/components/settings/embedder/EmbedderTemplatePreview.vue'
 import { embedderAcceptsField, type CompositeEmbedderPart, type EmbedderFormSettings } from '~/utils'
 
 // Passed as a parameter: vue-i18n would parse the braces of a literal Liquid tag as its own interpolation

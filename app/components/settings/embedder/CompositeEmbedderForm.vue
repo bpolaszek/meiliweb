@@ -14,7 +14,7 @@
       <USelect v-model="embedder[part].source" :items="sourceItems" class="w-full sm:w-1/2" />
     </UFormField>
 
-    <EmbedderSourceForm v-model="embedder[part]" :name :part :multimodal />
+    <EmbedderSourceForm v-model="embedder[part]" :name :part />
     <EmbedderDocumentTemplateFields v-model="embedder[part]" :part />
   </section>
 </template>
@@ -29,10 +29,7 @@ import {
   type EmbedderFormSettings,
 } from '~/utils'
 
-defineProps<{
-  name: string
-  multimodal: boolean
-}>()
+defineProps<{ name: string }>()
 const embedder = defineModel<EmbedderFormSettings>({ required: true })
 const { t } = useI18n()
 

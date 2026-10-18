@@ -1,4 +1,5 @@
 import type { Embedder, Embedders } from 'meilisearch'
+import type { InjectionKey } from 'vue'
 
 export const EMBEDDER_SOURCES = ['openAi', 'huggingFace', 'ollama', 'rest', 'userProvided', 'composite'] as const
 export type EmbedderSource = (typeof EMBEDDER_SOURCES)[number]
@@ -9,6 +10,7 @@ export const SUB_EMBEDDER_SOURCES = ['openAi', 'huggingFace', 'ollama', 'rest'] 
 // Versions of Meilisearch that introduced the experimental features embedders depend on
 export const COMPOSITE_EMBEDDERS_MIN_VERSION = '>=1.14.0'
 export const MULTIMODAL_MIN_VERSION = '>=1.16.0'
+export const RENDER_ROUTE_MIN_VERSION = '>=1.48.0'
 // Sources relying on the compositeEmbedders experimental feature
 export const COMPOSITE_EMBEDDER_SOURCES: readonly string[] = ['composite']
 export const COMPOSITE_EMBEDDER_PARTS = ['searchEmbedder', 'indexingEmbedder'] as const
@@ -66,6 +68,14 @@ export const embedderFields = (source: EmbedderSource, part?: CompositeEmbedderP
 
 export const embedderAcceptsField = (source: EmbedderSource, field: string, part?: CompositeEmbedderPart) =>
   embedderFields(source, part).includes(field)
+
+// Experimental features the embedder settings depend on, provided by the embedders page.
+export type EmbedderFeatures = {
+  multimodal: boolean
+  compositeEmbedders: boolean
+  renderRoute: boolean
+}
+export const EMBEDDER_FEATURES: InjectionKey<EmbedderFeatures> = Symbol('embedderFeatures')
 
 export type EmbedderFragmentRow = {
   name: string

@@ -73,6 +73,7 @@ const KNOWN_ORDER = [
   'chatCompletions',
   'multimodal',
   'foreignKeys',
+  'renderRoute',
 ]
 
 const sortedFeatures = computed(() => {
@@ -172,4 +173,8 @@ en:
     foreignKeys:
       label: Foreign keys
       description: Enables foreign key support for document hydration.
+    renderRoute:
+      label: Template rendering route
+      description: Enables the /render-template route. Meiliweb uses it to preview embedder document templates
+                   and fragments.
 </i18n>
