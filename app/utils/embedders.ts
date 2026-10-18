@@ -59,6 +59,13 @@ export class InvalidEmbedderJsonError extends Error {
   }
 }
 
+// A single PATCH can't delete an embedder and create another one under the same name.
+export class EmbedderNameTakenError extends Error {
+  constructor(public embedder: string) {
+    super(`An embedder named ${embedder} is already saved`)
+  }
+}
+
 export class DuplicateEmbedderNameError extends Error {
   constructor(public embedder: string) {
     super(`Duplicate embedder name: ${embedder}`)
@@ -170,6 +177,10 @@ export const buildEmbeddersPayload = (entries: EmbedderFormEntry[], initialEntri
   }
 
   const initialSettings = new Map(initialEntries.map(({ name, settings }) => [name, settings]))
+  const recreated = entries.find(({ name, persisted }) => !persisted && initialSettings.has(name))
+  if (undefined !== recreated) {
+    throw new EmbedderNameTakenError(recreated.name)
+  }
   const payload: Record<string, Record<string, any> | null> = {}
   for (const name of initialSettings.keys()) {
     if (!names.has(name)) {
