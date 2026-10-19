@@ -52,6 +52,18 @@
         :ui="{ base: 'rounded-lg' }"
         class="grow lg:w-80" />
 
+      <template v-if="imageSearchEmbedders.length > 0">
+        <button v-tippy="t('actions.searchByImage')" type="button" @click="imageInput?.click()">
+          <Icon
+            name="ph:image-fill"
+            :class="[
+              'size-6',
+              imageSearch ? 'text-primary-600 hover:text-primary-800' : 'text-gray-600 hover:text-gray-800',
+            ]" />
+        </button>
+        <input ref="imageInput" type="file" accept="image/*" class="hidden" @change="onImageSelected" />
+      </template>
+
       <button v-tippy="t('actions.searchSettings')" type="button" @click="openSearchSettings()">
         <Icon
           name="ph:sliders-fill"
@@ -102,10 +114,19 @@
       @close="clearSimilarDocuments()"
       class="mb-6 w-full" />
 
+    <ImageSearchBanner
+      v-if="imageSearch"
+      v-model:embedder="imageSearchEmbedder"
+      :file-name="imageSearch.fileName"
+      :image="imageSearch.image"
+      :embedders="imageSearchEmbedders"
+      @close="clearImageSearch()"
+      class="mb-6 w-full" />
+
     <DocumentsEmptyState
       v-if="0 === resultset.estimatedTotalHits"
       :index-uid="index.uid"
-      :request-has-filters="!!(searchParams.filter || searchParams.q)"></DocumentsEmptyState>
+      :request-has-filters="!!(searchParams.filter || searchParams.q || searchParams.media)"></DocumentsEmptyState>
 
     <MainComponent
       v-else
@@ -156,6 +177,8 @@ import {
   getFacetSearchableAttributePatterns,
   getFilterableAttributePatterns,
   getFormattedAttributes,
+  hasMediaSearchFragments,
+  readFileAsMediaBinary,
   tryOrThrow,
   type SearchSettings,
 } from '~/utils'
@@ -168,11 +191,12 @@ import DocumentsAsCards from '~/components/documents/DocumentsAsCards.vue'
 import DocumentsAsTable from '~/components/documents/DocumentsAsTable.vue'
 import Button from '~/components/layout/forms/Button.vue'
 import DocumentsAsMap from '~/components/documents/DocumentsAsMap.vue'
+import ImageSearchBanner from '~/components/documents/ImageSearchBanner.vue'
 import SimilarDocumentsBanner from '~/components/documents/SimilarDocumentsBanner.vue'
 import SearchSettingsModal from '~/components/documents/search-settings/SearchSettingsModal.vue'
 import { reactiveComputed } from '@vueuse/core'
 import { field as filterField } from 'meilisearch-filters'
-import type { SearchParams } from 'meilisearch'
+import type { MediaBinary, SearchParams } from 'meilisearch'
 import { TOAST_FAILURE, usePromisifiedDialogs, useToasts, useVersion } from '~/stores'
 
 const { t } = useI18n()
@@ -293,6 +317,8 @@ const findSimilarDocuments = async (documentId: DocumentId) => {
     if (null === vector) throw new Error(t('errors.noEmbedding', { embedder }))
     searchTerms.value = ''
     offset.value = 0
+    // `media` and `vector` can't be sent together.
+    imageSearch.value = null
     similarDocuments.value = { documentId, embedder, vector }
   } catch (error) {
     clearSimilarDocuments()
@@ -319,6 +345,54 @@ const similarSearchParams = computed<SearchParams>(() =>
     : {},
 )
 
+// Searching by image: the picked file is sent as `media`, for the embedder's search fragments to
+// embed. Only embedders with a fragment reading `media` can do that — and `media` requires an
+// embedder, so the image always comes with one of them.
+const imageSearchEmbedders = embedderNames.filter((name) => hasMediaSearchFragments(embedders[name] as any))
+const imageSearchEmbedder = ref<string>(
+  imageSearchEmbedders.includes(searchSettings.value.hybridEmbedder as string)
+    ? (searchSettings.value.hybridEmbedder as string)
+    : imageSearchEmbedders[0] ?? '',
+)
+type ImageSearch = { fileName: string; image: MediaBinary }
+const imageSearch = ref<ImageSearch | null>(null)
+const imageInput = ref<HTMLInputElement | null>(null)
+const clearImageSearch = () => {
+  imageSearch.value = null
+  offset.value = 0
+}
+const onImageSelected = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  // Reset so that picking the same file again still fires `change`.
+  input.value = ''
+  if (!file) return
+  try {
+    const image = await readFileAsMediaBinary(file)
+    clearSimilarDocuments()
+    offset.value = 0
+    imageSearch.value = { fileName: file.name, image }
+  } catch (error) {
+    createToast({ ...TOAST_FAILURE(t), title: t('errors.imageSearchFailed'), text: (error as Error).message })
+  }
+}
+// The image is a query in its own right, so it may come alone or next to the typed terms. Whatever
+// hybrid search the user configured only applies when there are terms to match by keyword: an image
+// alone has nothing for keyword search to work with.
+const imageSearchParams = computed<SearchParams>(() => {
+  if (!imageSearch.value) return {}
+  const { hybridEnabled, hybridSemanticRatio } = searchSettings.value
+  const semanticRatio = hybridEnabled && '' !== searchTerms.value ? hybridSemanticRatio : 1
+  return {
+    // Even an empty `q` counts as provided when Meilisearch picks the fragment to embed the query with:
+    // left in, it would match a `{{q}}` fragment next to the image one.
+    ...('' === searchTerms.value ? { q: undefined } : {}),
+    // `image` is the name the documented fragments read the picture from (`{{media.image.data}}`).
+    media: { image: imageSearch.value.image },
+    hybrid: { embedder: imageSearchEmbedder.value, semanticRatio },
+  }
+})
+
 // The compared document itself would always come back first, with a perfect similarity score.
 // Excluding it server-side keeps the hit count honest, but filtering on the primary key requires
 // it to be filterable — which it isn't by default, hence the client-side fallback in `hits`.
@@ -344,6 +418,7 @@ const searchParams = computed<SearchParams>(() => ({
   filter: searchFilter.value,
   ...buildSearchParams(effectiveSettings.value),
   ...similarSearchParams.value,
+  ...imageSearchParams.value,
   // personalize is deliberately NOT wired in here: reranking via Cohere is slow and rate-limited,
   // so it must never ride along with search-as-you-type. It's only sent by rerank() below, on
   // explicit user action.
@@ -501,8 +576,24 @@ watch(similarDocumentsEmbedder, () => {
   if (similarDocuments.value) findSimilarDocuments(similarDocuments.value.documentId)
 })
 watch(searchParams, async (searchParams) => {
-  self.resultset = await searchClient.index(index.uid).search(null, searchParams)
-  personalizeApplied.value = false
+  try {
+    self.resultset = await searchClient.index(index.uid).search(null, searchParams)
+    personalizeApplied.value = false
+  } catch (error) {
+    if (!searchParams.media) throw error
+    // The image may match no search fragment, or several, or the provider may reject it — only
+    // Meilisearch's message tells which. Dropping the image goes back to the plain search rather
+    // than leaving results that don't answer it under the banner.
+    const { data } = imageSearch.value?.image ?? {}
+    clearImageSearch()
+    // Meilisearch echoes the whole query back in a note, base64 image included: that line alone
+    // would flood the toast.
+    const text = (error as Error).message
+      .split('\n')
+      .filter((line) => !data || !line.includes(data))
+      .join('\n')
+    createToast({ ...TOAST_FAILURE(t), title: t('errors.imageSearchFailed'), text })
+  }
 })
 watch(resultset, () => (self.totalItems = self.resultset.estimatedTotalHits), {
   deep: true,
@@ -527,6 +618,7 @@ en:
     toggleFilters: Open filter panel
     searchSettings: Search settings
     clearTenantToken: Clear tenant token
+    searchByImage: Search by image
   labels:
     filters: Sort & Filter
     multitenancyEnabled: Tenant preview
@@ -534,5 +626,6 @@ en:
   errors:
     personalizeFailed: Personalized search failed
     similarDocumentsFailed: Could not find similar documents
+    imageSearchFailed: Image search failed
     noEmbedding: This document has no embedding for the "{embedder}" embedder.
 </i18n>
