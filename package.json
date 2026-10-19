@@ -64,6 +64,8 @@
     "typescript-eslint": "^7.6.0"
   },
   "resolutions": {
-    "string-width": "4.2.3"
+    "string-width": "4.2.3",
+    "**/@typescript-eslint/typescript-estree/minimatch": "^9.0.9",
+    "**/giget/tar": "^7.5.22"
   }
 }
