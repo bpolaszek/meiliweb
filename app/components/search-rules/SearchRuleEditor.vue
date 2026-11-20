@@ -114,6 +114,10 @@
           <Button type="button" size="small" icon="heroicons:plus" @click="addPin()">
             {{ t('actions.addPin') }}
           </Button>
+
+          <p v-if="hasScaleActions" class="text-xs font-light text-gray-500 italic">
+            {{ t('hints.scaleActions') }}
+          </p>
         </section>
 
         <footer class="flex flex-col items-center justify-end sm:flex-row">
@@ -139,7 +143,7 @@ import {
   useSearchRules,
   useTask,
   type SearchRuleConditions,
-  type SearchRulePayload,
+  type SearchRuleUpdatePayload,
   type SearchRule,
 } from '~/composables'
 import { TOAST_FAILURE, TOAST_PLEASEWAIT, TOAST_SUCCESS, useToasts } from '~/stores'
@@ -213,11 +217,11 @@ const factory = () => {
     words: conditions?.query?.words ?? '',
     start: toDateTimeLocal(conditions?.time?.start),
     end: toDateTimeLocal(conditions?.time?.end),
-    pins: (props.rule?.actions ?? []).map(({ selector, action }) => ({
+    pins: (props.rule?.actions?.pin ?? []).map(({ indexUid, id, position }) => ({
       id: ulid(),
-      indexUid: selector.indexUid ?? ANY_INDEX,
-      documentId: selector.id,
-      position: action.position,
+      indexUid: indexUid ?? ANY_INDEX,
+      documentId: id,
+      position,
     })) as PinRow[],
   }
 }
@@ -229,6 +233,8 @@ watch(open, (isOpen) => isOpen && reset())
 
 /** Filter conditions are not editable here; we only warn that they exist and are preserved. */
 const hasFilterConditions = computed(() => !!props.rule?.conditions?.filter)
+
+const hasScaleActions = computed(() => !!props.rule?.actions?.scale?.length)
 
 const addPin = () => form.pins.push({ id: ulid(), indexUid: ANY_INDEX, documentId: '', position: form.pins.length })
 
@@ -269,17 +275,22 @@ const buildConditions = (): SearchRuleConditions => {
   return conditions
 }
 
-const buildPayload = (): SearchRulePayload => ({
+const buildPayload = (): SearchRuleUpdatePayload => ({
   description: form.description.trim() || null,
   precedence: '' === form.precedence ? null : Number(form.precedence),
   active: form.active,
   conditions: buildConditions(),
-  actions: form.pins
-    .filter(({ documentId }) => documentId.trim())
-    .map(({ indexUid, documentId, position }) => ({
-      selector: { indexUid: ANY_INDEX === indexUid ? null : indexUid, id: documentId.trim() },
-      action: { type: 'pin' as const, position: Number(position) },
-    })),
+  // `actions` is replaced wholesale like `conditions`: carry over the `scale` actions the form doesn't edit.
+  actions: {
+    ...props.rule?.actions,
+    pin: form.pins
+      .filter(({ documentId }) => documentId.trim())
+      .map(({ indexUid, documentId, position }) => ({
+        indexUid: ANY_INDEX === indexUid ? null : indexUid,
+        id: documentId.trim(),
+        position: Number(position),
+      })),
+  },
 })
 
 const submit = () =>
@@ -336,6 +347,7 @@ en:
     words: The rule applies when the search query contains these words.
     timeWindow: Both bounds are optional, and must be in the future.
     filterConditions: This rule also carries filter conditions, which are not editable here. They will be preserved.
+    scaleActions: This rule also carries scale actions, which are not editable here. They will be preserved.
     pins: Each document is pinned at the given position (0 is the first result) when the rule applies.
   emptyPins: No pinned document yet.
   actions:

@@ -68,8 +68,8 @@
               </div>
             </td>
             <td>
-              <span v-if="item.actions.length" v-tippy="pinsDetail(item)" class="text-sm whitespace-nowrap">
-                {{ t('pinCount', item.actions.length) }}
+              <span v-if="item.actions.pin?.length" v-tippy="pinsDetail(item)" class="text-sm whitespace-nowrap">
+                {{ t('pinCount', item.actions.pin.length) }}
               </span>
               <span v-else class="text-sm font-light text-gray-500 italic">{{ t('placeholders.noPins') }}</span>
             </td>
@@ -278,9 +278,7 @@ const conditionsSummary = (rule: SearchRule) => {
 
 /** Tooltip listing every pin as `index#documentId → position`. */
 const pinsDetail = (rule: SearchRule) =>
-  rule.actions
-    .map(({ selector, action }) => `${selector.indexUid ?? '*'}#${selector.id} → ${action.position}`)
-    .join('\n')
+  (rule.actions.pin ?? []).map(({ indexUid, id, position }) => `${indexUid ?? '*'}#${id} → ${position}`).join('\n')
 
 const pending = reactive(new Set<string>())
 

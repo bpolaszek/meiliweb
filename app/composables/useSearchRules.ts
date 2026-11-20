@@ -1,10 +1,4 @@
-import type {
-  SearchRule as ClientSearchRule,
-  SearchRuleConditions as ClientSearchRuleConditions,
-  ResourceResults,
-  SearchRuleListPayload,
-  SearchRuleUpdatePayload,
-} from 'meilisearch'
+import type { SearchRule, SearchRuleListPayload, SearchRuleUpdatePayload } from 'meilisearch'
 import semver from 'semver/preload'
 import { useMeiliClient } from './useMeiliClient'
 
@@ -31,32 +25,15 @@ export const SEARCH_RULES_FEATURE = 'dynamicSearchRules'
  */
 export const SEARCH_RULE_UID_PATTERN = '[a-zA-Z0-9_\\-]+'
 
-export type { SearchRuleAction, SearchRuleListPayload, SearchRulePinAction, SearchRuleSelector } from 'meilisearch'
-
-/**
- * Matches searches whose own filter carries these attribute/value pairs. Meilisearch 1.53 accepts
- * it but meilisearch@0.60.0 does not type it yet, and it is not covered by the documented how-tos
- * either — so we don't expose an editor for it. `conditions` being replaced wholesale on update,
- * callers must still round-trip it or it would be silently lost.
- */
-export type SearchRuleFilterCondition = {
-  values?: Record<string, unknown> | null
-}
-
-export type SearchRuleConditions = ClientSearchRuleConditions & {
-  filter?: SearchRuleFilterCondition | null
-}
-
-/** The client also misses `lastUpdatedAt`, which the API returns on every rule. */
-export type SearchRule = Omit<ClientSearchRule, 'conditions'> & {
-  lastUpdatedAt?: string | null
-  conditions?: SearchRuleConditions | null
-}
-
-/** Partial update payload. Top-level keys are merged, but `conditions` is replaced as a whole. */
-export type SearchRulePayload = Omit<SearchRuleUpdatePayload, 'conditions'> & {
-  conditions?: SearchRuleConditions | null
-}
+export type {
+  SearchRule,
+  SearchRuleActions,
+  SearchRuleConditions,
+  SearchRuleListPayload,
+  SearchRulePin,
+  SearchRuleScale,
+  SearchRuleUpdatePayload,
+} from 'meilisearch'
 
 /** `1.50.0-rc.1` and friends must count as 1.50, hence the coercion. */
 export const supportsSearchRules = (pkgVersion?: string | null) => {
@@ -67,16 +44,12 @@ export const supportsSearchRules = (pkgVersion?: string | null) => {
 export const useSearchRules = () => {
   const meili = useMeiliClient()
 
-  // The casts below only widen the client's types with the two fields it hasn't caught up with
-  // (`conditions.filter`, `lastUpdatedAt`); drop them once meilisearch-js declares them.
-  const list = (parameters?: SearchRuleListPayload) =>
-    meili.getDynamicSearchRules(parameters) as Promise<ResourceResults<SearchRule[]>>
+  const list = (parameters?: SearchRuleListPayload) => meili.getDynamicSearchRules(parameters)
 
-  const get = (uid: string) => meili.getDynamicSearchRule(uid) as Promise<SearchRule>
+  const get = (uid: string): Promise<SearchRule> => meili.getDynamicSearchRule(uid)
 
   /** Creates the rule when `uid` is unknown, patches it otherwise. */
-  const save = (uid: string, rule: SearchRulePayload) =>
-    meili.updateDynamicSearchRule(uid, rule as SearchRuleUpdatePayload)
+  const save = (uid: string, rule: SearchRuleUpdatePayload) => meili.updateDynamicSearchRule(uid, rule)
 
   const remove = (uid: string) => meili.deleteDynamicSearchRule(uid)
 
