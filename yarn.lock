@@ -6949,10 +6949,10 @@ meilisearch-filters@^1.1.0:
   resolved "https://registry.yarnpkg.com/meilisearch-filters/-/meilisearch-filters-1.1.0.tgz#fecc51c5e97239a328702b703e080f05a5ac3b5f"
   integrity sha512-CAUNisEDynkmXBLoZmpiolsskdOcpQ3m3OolZzclhx2QcB2Yj7b4irG6v9pUh/MQa2vAL7DgpoR8Qu+WbSYr+A==
 
-meilisearch@^0.60.0:
-  version "0.60.0"
-  resolved "https://registry.yarnpkg.com/meilisearch/-/meilisearch-0.60.0.tgz#53b9f9741f66f3337121f809423d28af341f0bbe"
-  integrity sha512-z32KgxE6/7hRzbVfzUgzlmNl2OS7TwGE6wSWs2tVEuAY9DWrX6zAmt0s7wTyelH36orIaZ3/t1mQsCsExGtVDQ==
+meilisearch@^0.63.0:
+  version "0.63.0"
+  resolved "https://registry.yarnpkg.com/meilisearch/-/meilisearch-0.63.0.tgz#bd38e0a618a762b5829eca33a34f1a2f4542f91a"
+  integrity sha512-gpVdo4dpoma7MMVN4vbfZrWZWp1vIyKWRDKNJsHvB+z6+ykc3E210yb2lvbsTrRTNSM1hfq3vmXu4DRO00IDkA==
 
 memoize-one@^6.0.0:
   version "6.0.0"
